@@ -15,7 +15,7 @@ from typing import Dict, List, Set
 from src.analysis.sentiment import SentimentAnalyzer
 from src.core.config import SentinelConfig
 from src.core.csv_store import CSVStore
-from src.core.models import Comment, VideoSnapshot
+from src.core.models import Comment, TapTapReview, VideoSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +136,14 @@ class WeeklyReportGenerator:
 
             try:
                 if platform == "taptap":
-                    comments = self.store.load(Comment, platform, "reviews", date_str=date_str)
+                    # TapTap 异构为 TapTapReview，需转换为 Comment 展示
+                    reviews = self.store.load(TapTapReview, platform, "reviews", date_str=date_str)
+                    comments = [Comment(
+                        platform="taptap", video_id=r.game_id, comment_id=r.review_id,
+                        author=r.author, author_id=r.author_id, content=r.content,
+                        like_count=r.ups, reply_count=0, publish_time=r.publish_time,
+                        ip_location="", sentiment="", mentioned_games=""
+                    ) for r in reviews]
                 else:
                     comments = []
                     for vid in v_ids:
@@ -177,7 +184,13 @@ class WeeklyReportGenerator:
         for platform in platforms:
             try:
                 if platform == "taptap":
-                    comments = self.store.load(Comment, platform, "reviews", date_str=date_str)
+                    reviews = self.store.load(TapTapReview, platform, "reviews", date_str=date_str)
+                    comments = [Comment(
+                        platform="taptap", video_id=r.game_id, comment_id=r.review_id,
+                        author=r.author, author_id=r.author_id, content=r.content,
+                        like_count=r.ups, reply_count=0, publish_time=r.publish_time,
+                        ip_location="", sentiment="", mentioned_games=""
+                    ) for r in reviews]
                 else:
                     # 遍历目录下所有当天评论
                     comments = []

@@ -19,8 +19,10 @@ targets:
 
   taptap_games:
     - name: "率土之滨"
-      app_id: "xxx"          # 替换为实际App ID，例如 "66278"
+      app_id: "4682"
     - name: "三国志战略版"
-      app_id: "xxx"
-    # - name: "万国觉醒"
-    #   app_id: "xxx"
+      app_id: "139546"
+    - name: "万国觉醒"
+      app_id: "82921"
+    # - name: "鸿图之下"
+    #   app_id: "xxx"  # 可自行查找

@@ -74,26 +74,33 @@ class TapTapAdapter(BaseAdapter):
         TapTap 无视频概念，此方法返回游戏数据作为近似替代。
         """
         games = self.search_games(keyword)
-        # 将游戏映射为 VideoSnapshot（video_id = app_id）
         today = datetime.now().strftime("%Y-%m-%d")
         snapshots = []
         for g in games:
+            # title 可能是字符串，也可能是 {zh_CN: ...} 字典
+            raw_title = g.get("title", "")
+            title = raw_title if isinstance(raw_title, str) else (raw_title.get("zh_CN") or raw_title.get("en_US", ""))
+            # developer 可能是 null
+            dev = g.get("developer") or {}
+            dev_name = dev.get("name", "") if isinstance(dev, dict) else ""
+            dev_id = str(dev.get("id", "")) if isinstance(dev, dict) else ""
+            stat = g.get("stat") or {}
             snap = VideoSnapshot(
                 platform="taptap",
                 video_id=str(g.get("id", "")),
-                title=g.get("title", {}).get("zh_CN", "") or g.get("title", {}).get("en_US", ""),
-                author=g.get("developer", {}).get("name", ""),
-                author_id=str(g.get("developer", {}).get("id", "")),
+                title=title,
+                author=dev_name,
+                author_id=dev_id,
                 snapshot_date=today,
-                view_count=int(g.get("stat", {}).get("downloads", 0) or 0),
-                like_count=int(g.get("stat", {}).get("fans_count", 0) or 0),
-                comment_count=int(g.get("stat", {}).get("reviews_count", 0) or 0),
+                view_count=int(stat.get("hits_total", 0) or 0),
+                like_count=int(stat.get("fans_count", 0) or 0),
+                comment_count=int(stat.get("review_count", 0) or 0),
                 share_count=0,
-                favorite_count=int(g.get("stat", {}).get("wish_list_count", 0) or 0),
+                favorite_count=int(stat.get("wish_count", 0) or 0),
                 coin_count=0,
                 danmaku_count=0,
                 publish_date="",
-                tags=",".join(g.get("tags", {}).get("list", []) or []),
+                tags="",
                 url=f"https://www.taptap.cn/app/{g.get('id', '')}",
             )
             snapshots.append(snap)
@@ -105,22 +112,30 @@ class TapTapAdapter(BaseAdapter):
         if not info:
             return None
         today = datetime.now().strftime("%Y-%m-%d")
+        # title: 字符串 或 {zh_CN: ...}
+        raw_title = info.get("title", "")
+        title = raw_title if isinstance(raw_title, str) else (raw_title.get("zh_CN") or raw_title.get("en_US", "") if raw_title else "")
+        # developer: 可能是 null
+        dev = info.get("developer") or {}
+        dev_name = dev.get("name", "") if isinstance(dev, dict) else ""
+        dev_id = str(dev.get("id", "")) if isinstance(dev, dict) else ""
+        stat = info.get("stat") or {}
         return VideoSnapshot(
             platform="taptap",
             video_id=video_id,
-            title=info.get("title", {}).get("zh_CN", ""),
-            author=info.get("developer", {}).get("name", ""),
-            author_id=str(info.get("developer", {}).get("id", "")),
+            title=title,
+            author=dev_name,
+            author_id=dev_id,
             snapshot_date=today,
-            view_count=int(info.get("stat", {}).get("downloads", 0) or 0),
-            like_count=int(info.get("stat", {}).get("fans_count", 0) or 0),
-            comment_count=int(info.get("stat", {}).get("reviews_count", 0) or 0),
+            view_count=int(stat.get("hits_total", 0) or 0),
+            like_count=int(stat.get("fans_count", 0) or 0),
+            comment_count=int(stat.get("review_count", 0) or 0),
             share_count=0,
-            favorite_count=int(info.get("stat", {}).get("wish_list_count", 0) or 0),
+            favorite_count=int(stat.get("wish_count", 0) or 0),
             coin_count=0,
             danmaku_count=0,
             publish_date="",
-            tags=",".join(info.get("tags", {}).get("list", []) or []),
+            tags="",
             url=f"https://www.taptap.cn/app/{video_id}",
         )
 
