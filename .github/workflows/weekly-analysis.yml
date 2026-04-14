@@ -1,0 +1,55 @@
+name: 周度分析报告生成
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # 每周一 UTC 02:00（北京时间 10:00）运行
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout main 分支
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Fetch data 分支
+        run: |
+          git fetch origin data
+          # 将 data 分支的数据目录检出到本地工作区
+          git checkout origin/data -- data/
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-analysis-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            pip-analysis-
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Run 周报生成
+        run: python -m src.cli analyze --type weekly
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Commit actions (提交报表到 data 分支)
+        run: |
+          # 切换到 data 分支进行提交
+          git checkout data
+          git config user.name "slg-sentinel-bot"
+          git config user.email "bot@slg-sentinel"
+          git add reports/
+          git diff --staged --quiet || git commit -m "📈 generate weekly report $(date +%Y-%m-%d)"
+          git pull --rebase origin data || true
+          git push origin data

@@ -287,15 +287,44 @@ def cmd_profile(args: argparse.Namespace) -> None:
 def cmd_analyze(args: argparse.Namespace) -> None:
     """执行数据分析"""
     logger.info(f"开始分析: type={args.type}")
-    # TODO: Phase 4 实现分析功能
-    print(f"⚠️  分析功能尚未实现（type={args.type}）")
+    
+    from src.core.config import load_config
+    config = load_config()
+
+    if args.type == "weekly":
+        from src.analysis.weekly_report import WeeklyReportGenerator
+        generator = WeeklyReportGenerator(config)
+        report_path = generator.generate(date_str=args.date, output_dir=args.output_dir)
+        print(f"✅  周报生成完毕: {report_path}")
+    elif args.type == "sentiment":
+        # 预留给独立的批量情感分析命令
+        print("⚠️  独立情感分析功能尚未在 CLI 中直接暴露，目前已集成在 weekly 报表中。")
+    else:
+        print(f"⚠️  未知的分析类型: {args.type}")
 
 
 def cmd_expand_keywords(args: argparse.Namespace) -> None:
     """执行关键词扩展"""
     logger.info(f"开始关键词扩展: provider={args.provider}")
-    # TODO: Phase 4 实现关键词扩展
-    print(f"⚠️  关键词扩展功能尚未实现（provider={args.provider}）")
+    
+    from src.core.config import load_config
+    config = load_config()
+    
+    try:
+        from src.core.keyword_expander import KeywordExpander
+        expander = KeywordExpander(config)
+        keywords = expander.expand(provider=args.provider, max_keywords=args.max_keywords)
+        
+        if keywords:
+            print("\n✅ AI 扩展出的关键词如下：")
+            for i, kw in enumerate(keywords, 1):
+                print(f"{i}. {kw}")
+            print(f"\n提示：可以将以上关键词更新到 keywords.yaml 的 expansion 列表中。")
+        else:
+            print("⚠️ 未生成任何关键词，请检查配置和环境变量 DEEPSEEK_API_KEY。")
+            
+    except Exception as e:
+        logger.error(f"关键词扩展报错: {e}")
 
 
 def build_parser() -> argparse.ArgumentParser:
