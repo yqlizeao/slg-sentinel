@@ -1,0 +1,26 @@
+# ===========================
+# SLG Sentinel 跟踪目标配置
+# ===========================
+# 此文件可安全提交到公开仓库，不含任何敏感信息。
+# 所有 Cookie / API Key 通过 GitHub Secrets 或本地环境变量注入。
+
+targets:
+  bilibili_channels:
+    - name: "率土之滨官方"
+      uid: "xxx"            # 替换为实际UID，例如 "12345678"
+    # - name: "三国志战略版官方"
+    #   uid: "xxx"
+
+  youtube_channels:
+    - name: "SLG游戏评测频道"
+      channel_id: "UCxxx"   # 替换为实际频道ID，例如 "UCxxxxxxxxxxxxxxxxxxxxxxxx"
+    # - name: "率土之滨英文频道"
+    #   channel_id: "UCxxx"
+
+  taptap_games:
+    - name: "率土之滨"
+      app_id: "xxx"          # 替换为实际App ID，例如 "66278"
+    - name: "三国志战略版"
+      app_id: "xxx"
+    # - name: "万国觉醒"
+    #   app_id: "xxx"

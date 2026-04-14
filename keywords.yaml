@@ -1,0 +1,22 @@
+# ===========================
+# SLG Sentinel 关键词配置文件
+# ===========================
+
+# 种子关键词——AI会自动扩展
+seed_keywords:
+  games:
+    - 率土之滨
+    - 三国志战略版
+    - 万国觉醒
+    - 文明与征服
+    - 鸿图之下
+    - 寰宇之战
+  categories:
+    - SLG手游
+    - 策略战争游戏
+
+# 扩展配置
+expansion:
+  enabled: true
+  llm_provider: deepseek   # 或 openai / qwen
+  max_expanded_keywords: 50

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "slg-sentinel"
+version = "0.0.1"
+description = "SLG 游戏营销舆情监控系统 —— 多平台数据采集 + 情感分析 + 周报生成"
+readme = "README.md"
+requires-python = ">=3.11"
+
+# 核心依赖（GitHub Actions 环境）
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+# 各平台可选依赖（按 Phase 安装）
+[project.optional-dependencies]
+bilibili = [
+    "bilibili-api-python>=16.0",
+]
+youtube = [
+    "yt-dlp>=2024.0",
+    "scrapetube>=2.5",
+    "youtube-comment-downloader>=0.1.68",
+]
+taptap = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+]
+analysis = [
+    "requests>=2.31",
+]
+all = [
+    "bilibili-api-python>=16.0",
+    "yt-dlp>=2024.0",
+    "scrapetube>=2.5",
+    "youtube-comment-downloader>=0.1.68",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+]
+
+[project.scripts]
+slg-sentinel = "src.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.yml"]
