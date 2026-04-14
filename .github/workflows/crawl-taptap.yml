@@ -1,0 +1,51 @@
+name: TapTap数据采集
+
+on:
+  schedule:
+    - cron: '0 17 * * *'   # UTC 17:00 = 北京时间次日 1:00（错开B站/YouTube各30分钟）
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout data 分支
+        uses: actions/checkout@v4
+        with:
+          ref: data
+          fetch-depth: 0
+
+      - name: Checkout src 代码（从 main 分支）
+        run: |
+          git fetch origin main
+          git checkout origin/main -- src/ keywords.yaml targets.yaml pyproject.toml
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-taptap-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            pip-taptap-
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 pyyaml
+
+      - name: Run TapTap爬虫
+        run: python -m src.cli crawl --platform taptap --mode actions
+
+      - name: Commit data
+        run: |
+          git config user.name "slg-sentinel-bot"
+          git config user.email "bot@slg-sentinel"
+          git add data/
+          git diff --staged --quiet || git commit -m "📊 taptap snapshot $(date +%Y-%m-%d)"
+          git pull --rebase origin data || true
+          git push origin data

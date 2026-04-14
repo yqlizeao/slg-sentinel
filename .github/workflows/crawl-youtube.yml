@@ -1,0 +1,51 @@
+name: YouTube数据采集
+
+on:
+  schedule:
+    - cron: '30 16 * * *'  # UTC 16:30（错开B站30分钟，避免并发 git push 冲突）
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout data 分支
+        uses: actions/checkout@v4
+        with:
+          ref: data
+          fetch-depth: 0
+
+      - name: Checkout src 代码（从 main 分支）
+        run: |
+          git fetch origin main
+          git checkout origin/main -- src/ keywords.yaml targets.yaml pyproject.toml
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-youtube-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            pip-youtube-
+
+      - name: Install dependencies
+        run: pip install yt-dlp scrapetube youtube-comment-downloader pyyaml
+
+      - name: Run YouTube爬虫
+        run: python -m src.cli crawl --platform youtube --mode actions
+
+      - name: Commit data
+        run: |
+          git config user.name "slg-sentinel-bot"
+          git config user.email "bot@slg-sentinel"
+          git add data/
+          git diff --staged --quiet || git commit -m "📊 youtube snapshot $(date +%Y-%m-%d)"
+          git pull --rebase origin data || true
+          git push origin data

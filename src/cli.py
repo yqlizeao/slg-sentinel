@@ -26,11 +26,9 @@ def cmd_crawl(args: argparse.Namespace) -> None:
     if args.platform == "bilibili":
         _crawl_bilibili(args)
     elif args.platform == "youtube":
-        # TODO: Phase 2
-        print("⚠️  YouTube 采集尚未实现（Phase 2）")
+        _crawl_youtube(args)
     elif args.platform == "taptap":
-        # TODO: Phase 3
-        print("⚠️  TapTap 采集尚未实现（Phase 3）")
+        _crawl_taptap(args)
     elif args.mode != "local":
         print(f"❌  平台 {args.platform} 仅支持本地模式（需 MediaCrawler）")
     else:
@@ -119,6 +117,162 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
                     )
             except Exception as e:
                 logger.error(f"采集评论失败 {snap.video_id}: {e}")
+
+
+def _crawl_youtube(args: argparse.Namespace) -> None:
+    """YouTube 采集主逻辑（Phase 2）"""
+    from src.adapters.youtube import YouTubeAdapter
+    from src.core.config import load_config
+    from src.core.csv_store import CSVStore
+
+    config = load_config(keywords_file=args.keywords_file)
+    adapter = YouTubeAdapter()
+    store = CSVStore()
+    date_str = args.date
+
+    all_snapshots = []
+
+    # 1. 关键词搜索（每个关键词取前 20 条）
+    keywords = config.keywords.all_keywords()
+    if not keywords:
+        logger.warning("未找到关键词配置，请检查 keywords.yaml")
+    else:
+        logger.info(f"YouTube 关键词搜索，共 {len(keywords)} 个关键词")
+        for kw in keywords:
+            try:
+                snaps = adapter.search_videos(keyword=kw, max_results=20)
+                all_snapshots.extend(snaps)
+                logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 条视频")
+            except Exception as e:
+                logger.error(f"关键词 '{kw}' YouTube 搜索失败: {e}")
+
+    # 2. 指定频道视频列表（scrapetube，按播放量排序）
+    youtube_channels = config.targets.youtube_channels
+    for channel in youtube_channels:
+        if channel.channel_id and channel.channel_id != "UCxxx":
+            try:
+                ch_snaps = adapter.get_channel_videos(
+                    channel_id=channel.channel_id, sort_by="popular", limit=30
+                )
+                all_snapshots.extend(ch_snaps)
+                logger.info(f"频道 '{channel.name}' 获取 {len(ch_snaps)} 条视频")
+            except Exception as e:
+                logger.error(f"频道 '{channel.name}' 采集失败: {e}")
+
+    # 3. 去重（按 video_id）
+    seen_ids = set()
+    unique_snapshots = []
+    for snap in all_snapshots:
+        if snap.video_id and snap.video_id not in seen_ids:
+            seen_ids.add(snap.video_id)
+            unique_snapshots.append(snap)
+    all_snapshots = unique_snapshots
+
+    # 4. 保存到 CSV
+    if all_snapshots:
+        file_path = store.save(
+            all_snapshots, platform="youtube", data_type="videos", date_str=date_str
+        )
+        print(f"✅  已保存 {len(all_snapshots)} 条 YouTube 视频快照 → {file_path}")
+    else:
+        print("⚠️  YouTube 未采集到任何数据，请检查关键词配置和网络连接")
+
+    # 5. 保存到 snapshots（用于周增量计算）
+    if all_snapshots:
+        store.save(
+            all_snapshots, platform="youtube", data_type="snapshots", date_str=date_str
+        )
+
+    # 6. 评论采集：Top 3 视频
+    if all_snapshots and args.mode in ("actions", "local"):
+        top_videos = sorted(all_snapshots, key=lambda s: s.view_count, reverse=True)[:3]
+        for snap in top_videos:
+            if not snap.video_id:
+                continue
+            try:
+                comments = adapter.get_comments(snap.video_id)
+                if comments:
+                    store.save(
+                        comments,
+                        platform="youtube",
+                        data_type="comments",
+                        date_str=date_str,
+                        video_id=snap.video_id,
+                    )
+                    logger.info(f"已保存 {len(comments)} 条 YouTube 评论: {snap.video_id}")
+            except Exception as e:
+                logger.error(f"YouTube 评论采集失败 {snap.video_id}: {e}")
+
+
+def _crawl_taptap(args: argparse.Namespace) -> None:
+    """TapTap 采集主逻辑（Phase 3）"""
+    from src.adapters.taptap import TapTapAdapter
+    from src.core.config import load_config
+    from src.core.csv_store import CSVStore
+
+    config = load_config(keywords_file=args.keywords_file)
+    adapter = TapTapAdapter()
+    store = CSVStore()
+    date_str = args.date
+
+    all_reviews = []
+    all_snapshots = []
+
+    # 1. 从 targets.yaml 中采集指定游戏评论
+    taptap_games = config.targets.taptap_games
+    valid_games = [g for g in taptap_games if g.app_id and g.app_id != "xxx"]
+
+    if valid_games:
+        logger.info(f"TapTap 采集 {len(valid_games)} 个目标游戏")
+        for game in valid_games:
+            try:
+                # 获取游戏 snapshot
+                snap = adapter.get_video_info(game.app_id)
+                if snap:
+                    snap.title = snap.title or game.name
+                    all_snapshots.append(snap)
+
+                # 获取评论
+                reviews = adapter.get_reviews(
+                    app_id=game.app_id,
+                    game_name=game.name,
+                    sort="new",
+                    max_pages=20,
+                )
+                all_reviews.extend(reviews)
+                logger.info(f"游戏 '{game.name}' 采集 {len(reviews)} 条评论")
+            except Exception as e:
+                logger.error(f"TapTap 游戏 '{game.name}' 采集失败: {e}")
+    else:
+        # 没有指定游戏时，通过关键词搜索
+        keywords = config.keywords.all_keywords()
+        logger.info(f"targets.yaml 未配置 TapTap 游戏，改用关键词搜索（{len(keywords)} 个关键词）")
+        for kw in keywords[:3]:  # 关键词搜索限制3个，避免过度采集
+            try:
+                snaps = adapter.search_videos(kw)
+                all_snapshots.extend(snaps)
+                logger.info(f"TapTap 搜索 '{kw}' 找到 {len(snaps)} 个游戏")
+            except Exception as e:
+                logger.error(f"TapTap 搜索失败 '{kw}': {e}")
+
+    # 2. 保存游戏 snapshots
+    if all_snapshots:
+        snap_path = store.save(
+            all_snapshots, platform="taptap", data_type="videos", date_str=date_str
+        )
+        print(f"✅  已保存 {len(all_snapshots)} 条 TapTap 游戏快照 → {snap_path}")
+        store.save(
+            all_snapshots, platform="taptap", data_type="snapshots", date_str=date_str
+        )
+
+    # 3. 保存评论
+    if all_reviews:
+        review_path = store.save(
+            all_reviews, platform="taptap", data_type="reviews", date_str=date_str
+        )
+        print(f"✅  已保存 {len(all_reviews)} 条 TapTap 评论 → {review_path}")
+    elif not all_snapshots:
+        print("⚠️  TapTap 未采集到任何数据，请在 targets.yaml 中配置 taptap_games")
 
 
 def cmd_profile(args: argparse.Namespace) -> None:
