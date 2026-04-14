@@ -138,7 +138,7 @@ class BilibiliAdapter(BaseAdapter):
                         comment_count=int(item.get("review", 0) or 0),
                         share_count=0,
                         favorite_count=int(item.get("favorites", 0) or 0),
-                        coin_count=0,
+                        coin_count=-1,          # 搜索接口不返回投币数，标记为 -1
                         danmaku_count=int(item.get("danmaku", 0) or 0),
                         publish_date=datetime.fromtimestamp(
                             int(item.get("pubdate", 0) or 0)

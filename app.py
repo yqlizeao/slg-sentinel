@@ -1,384 +1,659 @@
 """
-SLG Sentinel — Streamlit 控制台
-
-运行方式：
-    streamlit run app.py
-
-依赖：
-    pip install streamlit
+SLG Sentinel — 企业级数据分析监控台
 """
 
 import subprocess
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
+import csv
+import html as _html
+import streamlit.components.v1 as st_components
 
 import streamlit as st
 import yaml
 
 # ─── 页面配置 ──────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="SLG Sentinel 舆情控制台",
-    page_icon="🛡️",
+    page_title="SLG Sentinel | 监控看板",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ─── 常量 ──────────────────────────────────────────────────────────────────────
+# ─── 极简工业感 CSS 样式 (纯净/全屏/黑白灰基调) ────────────────────────
+st.markdown("""
+<style>
+/* 强制使用无衬线系统字体，去风格化 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"], .stApp {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    background-color: #FAFAFA !important;
+    color: #171717 !important;
+}
+
+header[data-testid="stHeader"] { background-color: transparent !important; }
+footer { visibility: hidden !important; display: none !important; }
+
+/* 菜单导航样式调整 */
+section[data-testid="stSidebar"] {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #EAEAEA !important;
+    width: 180px !important;
+    min-width: 180px !important;
+    max-width: 180px !important;
+}
+
+/* 主内容区域去除左侧多余空白 */
+.block-container {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    max-width: 100% !important;
+}
+.stSidebar [data-testid="stMarkdownContainer"] p {
+    color: #666666 !important;
+    font-size: 13px !important;
+}
+
+/* 隐藏 Radio 选项的圆圈标志，伪装成原生菜单 */
+.stSidebar div[role="radiogroup"] > label {
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.stSidebar div[role="radiogroup"] > label:hover {
+    background-color: #F5F5F5;
+}
+
+/* 覆盖 Streamlit 原生标题的大小和间距 */
+h1 {
+    font-weight: 700 !important;
+    font-size: 30px !important;
+    letter-spacing: -0.04em !important;
+    color: #000000 !important;
+    margin-bottom: 6px !important;
+}
+h3 {
+    font-weight: 600 !important;
+    font-size: 18px !important;
+    margin-top: 1.5rem !important;
+    color: #111111 !important;
+}
+
+/* 指标卡片 (直角/细边框) */
+div[data-testid="stMetric"] {
+    background-color: #FFFFFF !important;
+    border: 1px solid #EAEAEA !important;
+    border-radius: 6px !important;
+    padding: 24px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+}
+div[data-testid="stMetricLabel"] {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #666666 !important;
+}
+div[data-testid="stMetricValue"] {
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    margin-top: 4px;
+}
+
+/* 核心操作按钮 */
+button[kind="primary"] {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+    border-radius: 6px !important;
+    border: 1px solid #000000 !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem !important;
+    font-size: 14px !important;
+    transition: all 0.15s ease !important;
+}
+button[kind="primary"]:hover {
+    background-color: #333333 !important;
+    border-color: #333333 !important;
+}
+
+/* 嵌套选项卡 */
+.stTabs [data-baseweb="tab-list"] {
+    border-bottom: 1px solid #EAEAEA;
+    gap: 32px;
+}
+.stTabs [data-baseweb="tab"] {
+    background: transparent !important;
+    color: #666666 !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    height: 44px;
+    border: none !important;
+}
+.stTabs [aria-selected="true"] {
+    color: #000000 !important;
+    border-bottom: 2px solid #000000 !important;
+}
+
+/* 数据矩阵表格 */
+.stMarkdown table {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #EAEAEA !important;
+    border-radius: 6px !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    margin-top: 1rem;
+}
+.stMarkdown th {
+    background-color: #FAFAFA !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    color: #666666 !important;
+    border-bottom: 1px solid #EAEAEA !important;
+    padding: 12px 16px !important;
+    text-align: left;
+}
+.stMarkdown td {
+    padding: 14px 16px !important;
+    font-size: 14px !important;
+    color: #111111 !important;
+    border-bottom: 1px solid #EAEAEA !important;
+}
+.stMarkdown tr:last-child td { border-bottom: none !important; }
+
+/* 游戏图标与标题卡片 */
+.game-card {
+    background-color: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.game-card img {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    border: 1px solid #F0F0F0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.game-card .info {
+    display: flex;
+    flex-direction: column;
+}
+.game-card .title {
+    font-weight: 600;
+    font-size: 15px;
+    color: #111111;
+    margin: 0;
+}
+.game-card .subtitle {
+    font-size: 12px;
+    color: #888888;
+    margin: 4px 0 0 0;
+}
+
+/* 平台微标 */
+.platform-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: text-bottom;
+    margin-right: 8px;
+    border-radius: 2px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# ─── 核心资源 (原生代码级矢量头像，彻底阻绝防盗链 403 放空) ─────────────────────────
+game_assets = [
+    {
+        "name": "三国志·战略版",
+        "developer": "灵犀互娱",
+        "bg": "linear-gradient(135deg, #374151 0%, #111827 100%)",
+        "char": "三"
+    },
+    {
+        "name": "万国觉醒 (ROK)",
+        "developer": "莉莉丝游戏",
+        "bg": "linear-gradient(135deg, #4B5563 0%, #1F2937 100%)",
+        "char": "万"
+    },
+    {
+        "name": "率土之滨",
+        "developer": "网易游戏",
+        "bg": "linear-gradient(135deg, #6B7280 0%, #374151 100%)",
+        "char": "率"
+    }
+]
+
+platform_brand_icons = {
+    "bilibili": "https://www.bilibili.com/favicon.ico",
+    "youtube": "https://www.youtube.com/favicon.ico",
+    "taptap": "https://www.taptap.cn/favicon.ico"
+}
+
+
+# ─── 常量与工具逻辑 ──────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent
 DATA_DIR = ROOT / "data"
 REPORTS_DIR = ROOT / "reports"
 KEYWORDS_FILE = ROOT / "keywords.yaml"
 TARGETS_FILE = ROOT / "targets.yaml"
 
-
-# ─── 工具函数 ──────────────────────────────────────────────────────────────────
 def run_cli(args: list[str]) -> tuple[str, str, int]:
-    """运行 CLI 子命令，实时返回 stdout/stderr/returncode"""
     cmd = [sys.executable, "-m", "src.cli"] + args
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        cwd=str(ROOT),
-    )
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(ROOT))
     return result.stdout, result.stderr, result.returncode
 
-
 def count_csv_rows(path: Path) -> int:
-    """统计 CSV 行数（不含表头）"""
-    if not path.exists():
-        return 0
+    if not path.exists(): return 0
     try:
-        with open(path, encoding="utf-8-sig") as f:
-            return max(0, sum(1 for _ in f) - 1)
-    except Exception:
-        return 0
-
+        with open(path, encoding="utf-8-sig") as f: return max(0, sum(1 for _ in f) - 1)
+    except Exception: return 0
 
 def get_platform_stats(platform: str) -> dict:
-    """获取平台当天的数据量统计"""
     today = datetime.now().strftime("%Y-%m-%d")
-    video_dir = DATA_DIR / platform / "videos"
-    comment_dir = DATA_DIR / platform / "comments"
-    review_dir = DATA_DIR / platform / "reviews"
+    v_dir, c_dir, r_dir = DATA_DIR/platform/"videos", DATA_DIR/platform/"comments", DATA_DIR/platform/"reviews"
+    v = sum(count_csv_rows(f) for f in v_dir.glob(f"{today}_*.csv")) if v_dir.exists() else 0
+    c = sum(count_csv_rows(f) for f in c_dir.glob(f"{today}_*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob(f"{today}_*.csv")) if r_dir.exists() else 0
+    return {"videos": v, "comments": c}
 
-    videos = sum(
-        count_csv_rows(f)
-        for f in video_dir.glob(f"{today}_*.csv")
-    ) if video_dir.exists() else 0
+def _build_slg_filter_terms() -> set[str]:
+    """从 keywords.yaml 提取所有游戏名和分类词，用于内容相关性过滤"""
+    terms = set()
+    try:
+        cfg = load_yaml(KEYWORDS_FILE)
+        kw = cfg.get("seed_keywords", {})
+        for v in kw.values():
+            if isinstance(v, list):
+                terms.update(str(t).strip() for t in v if t)
+    except Exception:
+        pass
+    # 兜底：直接写入已知目标游戏名
+    terms.update(["率土之滨", "三国志战略版", "万国觉醒", "文明与征服",
+                  "鸿图之下", "寰宇之战", "SLG", "策略"])
+    return terms
 
-    comments = sum(
-        count_csv_rows(f)
-        for f in (comment_dir if comment_dir.exists() else review_dir if review_dir.exists() else Path("/dev/null/x")).parent.glob("*.csv")
-    ) if True else 0
+_SLG_TERMS = _build_slg_filter_terms()
 
-    # 更简洁的方式
-    if comment_dir.exists():
-        comments = sum(count_csv_rows(f) for f in comment_dir.glob(f"{today}_*.csv"))
-    elif review_dir.exists():
-        comments = sum(count_csv_rows(f) for f in review_dir.glob(f"{today}_*.csv"))
-    else:
-        comments = 0
+def _is_slg_relevant(row: dict) -> bool:
+    """标题或 tags 里含任意一个追踪关键词则认为相关"""
+    text = (row.get("title", "") + " " + row.get("tags", "")).lower()
+    return any(t.lower() in text for t in _SLG_TERMS)
 
-    return {"videos": videos, "comments": comments}
+def get_trending_videos(top_k=3) -> list[dict]:
+    all_videos = []
+    for platform in ["bilibili", "youtube"]:
+        v_dir = DATA_DIR / platform / "videos"
+        if not v_dir.exists(): continue
+        for f in v_dir.glob("*.csv"):
+            try:
+                with open(f, encoding="utf-8-sig") as csv_f:
+                    reader = csv.DictReader(csv_f)
+                    for row in reader:
+                        try:
+                            if "view_count" in row and row["view_count"]:
+                                if not _is_slg_relevant(row):
+                                    continue          # ⬅ 过滤非SLG内容
+                                row['view_count'] = int(row['view_count'])
+                                row['platform'] = platform
+                                all_videos.append(row)
+                        except Exception: pass
+            except Exception: pass
+
+    all_videos.sort(key=lambda x: x.get('view_count', 0), reverse=True)
+
+    seen_ids = set()
+    unique_videos = []
+    for v in all_videos:
+        if v['video_id'] not in seen_ids:
+            seen_ids.add(v['video_id'])
+            unique_videos.append(v)
+            if len(unique_videos) == top_k:
+                break
+    return unique_videos
 
 
 def get_latest_report() -> Path | None:
-    """获取最新的周报文件"""
-    if not REPORTS_DIR.exists():
-        return None
+    if not REPORTS_DIR.exists(): return None
     reports = sorted(REPORTS_DIR.glob("*_weekly_report.md"), reverse=True)
     return reports[0] if reports else None
 
-
 def load_yaml(path: Path) -> dict:
-    """安全加载 YAML"""
     try:
-        with open(path, encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    except Exception:
-        return {}
+        with open(path, encoding="utf-8") as f: return yaml.safe_load(f) or {}
+    except Exception: return {}
 
 
-# ─── 侧边栏 ────────────────────────────────────────────────────────────────────
+# ─── 侧边栏菜单 ──────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/shield.png", width=60)
-    st.title("SLG Sentinel")
-    st.caption("竞品舆情监控系统")
-    st.divider()
+    st.markdown("""
+    <div style='display: flex; align-items: center; margin-bottom: 2rem; padding: 1rem 0;'>
+        <div style='background: #000; color: #fff; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: monospace; font-size: 18px; margin-right: 12px;'>S</div>
+        <div>
+            <h3 style='margin: 0; font-size: 16px; color: #111; line-height: 1.2;'>SLG Sentinel</h3>
+            <p style='margin: 0; font-size: 12px; color: #666;'>舆情分析平台</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     page = st.radio(
-        "导航",
-        ["📊 数据总览", "🕷️ 数据采集", "📈 生成周报", "🔑 关键词扩展", "⚙️ 配置管理"],
+        "应用导航",
+        ["总览", "采集", "周报", "扩词", "设置"],
         label_visibility="collapsed",
     )
 
-    st.divider()
-    st.caption(f"📅 当前日期：{datetime.now().strftime('%Y-%m-%d')}")
-    st.caption("💡 首次使用请先配置 targets.yaml")
-
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.caption(f"当前系统周期\n\n{datetime.now().strftime('%Y年%m月%d日')}")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 页面 1：数据总览
-# ═══════════════════════════════════════════════════════════════════════════════
-if page == "📊 数据总览":
-    st.title("📊 数据总览")
+if page == "总览":
+    st.markdown("<h1>数据大盘</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>实时监控矩阵内的媒体特征与用户反馈。</p>", unsafe_allow_html=True)
 
-    # 平台指标卡
-    platforms = ["bilibili", "youtube", "taptap"]
-    platform_labels = {"bilibili": "🟥 B 站", "youtube": "▶️ YouTube", "taptap": "🎮 TapTap"}
+    # ── 核心靶向产品 ──────────────────────────────────────────────────────────
+    st.markdown("<h3>核心靶向产品</h3>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    cols_ref = [c1, c2, c3]
+    for idx, game in enumerate(game_assets):
+        with cols_ref[idx]:
+            st.markdown(f"""
+            <div class="game-card">
+                <div style="width:56px; height:56px; border-radius:12px; border:1px solid #EAEAEA; background:{game['bg']}; display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px; font-weight:700; flex-shrink:0;">{game['char']}</div>
+                <div class="info">
+                    <p class="title">{game['name']}</p>
+                    <p class="subtitle">{game['developer']}</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # ── 平台增量指标 ──────────────────────────────────────────────────────────
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown("<h3>平台增量指标快照（当日）</h3>", unsafe_allow_html=True)
 
     cols = st.columns(3)
-    for i, platform in enumerate(platforms):
-        stats = get_platform_stats(platform)
+    p_data = [("bilibili", "哔哩哔哩"), ("youtube", "YouTube"), ("taptap", "TapTap")]
+    for i, (p_id, p_label) in enumerate(p_data):
+        stats = get_platform_stats(p_id)
         with cols[i]:
-            st.metric(
-                label=platform_labels[platform],
-                value=f"{stats['videos']} 条视频",
-                delta=f"{stats['comments']} 条评论/评分（今日）",
-            )
+            st.markdown(f"<div style='margin-bottom:-35px; z-index:10; position:relative; padding:24px 24px 0 24px;'><img class='platform-icon' src='{platform_brand_icons[p_id]}'> <span style='font-size:14px; font-weight:500; color:#666;'>{p_label}</span></div>", unsafe_allow_html=True)
+            st.metric(label="​", value=str(stats['videos']), delta=f"新增 {stats['comments']} 条互动反馈", delta_color="normal")
 
-    st.divider()
+    # ── 内容热度增量（周度）表格视图 ─────────────────────────────────────────
+    st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
+    st.markdown("<h3>内容热度增量（周度）</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>按播放量降序，点击标题跳转原平台，展开行可查看内嵌播放器。</p>", unsafe_allow_html=True)
 
-    # 最新周报预览
-    st.subheader("📄 最新舆情周报")
+    def fmt_num(n):
+        try:
+            n = int(n)
+            if n < 0: return "—"          # -1 = API 未返回此字段
+            if n >= 100000000: return f"{n/100000000:.1f}亿"
+            if n >= 10000: return f"{n/10000:.1f}万"
+            return f"{n:,}"
+        except: return str(n) if n else "—"
+
+    trending = get_trending_videos(20)  # 表格可承载更多
+    if trending:
+        # ── 用 st_components.html() 渲染，完全绕过 Streamlit markdown 解析器 ──────
+        rows_html_parts = []
+        for i, vid in enumerate(trending):
+            plat = vid['platform']
+            vid_id = _html.escape(vid['video_id'])
+            title_e = _html.escape(vid.get('title', ''))
+            author_e = _html.escape(vid.get('author', ''))
+            url_e = _html.escape(vid.get('url', '#'))
+            pfav_url = _html.escape(platform_brand_icons.get(plat, ''))
+
+            if plat == 'bilibili':
+                player_cell = f'''<iframe
+                    src="//player.bilibili.com/player.html?isOutside=true&bvid={vid_id}&p=1&autoplay=0&danmaku=0"
+                    scrolling="no" frameborder="no" allowfullscreen="true"
+                    style="width:160px;height:90px;display:block;border-radius:6px;border:none;"></iframe>'''
+            elif plat == 'youtube':
+                player_cell = f'''<iframe
+                    src="https://www.youtube.com/embed/{vid_id}"
+                    title="YouTube video player" frameborder="0"
+                    allow="accelerometer;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+                    style="width:160px;height:90px;display:block;border-radius:6px;border:none;"></iframe>'''
+            else:
+                player_cell = ''
+
+            fav_val = fmt_num(vid.get('favorite_count', 0)) if plat == 'bilibili' else '—'
+            coin_val = fmt_num(vid.get('coin_count', '0')) if plat == 'bilibili' else '—'
+
+            # ── 标签命中可视化 ─────────────────────────────────────────────────────────
+            raw_tags = str(vid.get('tags', '') or '')
+            tag_list = [t.strip() for t in raw_tags.split(',') if t.strip()][:10]
+            tags_html = ''
+            for tag in tag_list:
+                is_hit = any(
+                    st_term.lower() in tag.lower() or tag.lower() in st_term.lower()
+                    for st_term in _SLG_TERMS
+                )
+                cls = 'tag tag-hit' if is_hit else 'tag'
+                tags_html += f'<span class="{cls}">{_html.escape(tag)}</span>'
+            tags_block = f'<div class="tags">{tags_html}</div>' if tags_html else ''
+
+            rows_html_parts.append(f"""
+            <tr>
+                <td class="num">{i+1}</td>
+                <td class="player-cell">{player_cell}</td>
+                <td class="title-cell">
+                    <a href="{url_e}" target="_blank">{title_e}</a>
+                    <span class="author"><img src="{pfav_url}" class="pfav">{author_e}</span>
+                    {tags_block}
+                </td>
+                <td class="stat">{fmt_num(vid.get('view_count',0))}</td>
+                <td class="stat">{fmt_num(vid.get('like_count',0))}</td>
+                <td class="stat">{fmt_num(vid.get('comment_count',0))}</td>
+                <td class="stat">{fav_val}</td>
+                <td class="stat">{coin_val}</td>
+                <td class="stat muted">{vid.get('publish_date','')[:10]}</td>
+            </tr>
+            """)
+
+        all_rows = ''.join(rows_html_parts)
+        table_doc = f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+        <style>
+            * {{ margin:0; padding:0; box-sizing:border-box; }}
+            body {{ font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; }}
+            table {{ width:100%; border-collapse:collapse; font-size:13px; }}
+            thead tr {{ background:#FAFAFA; border-bottom:2px solid #EAEAEA; }}
+            th {{ padding:10px 12px; font-size:12px; font-weight:600; color:#666; text-align:left; white-space:nowrap; }}
+            th.right {{ text-align:right; }}
+            td {{ padding:12px 12px; border-bottom:1px solid #F0F0F0; vertical-align:middle; }}
+            tr:hover td {{ background:#FAFAFA; }}
+            td.num {{ color:#999; font-size:12px; text-align:center; width:28px; }}
+            td.player-cell {{ width:172px; padding:10px 8px; vertical-align:middle; }}
+            td.title-cell {{ min-width:180px; padding:10px 12px; }}
+            td.title-cell a {{ font-weight:600; color:#111; text-decoration:none; line-height:1.5; display:block; }}
+            td.title-cell a:hover {{ color:#1d4ed8; }}
+            td.stat {{ text-align:right; font-weight:500; white-space:nowrap; color:#333; }}
+            td.muted {{ color:#999; font-size:12px; }}
+            .author {{ display:block; font-size:11px; color:#888; margin-top:4px; }}
+            .pfav {{ width:12px; height:12px; vertical-align:middle; margin-right:4px; }}
+            .tags {{ display:flex; flex-wrap:wrap; gap:3px; margin-top:6px; }}
+            .tag {{ display:inline-block; padding:2px 6px; border-radius:3px; font-size:11px;
+                    background:#F5F5F5; color:#666; white-space:nowrap; }}
+            .tag-hit {{ background:#EEF2FF; color:#4338CA; font-weight:600; }}
+        </style></head><body>
+        <table>
+            <thead><tr>
+                <th>#</th><th>视频</th><th>视频标题</th>
+                <th class="right">播放</th><th class="right">点赞</th>
+                <th class="right">评论</th><th class="right">收藏</th>
+                <th class="right">投币</th><th class="right">发布日</th>
+            </tr></thead>
+            <tbody>{all_rows}</tbody>
+        </table>
+        </body></html>"""
+        # 每行约 130px（播放器 90 + 标题作者标签行）
+        table_height = min(len(trending) * 130 + 60, 3200)
+        st_components.html(table_doc, height=table_height, scrolling=False)
+    else:
+        st.markdown("<p style='color:#666; font-size:14px;'>当前采集库中暂未发现内容，请先执行策略采集。</p>", unsafe_allow_html=True)
+
+    # ── 最新周报 ──────────────────────────────────────────────────────────────
+    st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
+    st.markdown("<h3>最新已定稿周报</h3>", unsafe_allow_html=True)
     report = get_latest_report()
     if report:
-        st.caption(f"报告文件：`{report.name}`")
-        with st.expander("📖 展开查看完整周报", expanded=True):
-            st.markdown(report.read_text(encoding="utf-8"))
+        st.markdown(report.read_text(encoding="utf-8"))
     else:
-        st.info("暂无周报。请先完成数据采集，然后在「生成周报」页点击生成。")
-
-    # 数据文件清单
-    st.divider()
-    st.subheader("📂 数据文件清单")
-    if DATA_DIR.exists():
-        for platform in platforms:
-            p_dir = DATA_DIR / platform
-            if p_dir.exists():
-                csvs = list(p_dir.rglob("*.csv"))
-                if csvs:
-                    with st.expander(f"{platform_labels[platform]}（{len(csvs)} 个文件）"):
-                        for csv in sorted(csvs, reverse=True)[:10]:
-                            rows = count_csv_rows(csv)
-                            st.text(f"  📄 {csv.name}  ({rows} 行)")
-    else:
-        st.warning("data/ 目录不存在，请先运行采集。")
+        st.markdown("<p style='color: #666; font-size: 14px;'>当前目录下尚未检测到输出文件，请优先进行采集处理。</p>", unsafe_allow_html=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 页面 2：数据采集
-# ═══════════════════════════════════════════════════════════════════════════════
-elif page == "🕷️ 数据采集":
-    st.title("🕷️ 数据采集")
-    st.info("点击按钮将在后台调用 CLI，日志实时显示在下方（采集耗时较长请耐心等待）。")
 
-    col1, col2 = st.columns(2)
+elif page == "采集":
+    st.markdown("<h1>内容采集</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>手动介入向指定媒介触发爬虫网络或更新快照状态。</p>", unsafe_allow_html=True)
 
-    with col1:
-        st.subheader("平台选择")
-        platform = st.selectbox(
-            "选择采集平台",
-            ["bilibili", "youtube", "taptap"],
-            format_func=lambda x: {"bilibili": "🟥 B 站", "youtube": "▶️ YouTube", "taptap": "🎮 TapTap"}[x],
-        )
-        mode = st.radio("运行模式", ["actions（免登录/Actions）", "local（本地完整版）"])
-        mode_val = "actions" if "actions" in mode else "local"
+    t_exec, t_doc = st.tabs(["下发采集指令", "平台组件穿透能力约束清单"])
 
-    with col2:
-        st.subheader("采集说明")
-        hints = {
-            "bilibili": "🟥 **B 站**：使用 bilibili-api-python 免登录采集，热门视频评论受风控影响可能为 0。配置 `BILI_SESSDATA` 可解除。",
-            "youtube": "▶️ **YouTube**：使用 yt-dlp 搜索，每个关键词约 60-75 秒，8 个关键词约需 10 分钟，请勿中断。",
-            "taptap": "🎮 **TapTap**：采集 targets.yaml 中配置的游戏信息和评论，速度较快。",
-        }
-        st.markdown(hints[platform])
+    with t_exec:
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>选择执行平台</p>", unsafe_allow_html=True)
+            platform = st.selectbox("选择执行平台", ["bilibili", "youtube", "taptap"], label_visibility="collapsed")
+        with c2:
+            st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>授权执行模式</p>", unsafe_allow_html=True)
+            mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "受限凭证模式 (需要载入本地会话环境)"], label_visibility="collapsed")
+        
+        st.markdown("<br/>", unsafe_allow_html=True)
+        if st.button(f"启动 {platform.capitalize()} 指令流", type="primary"):
+            m_val = "actions" if "基础免登录" in mode else "local"
+            stdout, stderr, code = run_cli(["crawl", "--platform", platform, "--mode", m_val])
+            if code == 0:
+                st.success("指令流已成功回归至正常终态。")
+            else:
+                st.error(f"子线程调度失败，返回状态码: {code}")
+            with st.expander("下层标准输入输出追踪"):
+                st.code((stdout + "\n" + stderr).strip(), language="bash")
 
-    st.divider()
-
-    if st.button(f"🚀 开始采集 {platform}", type="primary", use_container_width=True):
-        log_area = st.empty()
-        progress = st.progress(0, text="正在采集中...")
-
-        with st.spinner(f"正在采集 {platform}，请稍候..."):
-            stdout, stderr, code = run_cli(["crawl", "--platform", platform, "--mode", mode_val])
-
-        progress.progress(100, text="完成！")
-
-        if code == 0:
-            st.success("✅ 采集完成！")
-        else:
-            st.error(f"❌ 采集失败（退出码 {code}）")
-
-        with st.expander("📋 运行日志", expanded=True):
-            combined = (stdout + "\n" + stderr).strip()
-            st.code(combined or "（无输出）", language="text")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 页面 3：生成周报
-# ═══════════════════════════════════════════════════════════════════════════════
-elif page == "📈 生成周报":
-    st.title("📈 生成舆情周报")
-
-    st.markdown("""
-    周报将从 `data/` 目录读取当天各平台快照和评论，计算本周增量、情感分布、竞品提及，
-    并扫描高赞负面评论作为预警，最终生成 Markdown 格式报告保存到 `reports/` 目录。
-    """)
-
-    col1, col2 = st.columns([1, 2])
-
-    with col1:
-        custom_date = st.date_input("报告日期", value=datetime.now())
-        date_str = custom_date.strftime("%Y-%m-%d")
-        st.caption(f"将生成 `{date_str}_weekly_report.md`")
-
-        generate_btn = st.button("🗞️ 生成周报", type="primary", use_container_width=True)
-
-    with col2:
-        st.info("""
-        **提示**  
-        - 首次运行无上周数据对比，播放量增量会显示当前全量值  
-        - 建议每天开始采集后，再在周一点击生成当周报告  
-        - 报告会自动同步到 `reports/` 目录
+    with t_doc:
+        st.markdown("<h3>整体网络与认证边界限制</h3>", unsafe_allow_html=True)
+        st.markdown("""
+| 信息源头 | 底层封装框架 | 环境鉴权壁垒 |
+| --- | --- | --- |
+| **哔哩哔哩** | 原生 `bilibili-api-python` | 浅数据与元信息面支持匿名。深度用户与完整分页强制要求会话载入 (Local模式)。 |
+| **YouTube** | `scrapetube` + `downloader` | 全程公开解构请求。对一切层级指标跨越鉴权壁垒。 |
+| **TapTap** | 自建 WebAPIv2 解析 | 完全依赖伪装头部模拟。所有内容免登录放行。 |
+| **字节/小红书系**| 第三方代理模块连接 | 强风控封锁。不可脱离外部本地脚本 (Playwright浏览器扫码登录环节) 独立处理。 |
+        """)
+        
+        st.markdown("<h3>哔哩哔哩 (Bilibili) 细节规范</h3>", unsafe_allow_html=True)
+        st.markdown("""
+| 监控范围 | 强隔离网准入性 | 解包机制前置条件 | 驱动载体 |
+| --- | --- | --- | --- |
+| 视频基座属性与互动数 | 放行 | 内部执行 `Wbi` 凭证计算 | `bilibili-api-python` |
+| 全局条件检索 | 放行 | 内部执行 `Wbi` 凭证计算 | `bilibili-api-python` |
+| 热图大盘与榜单 | 放行 | 独立开放接口处理 | `bilibili-api-python` |
+| 评论流头部分页 | 放行 | 风控下发残卷信息对冲 | `bilibili-api-python` |
+| **过深评论查询长尾** | 阻断 | **硬性环境需求载体 SESSDATA 以解除限查。** | `bili_api` 会话注入 |
         """)
 
-    if generate_btn:
-        with st.spinner("正在分析数据并生成周报..."):
-            stdout, stderr, code = run_cli([
-                "analyze", "--type", "weekly",
-                "--date", date_str
-            ])
 
+elif page == "周报":
+    st.markdown("<h1>周报生成</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>根据给定时序处理全矩阵存储池并输出语义聚类文档。</p>", unsafe_allow_html=True)
+    
+    custom_date = st.date_input("时序截断点 (默认采用系统当下日)", value=datetime.now())
+    if st.button("激活生成管道", type="primary"):
+        date_str = custom_date.strftime("%Y-%m-%d")
+        stdout, stderr, code = run_cli(["analyze", "--type", "weekly", "--date", date_str])
         if code == 0:
-            st.success(f"✅ 周报生成成功：`reports/{date_str}_weekly_report.md`")
-            report_path = REPORTS_DIR / f"{date_str}_weekly_report.md"
-            if report_path.exists():
-                st.divider()
-                st.markdown(report_path.read_text(encoding="utf-8"))
+            st.success("周报管道归档成功，数据已完成扁平化解析。")
+            st.markdown((REPORTS_DIR / f"{date_str}_weekly_report.md").read_text(encoding="utf-8"))
         else:
-            st.error("❌ 生成失败")
-            st.code(stderr or stdout, language="text")
+            st.error("执行链由于未捕获异常而停止。")
 
+elif page == "扩词":
+    st.markdown("<h1>关键词扩展</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>介入 AI 模型 API，衍生竞品的搜索别称网并填充至配置文件。</p>", unsafe_allow_html=True)
+    
+    import os
+    api_k = os.environ.get("DEEPSEEK_API_KEY", "")
+    
+    c1, c2 = st.columns(2)
+    with c1: provider = st.selectbox("神经网提供方", ["deepseek", "openai", "qwen"])
+    with c2: max_k = st.slider("边界容量阀值", 10, 100, 50)
+    
+    if api_k:
+        st.markdown("<p style='font-size: 14px; color: #111; font-weight: 500;'>环境检测通过：DEEPSEEK_API_KEY 已发现。</p>", unsafe_allow_html=True)
+    else:
+        st.markdown("<p style='font-size: 14px; color: #D32F2F; font-weight: 500;'>环境变量缺失：需配置 DEEPSEEK_API_KEY。</p>", unsafe_allow_html=True)
+        
+    if st.button("生成拓补集合", type="primary", disabled=not api_k):
+        stdout, _, code = run_cli(["expand-keywords", "--provider", provider, "--max-keywords", str(max_k)])
+        if code == 0: st.code(stdout, language="json")
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 页面 4：关键词扩展
-# ═══════════════════════════════════════════════════════════════════════════════
-elif page == "🔑 关键词扩展":
-    st.title("🔑 AI 关键词扩展")
+elif page == "设置":
+    import os
+    st.markdown("<h1>系统设置</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>直接在下方编辑配置内容，点击保存后立即生效，无需修改代码。</p>", unsafe_allow_html=True)
 
-    st.markdown("""
-    使用大语言模型（DeepSeek / OpenAI 等）根据 `keywords.yaml` 中的种子词，
-    自动联想 SLG 游戏的长尾搜索词、俗称、话术等，扩大监控覆盖面。
-    """)
+    t1, t2, t3 = st.tabs(["追踪目标 (targets.yaml)", "关键词库 (keywords.yaml)", "运行环境变量"])
 
-    col1, col2 = st.columns(2)
-    with col1:
-        provider = st.selectbox("LLM 提供商", ["deepseek", "openai", "qwen"])
-        max_kw = st.slider("最大关键词数", 10, 100, 50)
-
-    with col2:
-        import os
-        api_key = os.environ.get("DEEPSEEK_API_KEY", "")
-        if api_key:
-            st.success("✅ 检测到 DEEPSEEK_API_KEY 环境变量")
-        else:
-            st.warning("⚠️ 未检测到 `DEEPSEEK_API_KEY`，请先在终端设置：\n```\nexport DEEPSEEK_API_KEY=sk-xxx\n```")
-
-    # 当前种子词预览
-    kw_data = load_yaml(KEYWORDS_FILE)
-    seed = kw_data.get("seed_keywords", {})
-    current_games = seed.get("games", [])
-    st.caption(f"当前种子词（{len(current_games)} 个游戏）：{', '.join(current_games)}")
-
-    if st.button("✨ 开始 AI 扩展", type="primary", disabled=not api_key):
-        with st.spinner(f"正在调用 {provider} 扩展关键词..."):
-            stdout, stderr, code = run_cli([
-                "expand-keywords",
-                "--provider", provider,
-                "--max-keywords", str(max_kw),
-            ])
-
-        if code == 0:
-            st.success("✅ 扩展完成！")
-            st.code(stdout, language="text")
-        else:
-            st.error("❌ 扩展失败")
-            st.code(stderr or stdout, language="text")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 页面 5：配置管理
-# ═══════════════════════════════════════════════════════════════════════════════
-elif page == "⚙️ 配置管理":
-    st.title("⚙️ 配置管理")
-
-    tab1, tab2 = st.tabs(["🎯 跟踪目标 (targets.yaml)", "🔍 关键词 (keywords.yaml)"])
-
-    with tab1:
-        st.subheader("跟踪目标配置")
-        targets = load_yaml(TARGETS_FILE)
-        t_data = targets.get("targets", targets)
-
-        # TapTap 游戏列表
-        st.markdown("**🎮 TapTap 游戏（已填入真实 app_id）**")
-        games = t_data.get("taptap_games", [])
-        if games:
-            for g in games:
-                col1, col2 = st.columns([2, 1])
-                col1.text(g.get("name", "未命名"))
-                col2.code(g.get("app_id", "?"), language=None)
-        else:
-            st.info("暂未配置 TapTap 游戏，请编辑 targets.yaml")
-
-        # B站频道
-        st.markdown("**📺 B 站频道**")
-        channels = t_data.get("bilibili_channels", [])
-        if channels:
-            for c in channels:
-                st.text(f"{c.get('name', '')}  |  UID: {c.get('uid', '未配置')}")
-        else:
-            st.info("暂未配置 B 站频道")
-
-        # YouTube 频道
-        st.markdown("**▶️ YouTube 频道**")
-        yt_channels = t_data.get("youtube_channels", [])
-        if yt_channels:
-            for c in yt_channels:
-                st.text(f"{c.get('name', '')}  |  {c.get('channel_id', '未配置')}")
-        else:
-            st.info("暂未配置 YouTube 频道")
-
-        st.divider()
-        st.caption("如需修改，直接编辑项目根目录的 `targets.yaml` 文件，无需重启应用。")
-        with st.expander("📝 查看 targets.yaml 原始内容"):
-            st.code(TARGETS_FILE.read_text(encoding="utf-8"), language="yaml")
-
-    with tab2:
-        st.subheader("关键词配置")
-        kw_data = load_yaml(KEYWORDS_FILE)
-        seed = kw_data.get("seed_keywords", {})
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("**游戏关键词**")
-            for kw in seed.get("games", []):
-                st.markdown(f"- `{kw}`")
-
-        with col2:
-            st.markdown("**品类关键词**")
-            for kw in seed.get("categories", []):
-                st.markdown(f"- `{kw}`")
-
-        expansion = kw_data.get("expansion", {})
-        st.info(
-            f"AI 扩展：{'✅ 已启用' if expansion.get('enabled') else '❌ 已禁用'} "
-            f"| 提供商：`{expansion.get('llm_provider', 'deepseek')}` "
-            f"| 最大数量：{expansion.get('max_expanded_keywords', 50)}"
+    with t1:
+        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:0.5rem;'>编辑完成后点击「保存」，文件将立即写入磁盘。</p>", unsafe_allow_html=True)
+        targets_content = st.text_area(
+            "targets.yaml",
+            value=TARGETS_FILE.read_text(encoding="utf-8"),
+            height=400,
+            label_visibility="collapsed",
         )
+        if st.button("保存 targets.yaml", type="primary"):
+            try:
+                yaml.safe_load(targets_content)  # 语法校验
+                TARGETS_FILE.write_text(targets_content, encoding="utf-8")
+                st.success("targets.yaml 已保存。")
+            except yaml.YAMLError as e:
+                st.error(f"YAML 语法错误，未保存：{e}")
 
-        with st.expander("📝 查看 keywords.yaml 原始内容"):
-            st.code(KEYWORDS_FILE.read_text(encoding="utf-8"), language="yaml")
+    with t2:
+        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:0.5rem;'>编辑完成后点击「保存」，文件将立即写入磁盘。</p>", unsafe_allow_html=True)
+        kw_content = st.text_area(
+            "keywords.yaml",
+            value=KEYWORDS_FILE.read_text(encoding="utf-8"),
+            height=400,
+            label_visibility="collapsed",
+        )
+        if st.button("保存 keywords.yaml", type="primary"):
+            try:
+                yaml.safe_load(kw_content)
+                KEYWORDS_FILE.write_text(kw_content, encoding="utf-8")
+                st.success("keywords.yaml 已保存。")
+            except yaml.YAMLError as e:
+                st.error(f"YAML 语法错误，未保存：{e}")
+
+    with t3:
+        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1rem;'>当前进程中已加载的关键环境变量状态。如需修改，请在终端中 <code>export KEY=value</code> 后重启 GUI。</p>", unsafe_allow_html=True)
+        env_vars = [
+            ("DEEPSEEK_API_KEY", "AI 关键词扩展 / 情感增强"),
+            ("BILI_SESSDATA", "B站深度评论采集（Cookie）"),
+            ("MEDIA_CRAWLER_DIR", "MediaCrawler 本地数据目录"),
+        ]
+        rows = ""
+        for k, desc in env_vars:
+            v = os.environ.get(k, "")
+            status = f'<span style="color:#16a34a; font-weight:600;">已配置</span>' if v else f'<span style="color:#dc2626;">未配置</span>'
+            masked = v[:6] + "..." if len(v) > 6 else ("—" if not v else v)
+            rows += f'<tr style="border-bottom:1px solid #F0F0F0;"><td style="padding:12px 16px; font-size:13px; font-family:monospace; font-weight:600;">{k}</td><td style="padding:12px 16px; font-size:13px; color:#666;">{desc}</td><td style="padding:12px 16px;">{status}</td><td style="padding:12px 16px; font-size:12px; font-family:monospace; color:#888;">{masked}</td></tr>'
+        st.markdown(f"""
+        <div style="background:#fff;border:1px solid #EAEAEA;border-radius:8px;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;">
+            <thead><tr style="background:#FAFAFA;border-bottom:2px solid #EAEAEA;">
+                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;text-align:left;">变量名</th>
+                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;text-align:left;">用途</th>
+                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;">状态</th>
+                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;">值预览</th>
+            </tr></thead>
+            <tbody>{rows}</tbody>
+        </table></div>
+        """, unsafe_allow_html=True)
