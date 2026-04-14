@@ -22,8 +22,103 @@ def cmd_crawl(args: argparse.Namespace) -> None:
     logger.info(
         f"开始采集: platform={args.platform}, mode={args.mode}, date={args.date}"
     )
-    # TODO: Phase 1-3 实现各平台采集逻辑
-    print(f"⚠️  采集功能尚未实现（platform={args.platform}, mode={args.mode}）")
+
+    if args.platform == "bilibili":
+        _crawl_bilibili(args)
+    elif args.platform == "youtube":
+        # TODO: Phase 2
+        print("⚠️  YouTube 采集尚未实现（Phase 2）")
+    elif args.platform == "taptap":
+        # TODO: Phase 3
+        print("⚠️  TapTap 采集尚未实现（Phase 3）")
+    elif args.mode != "local":
+        print(f"❌  平台 {args.platform} 仅支持本地模式（需 MediaCrawler）")
+    else:
+        # TODO: Phase 5 — douyin / kuaishou / xiaohongshu
+        print(f"⚠️  {args.platform} 采集尚未实现（Phase 5）")
+
+
+def _crawl_bilibili(args: argparse.Namespace) -> None:
+    """B站采集主逻辑（Phase 1）"""
+    from src.adapters.bilibili import BilibiliAdapter
+    from src.core.config import load_config
+    from src.core.csv_store import CSVStore
+
+    config = load_config(keywords_file=args.keywords_file)
+    adapter = BilibiliAdapter()
+    store = CSVStore()
+    date_str = args.date
+
+    all_snapshots = []
+
+    # 1. 关键词搜索
+    keywords = config.keywords.all_keywords()
+    if not keywords:
+        logger.warning("未找到关键词配置，请检查 keywords.yaml")
+    else:
+        logger.info(f"开始关键词搜索，共 {len(keywords)} 个关键词")
+        for kw in keywords:
+            try:
+                snaps = adapter.search_videos(keyword=kw, page=1)
+                all_snapshots.extend(snaps)
+                logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 个视频")
+            except Exception as e:
+                logger.error(f"关键词 '{kw}' 搜索失败: {e}")
+
+    # 2. 指定频道的视频详情
+    bilibili_channels = config.targets.bilibili_channels
+    for channel in bilibili_channels:
+        if channel.uid and channel.uid != "xxx":
+            logger.info(f"采集频道: {channel.name} (uid={channel.uid})")
+            # 此处仅记录日志，具体频道视频列表需要 Cookie
+            # actions 模式下通过关键词搜索覆盖
+
+    # 3. 热门视频快照（可选，丰富数据）
+    if args.mode == "actions":
+        try:
+            hot_snaps = adapter.get_hot_videos()
+            # 筛选与 SLG 相关的（这里全量保存，分析层再过滤）
+            logger.info(f"获取热门视频 {len(hot_snaps)} 条")
+            # 不自动添加到 all_snapshots，避免数据量过大
+        except Exception as e:
+            logger.error(f"获取热门视频失败（非致命）: {e}")
+
+    # 4. 保存到 CSV
+    if all_snapshots:
+        file_path = store.save(
+            all_snapshots, platform="bilibili", data_type="videos", date_str=date_str
+        )
+        print(f"✅  已保存 {len(all_snapshots)} 条视频快照 → {file_path}")
+    else:
+        print("⚠️  未采集到任何数据，请检查关键词配置和网络连接")
+
+    # 5. 保存到 snapshots（用于周增量计算）
+    if all_snapshots:
+        store.save(
+            all_snapshots, platform="bilibili", data_type="snapshots", date_str=date_str
+        )
+
+    # 6. 局部评论采集：对浏览量 Top 3 视频采集评论
+    if all_snapshots and args.mode in ("actions", "local"):
+        top_videos = sorted(all_snapshots, key=lambda s: s.view_count, reverse=True)[:3]
+        for snap in top_videos:
+            if not snap.video_id:
+                continue
+            try:
+                comments = adapter.get_comments(snap.video_id, max_pages=5)
+                if comments:
+                    store.save(
+                        comments,
+                        platform="bilibili",
+                        data_type="comments",
+                        date_str=date_str,
+                        video_id=snap.video_id,
+                    )
+                    logger.info(
+                        f"已保存 {len(comments)} 条评论: {snap.video_id}"
+                    )
+            except Exception as e:
+                logger.error(f"采集评论失败 {snap.video_id}: {e}")
 
 
 def cmd_profile(args: argparse.Namespace) -> None:
