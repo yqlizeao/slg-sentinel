@@ -33,8 +33,20 @@ class MediaCrawlerBridge:
     def import_platform_data(self, platform: str) -> tuple[List[VideoSnapshot], List[Comment]]:
         """
         从 MediaCrawler 产出中导入指定平台（douyin/kuaishou/xiaohongshu）的数据。
+        
+        MediaCrawler 实际输出目录名：
+          xhs       → --platform xiaohongshu
+          douyin    → --platform douyin
+          kuaishou  → --platform kuaishou
         """
-        platform_dir = self.mc_dir / platform
+        # 映射 CLI 平台名 → MediaCrawler 实际目录名
+        MC_DIR_MAP = {
+            "xiaohongshu": "xhs",
+            "douyin": "douyin",
+            "kuaishou": "kuaishou",
+        }
+        mc_platform = MC_DIR_MAP.get(platform, platform)
+        platform_dir = self.mc_dir / mc_platform
         if not platform_dir.exists():
             logger.warning(f"MediaCrawler 目录下未找到 {platform} 数据: {platform_dir}")
             return [], []
