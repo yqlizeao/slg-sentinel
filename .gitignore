@@ -52,3 +52,6 @@ logs/
 
 # MediaCrawler（子模块，不追踪其内部文件变更）
 third_party/MediaCrawler/
+
+# Python 虚拟环境
+.venv/

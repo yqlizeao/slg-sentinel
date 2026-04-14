@@ -13,7 +13,6 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import streamlit as st
 import yaml
@@ -86,7 +85,7 @@ def get_platform_stats(platform: str) -> dict:
     return {"videos": videos, "comments": comments}
 
 
-def get_latest_report() -> Optional[Path]:
+def get_latest_report() -> Path | None:
     """获取最新的周报文件"""
     if not REPORTS_DIR.exists():
         return None
