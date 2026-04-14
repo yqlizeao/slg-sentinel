@@ -74,9 +74,8 @@ class UserProfile:
     platform: str
     user_id: str
     username: str
-    source_video_id: str    # 从哪个视频的评论中发现的
-    public_favorites: str   # B站公开收藏夹中的SLG相关内容
-    followed_channels: str  # 关注的SLG相关UP主/频道
-    taptap_games: str       # TapTap玩过的游戏列表
-    comment_mentions: str   # 评论中提到的竞品
-    inferred_tags: str      # 推断标签，如"率土+三战双游玩家"
+    age_group: str          # 年龄段推断
+    spend_type: str         # 消费倾向推断 (free, dolphin, whale)
+    tags: str               # 逗号分隔的推断标签
+    location: str           # IP属地
+    last_active_time: str   # 最后活跃时间（最近一条评论的时间或者当前时间）

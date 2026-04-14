@@ -29,11 +29,12 @@ def cmd_crawl(args: argparse.Namespace) -> None:
         _crawl_youtube(args)
     elif args.platform == "taptap":
         _crawl_taptap(args)
+    elif args.platform in ("douyin", "kuaishou", "xiaohongshu"):
+        _crawl_media_crawler(args)
     elif args.mode != "local":
-        print(f"❌  平台 {args.platform} 仅支持本地模式（需 MediaCrawler）")
+        print(f"❌  平台 {args.platform} 的采集逻辑在 actions 下可能受限，请在本地使用 MediaCrawler。")
     else:
-        # TODO: Phase 5 — douyin / kuaishou / xiaohongshu
-        print(f"⚠️  {args.platform} 采集尚未实现（Phase 5）")
+        print(f"⚠️  {args.platform} 采集尚未实现。")
 
 
 def _crawl_bilibili(args: argparse.Namespace) -> None:
@@ -275,13 +276,66 @@ def _crawl_taptap(args: argparse.Namespace) -> None:
         print("⚠️  TapTap 未采集到任何数据，请在 targets.yaml 中配置 taptap_games")
 
 
+def _crawl_media_crawler(args: argparse.Namespace) -> None:
+    """抖音/快手/小红书 采集主逻辑（Phase 5 桥接 MediaCrawler）"""
+    import os
+    from src.adapters.media_crawler import MediaCrawlerBridge
+    from src.core.csv_store import CSVStore
+
+    mc_dir = os.environ.get("MEDIA_CRAWLER_DIR", "MediaCrawler/data")
+    try:
+        bridge = MediaCrawlerBridge(mc_dir)
+        snaps, comments = bridge.import_platform_data(args.platform)
+    except FileNotFoundError:
+        logger.error(f"未找到 MediaCrawler 数据目录: {mc_dir}")
+        print("💡 提示: 请先运行 MediaCrawler 采集数据，并通过设置 MEDIA_CRAWLER_DIR 注入其 data 目录路径。")
+        return
+
+    if not snaps and not comments:
+        logger.warning(f"在 {mc_dir}/{args.platform} 中未解析到数据。")
+        return
+
+    store = CSVStore()
+    date_str = args.date
+
+    if snaps:
+        store.save(snaps, platform=args.platform, data_type="videos", date_str=date_str)
+        store.save(snaps, platform=args.platform, data_type="snapshots", date_str=date_str)
+    
+    if comments:
+        store.save(comments, platform=args.platform, data_type="comments", date_str=date_str)
+        
+    print(f"✅  已从 MediaCrawler 导入 {args.platform} 数据: {len(snaps)} 视频, {len(comments)} 评论")
+
+
 def cmd_profile(args: argparse.Namespace) -> None:
     """执行用户画像推断"""
     logger.info(
         f"开始用户画像: platform={args.platform}, video_id={args.video_id}"
     )
-    # TODO: Phase 5 实现用户画像功能
-    print(f"⚠️  用户画像功能尚未实现（platform={args.platform}）")
+    
+    from src.analysis.profiler import UserProfiler
+    profiler = UserProfiler()
+    
+    try:
+        profiles = profiler.profile_video_users(
+            platform=args.platform,
+            video_id=args.video_id,
+            max_users=args.max_users
+        )
+        
+        if profiles:
+            profiler.save_profiles(profiles, args.platform)
+            print(f"✅ 已针对 {args.platform} 视频 {args.video_id} 成功生成 {len(profiles)} 个用户画像！")
+            for p in profiles[:5]:
+                print(f" - [{p.username}] 分析结果: 年龄段 {p.age_group}, 倾向 {p.spend_type}, 标签 {p.tags}")
+            if len(profiles) > 5:
+                print(f"   ...以及其他 {len(profiles) - 5} 位用户的画像。")
+        else:
+            print("⚠️ 未生成任何用户画像，请检查视频是否有评论数据。")
+            
+    except Exception as e:
+        logger.error(f"生成用户画像失败: {e}")
 
 
 def cmd_analyze(args: argparse.Namespace) -> None:
@@ -391,7 +445,7 @@ def build_parser() -> argparse.ArgumentParser:
     profile_parser.add_argument(
         "--platform",
         required=True,
-        choices=["bilibili"],
+        choices=["bilibili", "youtube", "taptap", "douyin", "kuaishou", "xiaohongshu"],
         help="目标平台",
     )
     profile_parser.add_argument(
