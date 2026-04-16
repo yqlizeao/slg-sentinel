@@ -572,65 +572,88 @@ elif page == "采集":
     st.markdown("<h1>内容采集</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 1.5rem;'>手动介入向指定媒介触发爬虫网络或更新快照状态。</p>", unsafe_allow_html=True)
     
-    t_exec, t_doc = st.tabs(["下发采集指令", "平台组件穿透能力约束清单"])
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>选择执行平台</p>", unsafe_allow_html=True)
+        platform = st.selectbox("选择执行平台", ["bilibili", "youtube", "taptap"], label_visibility="collapsed")
+    
+    with c2:
+        st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>授权执行模式</p>", unsafe_allow_html=True)
+        mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "受限凭证模式 (需要载入本地会话环境)"], label_visibility="collapsed")
 
-    with t_exec:
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>选择执行平台</p>", unsafe_allow_html=True)
-            platform = st.selectbox("选择执行平台", ["bilibili", "youtube", "taptap"], label_visibility="collapsed")
-        
-        with c2:
-            st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>授权执行模式</p>", unsafe_allow_html=True)
-            mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "受限凭证模式 (需要载入本地会话环境)"], label_visibility="collapsed")
-            
-            st.markdown("<div style='margin-top:4px; padding:12px; border-radius:6px; background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #3b82f6; font-size:13px;'>", unsafe_allow_html=True)
-            if platform == "bilibili":
-                if "基础免登录" in mode:
-                    st.markdown("✅ **视频元数据与互动提取** (底层自动轮换 Wbi 签名)<br/>✅ **浅层评论捕获** (局限于风控安全点)<br/>❌ <span style='color:#dc2626;'><b>深维长尾评论穿刺</b> (由于环境受阻将抛出错误)</span><br/>❌ <span style='color:#dc2626;'><b>玩家画像（关注列表/收藏）提取</b></span>", unsafe_allow_html=True)
-                else:
-                    st.markdown("✅ **视频元数据与互动提取**<br/>✅ <span style='color:#16a34a;'><b>深维长尾评论穿刺全开</b> (需确保环境变量有效)</span><br/>✅ <span style='color:#16a34a;'><b>玩家画像（关注列表/收藏）反制嗅探</b></span>", unsafe_allow_html=True)
-            elif platform == "youtube":
-                st.markdown("✅ **视频元数据高频检索** (yt-dlp 驱动)<br/>✅ **频道全量扫流提取** (scrapetube 驱动，不受限期)<br/>✅ **深维评论级联抓取** (独立 downloader 穿刺)<br/><br/><span style='color:#666; font-size: 11px;'>⚡ 本框架组对 YouTube 无身份鉴权屏障要求，故全模式放行。</span>", unsafe_allow_html=True)
-            elif platform == "taptap":
-                st.markdown("✅ **长评与核心打分急速捕获**<br/>✅ **发贴设备与核心游玩时长提取**<br/>✅ **极深「曾玩过游戏群」交叉构建** (SLG浓度分析器源)<br/><br/><span style='color:#666; font-size: 11px;'>⚡ 本框架使用原生 WebAPI 头部伪装，全环境免授权。</span>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown("<br/>", unsafe_allow_html=True)
-        if st.button(f"启动 {platform.capitalize()} 指令流", type="primary"):
-            m_val = "actions" if "基础免登录" in mode else "local"
-            with st.spinner(f"探测器正在后台接入 {platform.capitalize()} 信息流，通常耗时一至两分钟，请勿刷新页面..."):
-                stdout, stderr, code = run_cli(["crawl", "--platform", platform, "--mode", m_val])
-            if code == 0:
-                st.success(f"✅ 【{platform.capitalize()}】指令流已成功回归至正常终态，全部捕获已落盘。")
-            else:
-                st.error(f"❌ 子线程调度失败，返回状态码: {code}")
-            with st.expander("下层标准输入输出追踪", expanded=True if code != 0 else False):
-                st.code((stdout + "\n" + stderr).strip(), language="bash")
+    # ── 动态构造 HTML 探针穿透能力矩阵表 ─────────────────────────────────────
+    matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+        table { width:100%; border-collapse:collapse; font-size:13px; border:1px solid #EAEAEA; border-radius:6px; overflow:hidden; }
+        thead tr { background:#FAFAFA; border-bottom:1px solid #EAEAEA; }
+        th { padding:12px 14px; font-size:12px; font-weight:600; color:#666; text-align:left; }
+        td { padding:12px 14px; border-bottom:1px solid #F0F0F0; vertical-align:middle; font-size:13px; color:#333; }
+        tr:hover td { background:#FAFAFA; }
+        .g { color:#16a34a; font-weight:600; }
+        .y { color:#d97706; font-weight:600; }
+        .r { color:#dc2626; font-weight:600; }
+        .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+        .bg-g { background:#16a34a; }
+        .bg-y { background:#d97706; }
+        .bg-r { background:#dc2626; }
+        .desc { font-size:12px; color:#666; }
+    </style></head><body>
+    <table>
+        <thead><tr>
+            <th style="width:25%">监控域 (Domain)</th>
+            <th style="width:25%">当前授权状态</th>
+            <th style="width:50%">底盘屏障约束说明</th>
+        </tr></thead>
+        <tbody>"""
+    
+    if platform == "bilibili":
+        if "基础免登录" in mode:
+            rows = """
+        <tr><td>视频基座属性与互动数</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">内部执行 Wbi 凭证计算，全域支持</td></tr>
+        <tr><td>全局条件特征检索</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">热图大盘与搜索条件无感知调取</td></tr>
+        <tr><td>评论流头部分页</td><td><span class="dot bg-y"></span><span class="y">受限</span></td><td class="desc">风控下发残卷信息对冲，限流返回</td></tr>
+        <tr><td>过深全量长尾评论</td><td><span class="dot bg-r"></span><span class="r">阻断</span></td><td class="desc">由于无环境会话受阻，直接拒绝分发</td></tr>
+        <tr><td>玩家画像关注/收藏</td><td><span class="dot bg-r"></span><span class="r">盲区</span></td><td class="desc">强制要求 SESSDATA 会话注入穿越</td></tr>"""
+        else:
+            rows = """
+        <tr><td>视频基座属性与互动数</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">根据本地环境凭证接管全链路</td></tr>
+        <tr><td>全局条件特征检索</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">根据本地环境凭证接管全链路</td></tr>
+        <tr><td>评论流头部分页</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">无感知高速下行</td></tr>
+        <tr><td>过深全量长尾评论</td><td><span class="dot bg-g"></span><span class="g">深度击穿</span></td><td class="desc">依赖 SESSDATA 穿梭解除并发长鞭封锁</td></tr>
+        <tr><td>玩家画像关注/收藏</td><td><span class="dot bg-g"></span><span class="g">全量透视</span></td><td class="desc">解锁逆向探测权力，完全穿透黑盒层</td></tr>"""
+    elif platform == "youtube":
+        rows = """
+        <tr><td>视频元数据高频检索</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">依赖 <code>yt-dlp</code> 提取，不受防机器困扰</td></tr>
+        <tr><td>频道全量扫流提取</td><td><span class="dot bg-g"></span><span class="g">深度击穿</span></td><td class="desc"><code>scrapetube</code> 突破 YouTube 网页万级检索束缚</td></tr>
+        <tr><td>无尽评论池穿刺</td><td><span class="dot bg-g"></span><span class="g">深度击穿</span></td><td class="desc">专项下行器驱动，支持千万级高并发无损下传</td></tr>
+        <tr><td colspan="3" style="text-align:center; padding:16px;" class="desc">⚡ 本中枢架构对 YouTube 彻底实现零身份鉴权跨域，双模式状态等效。</td></tr>"""
+    elif platform == "taptap":
+        rows = """
+        <tr><td>核心打分与星级捕捉</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">原生 WebAPIv2 头部指纹伪装穿刺</td></tr>
+        <tr><td>发帖设备与游玩时长</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">原生 WebAPIv2 头部指纹伪装穿刺</td></tr>
+        <tr><td>高频提取玩家跨游图谱</td><td><span class="dot bg-g"></span><span class="g">全局聚合</span></td><td class="desc">高并发截取曾玩列表，为 Profiler 提供原始血液</td></tr>
+        <tr><td colspan="3" style="text-align:center; padding:16px;" class="desc">⚡ TapTap 系统全库支持匿名级伪装提取，无需额外分配授权凭证。</td></tr>"""
 
-    with t_doc:
-        st.markdown("<h3>整体网络与认证边界限制</h3>", unsafe_allow_html=True)
-        st.markdown('''
-| 信息源头 | 底层封装框架 | 环境鉴权壁垒 |
-| --- | --- | --- |
-| **哔哩哔哩** | 原生 `bilibili-api-python` | 浅数据与元信息面支持匿名。深度用户与完整分页强制要求会话载入 (Local模式)。 |
-| **YouTube** | `scrapetube` + `downloader` | 全程公开解构请求。对一切层级指标跨越鉴权壁垒。 |
-| **TapTap** | 自建 WebAPIv2 解析 | 完全依赖伪装头部模拟。所有内容免登录放行。 |
-| **字节/小红书系**| 第三方代理模块连接 | 强风控封锁。不可脱离外部本地脚本 (Playwright浏览器扫码登录环节) 独立处理。 |
-        ''')
-        
-        st.markdown("<h3>哔哩哔哩 (Bilibili) 细节规范</h3>", unsafe_allow_html=True)
-        st.markdown('''
-| 监控范围 | 强隔离网准入性 | 解包机制前置条件 | 驱动载体 |
-| --- | --- | --- | --- |
-| 视频基座属性与互动数 | 放行 | 内部执行 `Wbi` 凭证计算 | `bilibili-api-python` |
-| 全局条件检索 | 放行 | 内部执行 `Wbi` 凭证计算 | `bilibili-api-python` |
-| 热图大盘与榜单 | 放行 | 独立开放接口处理 | `bilibili-api-python` |
-| 评论流头部分页 | 放行 | 风控下发残卷信息对冲 | `bilibili-api-python` |
-| **过深评论查询长尾** | 阻断 | **硬性环境需求载体 SESSDATA 以解除限查。** | `bili_api` 会话注入 |
-        ''')
+    matrix_html = matrix_html_base + rows + "</tbody></table></body></html>"
+    
+    st.markdown("<p style='font-size:14px; color:#111; font-weight:600; margin-top:1.5rem; margin-bottom:0.5rem;'>当前选中模式探针约束矩阵</p>", unsafe_allow_html=True)
+    st_components.html(matrix_html, height=270, scrolling=False)
 
-    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:2.5rem 0 1.5rem 0;'/>", unsafe_allow_html=True)
+    st.markdown("<br/>", unsafe_allow_html=True)
+    if st.button(f"启动 {platform.capitalize()} 采集链路", type="primary"):
+        m_val = "actions" if "基础免登录" in mode else "local"
+        with st.spinner(f"探测器正在后台接入 {platform.capitalize()} 信息流，通常耗时一至两分钟，请勿刷新页面..."):
+            stdout, stderr, code = run_cli(["crawl", "--platform", platform, "--mode", m_val])
+        if code == 0:
+            st.success(f"✅ 【{platform.capitalize()}】指令流已成功回归至正常终态，全部捕获已落盘。")
+        else:
+            st.error(f"❌ 子线程调度失败，返回状态码: {code}")
+        with st.expander("下层标准输入输出追踪", expanded=True if code != 0 else False):
+            st.code((stdout + "\n" + stderr).strip(), language="bash")
+
+    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
 
     # ── 用户数据可访问性矩阵 ──────────────────────────────────────────────────
     st.markdown("<h3>用户数据可访问性矩阵</h3>", unsafe_allow_html=True)
