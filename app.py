@@ -924,7 +924,7 @@ elif page == "设置":
         if "targets" not in targets_data: targets_data["targets"] = {}
         t_data = targets_data["targets"]
 
-        st.info("🎯 **追踪目标 (Targets)**：用于**“定向狙击”**。指定确切的官方频道或游戏专区，对其发布的所有动作实施无死角的深度监听与全量捕获。")
+        st.info("追踪目标主要是用来进行特定频道的持续监控的。你可以把想重点关注的 B站/YouTube 官方账号或特定游戏专区填在这里，系统会去抓取他们新发的任何动态。")
         st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>操作说明：在下方表格单元格双击可直接修改追踪目标。在末尾空白行输入即可新增，选中行首数字按 Delete 键可删除整行。编辑完成后请点击底部保存。</p>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
@@ -963,7 +963,7 @@ elif page == "设置":
         if "seed_keywords" not in kw_data: kw_data["seed_keywords"] = {"games": [], "categories": []}
         if "expansion" not in kw_data: kw_data["expansion"] = {"enabled": True, "llm_provider": "deepseek", "max_expanded_keywords": 50}
 
-        st.info("🔑 **关键词库 (Keywords)**：用于**“大范围撒网”**。在各平台输入这些词搜捕野生爆款。\n\n*注：特意将「游戏名」与「品类」拆分成两列，是为了向下方的大模型输送立体参照物，从而更精准地诱发 AI 为你裂变出类似“三战开荒队”这样的专属黑话集合。*")
+        st.info("这里的关键词会被系统直接丢到各个平台的搜索框里去执行大范围的内容检索。\n\n注：之所以把游戏名称和游戏品类拆分成两张单独的表，是因为底下的 AI 扩词功能需要同时参考这两项，才能更聪明的为你联想出类似“三战开荒”这样的民间俗称与黑话组合。")
         st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>操作说明：在下方表格双击单元格即可修改或新增系统追踪词条（支持选中行首数字后按 Delete 键删除行）。</p>", unsafe_allow_html=True)
 
         c1, c2 = st.columns(2)
