@@ -20,8 +20,8 @@
 
 | 模块 | 说明 |
 |------|------|
-| 🖥 **企业级大盘 (GUI)** | 极简 Linear/Vercel 风格的 Streamlit 控制台，一站式管理采集、查看热度增量矩阵、编辑关键词与目标，支持图文并茂的内嵌播放器 |
-| 📱 **多平台数据采集** | 原生覆盖 B站 (视频/评论)、YouTube (视频/评论)、TapTap (长评)；可通过桥接支持 抖音/快手/小红书 |
+| 🖥 **企业级大盘 (GUI)** | 极简 Linear/Vercel 风格的 Streamlit 控制台，一站式管理采集、支持平台探针约束矩阵（明确指示各端执行限制）、编辑关键词与目标。全站强制 Light 工业白底模式。 |
+| 📱 **多平台数据采集** | 原生覆盖 B站、YouTube、TapTap；更通过**底层 Git Submodule 静默挂载 MediaCrawler** 实现抖音/快手/小红书的本地原生终端进程唤起（完美支持防风控扫码穿透）。 |
 | 🤖 **云端自动化化** | 云端 GitHub Actions 每日自动存快照，每周一自动生成舆情 markdown 周报 |
 | 🧠 **AI 与情感分析** | 借助 DeepSeek/OpenAI 实现大语言模型自动扩写种子搜索词，并在离线端执行玩家情感极性判断 |
 | 👤 **用户画像降维推断** | 突破平台隐私限制：通过交叉比对 TapTap 玩过的游戏、B站公开收藏夹及评论区提及提取，逆向合成竞品偏好画像 |
@@ -35,16 +35,17 @@
 推荐使用 Python 3.11 或 3.12 (macOS 用户推荐使用 `brew install python@3.12`)：
 
 ```bash
-git clone https://github.com/yqlizeao/slg-sentinel.git
+# 包含 MediaCrawler 防风控抓取引擎，必须使用递归克隆拉取 Submodule 子模块！
+git clone --recursive https://github.com/yqlizeao/slg-sentinel.git
 cd slg-sentinel
 
-# 创建虚拟环境
+# 创建虚拟环境，隔离所有依赖污染
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 安装全量依赖 (含 GUI)
-pip install -e ".[all]"
-pip install streamlit pandas
+# 一次性安装所有平台适配器及 GUI 中台所需依赖（含 Streamlit 与 Pandas）
+# 注意: Maczsh 可能需要给中括号加引号，如 ".[all,gui]"
+pip install -e ".[all,gui]"
 ```
 
 ### 2. 启动企业级控制台 (GUI)
