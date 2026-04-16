@@ -594,47 +594,45 @@ elif page == "采集":
         .g { color:#16a34a; font-weight:600; }
         .y { color:#d97706; font-weight:600; }
         .r { color:#dc2626; font-weight:600; }
-        .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
-        .bg-g { background:#16a34a; }
-        .bg-y { background:#d97706; }
-        .bg-r { background:#dc2626; }
+        code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:'SF Mono',monospace; font-size:11px; color:#2563eb; }
         .desc { font-size:12px; color:#666; }
     </style></head><body>
     <table>
         <thead><tr>
-            <th style="width:25%">监控域 (Domain)</th>
-            <th style="width:25%">当前授权状态</th>
-            <th style="width:50%">底盘屏障约束说明</th>
+            <th style="width:18%">采集域</th>
+            <th style="width:30%">核心指令/接⼝</th>
+            <th style="width:25%">可落盘字段</th>
+            <th style="width:27%">可⾏性与限制</th>
         </tr></thead>
         <tbody>"""
     
     if platform == "bilibili":
         if "基础免登录" in mode:
             rows = """
-        <tr><td>视频基座属性与互动数</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">内部执行 Wbi 凭证计算，全域支持</td></tr>
-        <tr><td>全局条件特征检索</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">热图大盘与搜索条件无感知调取</td></tr>
-        <tr><td>评论流头部分页</td><td><span class="dot bg-y"></span><span class="y">受限</span></td><td class="desc">风控下发残卷信息对冲，限流返回</td></tr>
-        <tr><td>过深全量长尾评论</td><td><span class="dot bg-r"></span><span class="r">阻断</span></td><td class="desc">由于无环境会话受阻，直接拒绝分发</td></tr>
-        <tr><td>玩家画像关注/收藏</td><td><span class="dot bg-r"></span><span class="r">盲区</span></td><td class="desc">强制要求 SESSDATA 会话注入穿越</td></tr>"""
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">BV号、视频标题、发布日</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">播放、点赞、投币、收藏</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频评论区</td><td><code>video.Video().get_comments()</code></td><td class="desc">用户UID、文本内容、点赞数</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
+        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list()</code></td><td class="desc">收藏的视频实体列表</td><td><span class="r">❌ 拦截: 无凭证不予下发</span></td></tr>
+        <tr><td>用户关注列表</td><td><code>API /x/relation/followings</code></td><td class="desc">关注的UP主、游戏官方号</td><td><span class="r">❌ 拦截: 需登录态Cookie</span></td></tr>"""
         else:
             rows = """
-        <tr><td>视频基座属性与互动数</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">根据本地环境凭证接管全链路</td></tr>
-        <tr><td>全局条件特征检索</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">根据本地环境凭证接管全链路</td></tr>
-        <tr><td>评论流头部分页</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">无感知高速下行</td></tr>
-        <tr><td>过深全量长尾评论</td><td><span class="dot bg-g"></span><span class="g">深度击穿</span></td><td class="desc">依赖 SESSDATA 穿梭解除并发长鞭封锁</td></tr>
-        <tr><td>玩家画像关注/收藏</td><td><span class="dot bg-g"></span><span class="g">全量透视</span></td><td class="desc">解锁逆向探测权力，完全穿透黑盒层</td></tr>"""
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">BV号、视频标题、发布日</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">播放、点赞、投币、收藏</td><td><span class="g">✅ 高并发安全下行</span></td></tr>
+        <tr><td>视频评论区</td><td><code>video.Video().get_comments()</code></td><td class="desc">用户UID、文本内容、点赞数</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
+        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list()</code></td><td class="desc">收藏的视频实体列表</td><td><span class="g">✅ 若用户公开即完全采集</span></td></tr>
+        <tr><td>用户关注列表</td><td><code>API /x/relation/followings</code></td><td class="desc">关注的UP主、游戏官方号</td><td><span class="g">✅ 解除屏蔽获得高阶权限</span></td></tr>"""
     elif platform == "youtube":
         rows = """
-        <tr><td>视频元数据高频检索</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">依赖 <code>yt-dlp</code> 提取，不受防机器困扰</td></tr>
-        <tr><td>频道全量扫流提取</td><td><span class="dot bg-g"></span><span class="g">深度击穿</span></td><td class="desc"><code>scrapetube</code> 突破 YouTube 网页万级检索束缚</td></tr>
-        <tr><td>无尽评论池穿刺</td><td><span class="dot bg-g"></span><span class="g">深度击穿</span></td><td class="desc">专项下行器驱动，支持千万级高并发无损下传</td></tr>
-        <tr><td colspan="3" style="text-align:center; padding:16px;" class="desc">⚡ 本中枢架构对 YouTube 彻底实现零身份鉴权跨域，双模式状态等效。</td></tr>"""
+        <tr><td>引擎检索提取</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">videoId、标题、频道名</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
+        <tr><td>频道极速扫流</td><td><code>scrapetube.get_channel()</code></td><td class="desc">频道内全体视频库清单</td><td><span class="g">✅ 突破万级网页限制</span></td></tr>
+        <tr><td>视频元数据</td><td><code>yt-dlp --dump-json</code></td><td class="desc">viewCount、likeCount、Tags</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
+        <tr><td>评论区穿刺</td><td><code>youtube-comment-downloader</code></td><td class="desc">评论者、内容、点赞、时间</td><td><span class="g">✅ 承载千万级弹幕导出</span></td></tr>"""
     elif platform == "taptap":
         rows = """
-        <tr><td>核心打分与星级捕捉</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">原生 WebAPIv2 头部指纹伪装穿刺</td></tr>
-        <tr><td>发帖设备与游玩时长</td><td><span class="dot bg-g"></span><span class="g">放行</span></td><td class="desc">原生 WebAPIv2 头部指纹伪装穿刺</td></tr>
-        <tr><td>高频提取玩家跨游图谱</td><td><span class="dot bg-g"></span><span class="g">全局聚合</span></td><td class="desc">高并发截取曾玩列表，为 Profiler 提供原始血液</td></tr>
-        <tr><td colspan="3" style="text-align:center; padding:16px;" class="desc">⚡ TapTap 系统全库支持匿名级伪装提取，无需额外分配授权凭证。</td></tr>"""
+        <tr><td>游戏长评截取</td><td><code>API /v2/review/thread</code></td><td class="desc">评分星级、测评内容、点赞</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>发帖设备透视</td><td><code>API /v2/review/thread</code></td><td class="desc">device_name(如 iPhone15)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>硬核游玩时长</td><td><code>API /v2/review/thread</code></td><td class="desc">spent_time(如 125.5小时)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>玩家跨游图谱</td><td><code>API /v2/game/games</code></td><td class="desc">该玩家曾玩过的所有游戏</td><td><span class="g">✅ 免 Cookie 高频并发下发</span></td></tr>"""
 
     matrix_html = matrix_html_base + rows + "</tbody></table></body></html>"
     
