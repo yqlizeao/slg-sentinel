@@ -677,14 +677,19 @@ elif page == "采集":
         <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">找出该玩家从三战开溜入驻新端的核心缘由缩影</td><td><span class="g">✅ 免 Cookie 高频并发下行</span></td></tr>"""
     elif platform in ["xiaohongshu", "douyin", "kuaishou"]:
         comp_title = "外部核心桥接库: <a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>MediaCrawler (16.9k⭐)</a> · <span style='font-family:monospace; color:#333; font-weight:600; font-size:11px;'>(Playwright 子进程挂载)</span>"
-        iframe_height = 420
+        iframe_height = 560
         rows = """
-        <tr><td>多端防风控突破口</td><td><code>Playwright / JS 逆向解构</code></td><td class="desc">扫码与无头浏览器组合拳完全粉碎抖音/小黑盒墙盾</td><td><span class="y">⚠️ 极强风控：拒绝一切免登</span></td></tr>
-        <tr><td>原生沙盒进程调度</td><td><code>subprocess.run('main.py')</code></td><td class="desc">基于独立沙盒调用引擎，确保核心主进程完全免疫崩溃</td><td><span class="g">✅ 本地终端环境独占放行</span></td></tr>
-        <tr><td>原生数据统一清洗</td><td><code>MediaCrawlerBridge.import...</code></td><td class="desc">将外来杂乱字典映射并同构组装回 VideoSnapshot 规范</td><td><span class="g">✅ 聚合入库，免数据分裂</span></td></tr>
-        <tr><td>精准瀑布流拦截</td><td><code>aweme_id / note_id 下发</code></td><td class="desc">极速阻击竞品短视频买量黑马，提取标题与播放池基数</td><td><span class="g">✅ 彻底剥离落盘分析</span></td></tr>
-        <tr><td>种草神评长尾拦截</td><td><code>comment_id 万级穿透</code></td><td class="desc">提取抖音与红书下的真实用户评价，汇聚最强舆情宣泄口</td><td><span class="g">✅ 完整挂载至下属文件树</span></td></tr>
-        <tr><td>发帖/点赞/收藏数</td><td><code>CSV 二次解包聚合</code></td><td class="desc">重塑买量平台在短视频维度的社交传播穿透力</td><td><span class="g">✅ 全量导出归入系统仓库</span></td></tr>"""
+        <tr><td>帖子/视频 ID</td><td><code>MediaCrawler (aweme_id)</code></td><td class="desc">精准阻击买量爆款的唯一溯源标识</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>视频文案标题 (Title)</td><td><code>MediaCrawler (desc)</code></td><td class="desc">提供检索和展示的语义内容实体营销文案</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>创作者名称 (Author)</td><td><code>MediaCrawler (nickname)</code></td><td class="desc">判断出稿方主体是官方号还是野蛮生长的二创者</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>短片真实播放量</td><td><code>MediaCrawler (play_count)</code></td><td class="desc">初筛高价值瀑布流水线视频门槛和传播穿透度</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>核心点赞数 (like)</td><td><code>MediaCrawler (like_count)</code></td><td class="desc">评估受众对于该套 SLG 营销素材的正向交汇反馈</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>二次分享转发量</td><td><code>MediaCrawler (share_count)</code></td><td class="desc">衡量整包游戏被玩家“人传人”裂变的超级质变指数</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>私域背书收藏数</td><td><code>MediaCrawler (collect)</code></td><td class="desc">记录防守玩家将攻略/买量视频作为个人资产的意图</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>内容定向算法标签</td><td><code>MediaCrawler (tags)</code></td><td class="desc">捕捉小红书/抖音分发引擎为内容加盖的隐喻标识</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>评论者 ID (user_id)</td><td><code>MediaCrawler (comments)</code></td><td class="desc">追踪恶意带节奏/或死忠粉的底层账号坐标体系</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>神评文本明文</td><td><code>MediaCrawler (text)</code></td><td class="desc">大量沉淀充满缩写梗的粗粝原生态情绪语料库</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>
+        <tr><td>网民 IP 物理归属</td><td><code>MediaCrawler (ip_location)</code></td><td class="desc">还原该竞品下沉市场的真实地域浓度与氪金能力分布</td><td><span class="y">⚠️ 依赖终端沙盒强取</span></td></tr>"""
 
     matrix_html = matrix_html_base + rows + "</tbody></table></body></html>"
     
