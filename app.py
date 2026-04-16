@@ -373,7 +373,7 @@ with st.sidebar:
 
     page = st.radio(
         "应用导航",
-        ["总览", "采集", "周报", "扩词", "设置"],
+        ["总览", "采集", "周报", "设置"],
         label_visibility="collapsed",
     )
 
@@ -912,32 +912,6 @@ elif page == "周报":
             st.error("执行链由于未捕获异常而停止。")
             with st.expander("调试层输出"):
                 st.code(stderr, language="bash")
-
-elif page == "扩词":
-    import os
-    st.markdown("<h1>知识网扩写</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>根据 `keywords.yaml` 的种子源，利用 AI 实现营销话术的深层泛化。</p>", unsafe_allow_html=True)
-    
-    api_k = os.environ.get("DEEPSEEK_API_KEY", "")
-    
-    c1, c2 = st.columns(2)
-    with c1: provider = st.selectbox("神经网提供方", ["deepseek", "openai", "qwen"])
-    with c2: max_k = st.slider("边界容量阀值", 10, 100, 50)
-    
-    if api_k:
-        st.markdown("<p style='font-size: 14px; color: #16a34a; font-weight: 500;'>环境检测通过：DEEPSEEK_API_KEY 已发现。</p>", unsafe_allow_html=True)
-    else:
-        st.warning("⚠️ 缺少大语言模型认知层 (DEEPSEEK_API_KEY)。扩词调度已被安全隔离控制，请通过「设置」面板注入环境变量后再试。")
-        
-    if st.button("启动深度知识关联投射", type="primary", disabled=bool(not api_k)):
-        with st.spinner("AI 正在解析目标赛道同义映射表并生成拓补集合..."):
-            stdout, _, code = run_cli(["expand-keywords", "--provider", provider, "--max-keywords", str(max_k)])
-        if code == 0: 
-            st.success("✅ 扩词网络编排完成，衍生词条已被更新至环境上下文。")
-            st.code(stdout, language="json")
-        else:
-            st.error("执行崩溃，发生异常。")
-
 elif page == "设置":
     import os
     st.markdown("<h1>系统设置</h1>", unsafe_allow_html=True)
