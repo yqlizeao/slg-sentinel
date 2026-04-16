@@ -257,10 +257,9 @@ def count_csv_rows(path: Path) -> int:
     except Exception: return 0
 
 def get_platform_stats(platform: str) -> dict:
-    today = datetime.now().strftime("%Y-%m-%d")
     v_dir, c_dir, r_dir = DATA_DIR/platform/"videos", DATA_DIR/platform/"comments", DATA_DIR/platform/"reviews"
-    v = sum(count_csv_rows(f) for f in v_dir.glob(f"{today}_*.csv")) if v_dir.exists() else 0
-    c = sum(count_csv_rows(f) for f in c_dir.glob(f"{today}_*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob(f"{today}_*.csv")) if r_dir.exists() else 0
+    v = sum(count_csv_rows(f) for f in v_dir.glob("*.csv")) if v_dir.exists() else 0
+    c = sum(count_csv_rows(f) for f in c_dir.glob("*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob("*.csv")) if r_dir.exists() else 0
     return {"videos": v, "comments": c}
 
 def _build_slg_filter_terms() -> set[str]:
@@ -374,7 +373,7 @@ if page == "总览":
 
     # ── 平台增量指标 ──────────────────────────────────────────────────────────
     st.markdown("<br/>", unsafe_allow_html=True)
-    st.markdown("<h3>平台增量指标快照（当日）</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>平台入库总量矩阵（累计）</h3>", unsafe_allow_html=True)
 
     cols = st.columns(3)
     p_data = [("bilibili", "哔哩哔哩"), ("youtube", "YouTube"), ("taptap", "TapTap")]
@@ -382,7 +381,7 @@ if page == "总览":
         stats = get_platform_stats(p_id)
         with cols[i]:
             st.markdown(f"<div style='margin-bottom:-35px; z-index:10; position:relative; padding:24px 24px 0 24px;'><img class='platform-icon' src='{platform_brand_icons[p_id]}'> <span style='font-size:14px; font-weight:500; color:#666;'>{p_label}</span></div>", unsafe_allow_html=True)
-            st.metric(label="​", value=str(stats['videos']), delta=f"新增 {stats['comments']} 条互动反馈", delta_color="normal")
+            st.metric(label="​", value=str(stats['videos']) if stats['videos'] else "0", delta=f"共录得 {stats['comments']} 条评论反馈", delta_color="normal")
 
     # ── 内容热度增量（周度）表格视图 ─────────────────────────────────────────
     st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
@@ -705,12 +704,13 @@ elif page == "采集":
         st.markdown("<br/>", unsafe_allow_html=True)
         if st.button(f"启动 {platform.capitalize()} 指令流", type="primary"):
             m_val = "actions" if "基础免登录" in mode else "local"
-            stdout, stderr, code = run_cli(["crawl", "--platform", platform, "--mode", m_val])
+            with st.spinner(f"探测器正在后台接入 {platform.capitalize()} 信息流，通常耗时一至两分钟，请勿刷新页面..."):
+                stdout, stderr, code = run_cli(["crawl", "--platform", platform, "--mode", m_val])
             if code == 0:
-                st.success("指令流已成功回归至正常终态。")
+                st.success(f"✅ 【{platform.capitalize()}】指令流已成功回归至正常终态，全部捕获已落盘。")
             else:
-                st.error(f"子线程调度失败，返回状态码: {code}")
-            with st.expander("下层标准输入输出追踪"):
+                st.error(f"❌ 子线程调度失败，返回状态码: {code}")
+            with st.expander("下层标准输入输出追踪", expanded=True if code != 0 else False):
                 st.code((stdout + "\n" + stderr).strip(), language="bash")
 
     with t_doc:
@@ -737,24 +737,38 @@ elif page == "采集":
 
 
 elif page == "周报":
-    st.markdown("<h1>周报生成</h1>", unsafe_allow_html=True)
+    import os
+    st.markdown("<h1>我的周报</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>根据给定时序处理全矩阵存储池并输出语义聚类文档。</p>", unsafe_allow_html=True)
     
     custom_date = st.date_input("时序截断点 (默认采用系统当下日)", value=datetime.now())
-    if st.button("激活生成管道", type="primary"):
+    
+    # 缺乏 API 时的屏蔽层
+    has_api = bool(os.environ.get("DEEPSEEK_API_KEY"))
+    if not has_api:
+        st.warning("⚠️ 侦测到 LLM 神经引擎未连接 (缺少 DEEPSEEK_API_KEY 环境变量)。由于生成报告依赖语义分析器，请先前往「设置」配置，否则无法启动生成任务。")
+
+    if st.button("激活生成管道", type="primary", disabled=not has_api):
         date_str = custom_date.strftime("%Y-%m-%d")
-        stdout, stderr, code = run_cli(["analyze", "--type", "weekly", "--date", date_str])
+        with st.spinner("LLM 神经节点正在处理全矩阵存储池并提纯海量图文舆情特征，约需 1-2 分钟..."):
+            stdout, stderr, code = run_cli(["analyze", "--type", "weekly", "--date", date_str])
         if code == 0:
-            st.success("周报管道归档成功，数据已完成扁平化解析。")
-            st.markdown((REPORTS_DIR / f"{date_str}_weekly_report.md").read_text(encoding="utf-8"))
+            st.success("🎉 生成完毕！周报结果已写入 reports 目录。")
+            st.balloons()
+            try:
+                st.markdown((REPORTS_DIR / f"{date_str}_weekly_report.md").read_text(encoding="utf-8"))
+            except Exception:
+                pass
         else:
             st.error("执行链由于未捕获异常而停止。")
+            with st.expander("调试层输出"):
+                st.code(stderr, language="bash")
 
 elif page == "扩词":
-    st.markdown("<h1>关键词扩展</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>介入 AI 模型 API，衍生竞品的搜索别称网并填充至配置文件。</p>", unsafe_allow_html=True)
-    
     import os
+    st.markdown("<h1>知识网扩写</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>根据 `keywords.yaml` 的种子源，利用 AI 实现营销话术的深层泛化。</p>", unsafe_allow_html=True)
+    
     api_k = os.environ.get("DEEPSEEK_API_KEY", "")
     
     c1, c2 = st.columns(2)
@@ -762,13 +776,18 @@ elif page == "扩词":
     with c2: max_k = st.slider("边界容量阀值", 10, 100, 50)
     
     if api_k:
-        st.markdown("<p style='font-size: 14px; color: #111; font-weight: 500;'>环境检测通过：DEEPSEEK_API_KEY 已发现。</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 14px; color: #16a34a; font-weight: 500;'>环境检测通过：DEEPSEEK_API_KEY 已发现。</p>", unsafe_allow_html=True)
     else:
-        st.markdown("<p style='font-size: 14px; color: #D32F2F; font-weight: 500;'>环境变量缺失：需配置 DEEPSEEK_API_KEY。</p>", unsafe_allow_html=True)
+        st.warning("⚠️ 缺少大语言模型认知层 (DEEPSEEK_API_KEY)。扩词调度已被安全隔离控制，请通过「设置」面板注入环境变量后再试。")
         
-    if st.button("生成拓补集合", type="primary", disabled=not api_k):
-        stdout, _, code = run_cli(["expand-keywords", "--provider", provider, "--max-keywords", str(max_k)])
-        if code == 0: st.code(stdout, language="json")
+    if st.button("启动深度知识关联投射", type="primary", disabled=bool(not api_k)):
+        with st.spinner("AI 正在解析目标赛道同义映射表并生成拓补集合..."):
+            stdout, _, code = run_cli(["expand-keywords", "--provider", provider, "--max-keywords", str(max_k)])
+        if code == 0: 
+            st.success("✅ 扩词网络编排完成，衍生词条已被更新至环境上下文。")
+            st.code(stdout, language="json")
+        else:
+            st.error("执行崩溃，发生异常。")
 
 elif page == "设置":
     import os
