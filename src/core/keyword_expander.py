@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import List
+import time
+from typing import List, Callable
 
 import requests
 
 from src.core.config import SentinelConfig
+from src.adapters.taptap import TapTapAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +42,15 @@ class KeywordExpander:
     def __init__(self, config: SentinelConfig):
         self.config = config
 
-    def expand(self, provider: str = "deepseek", max_keywords: int = 50) -> List[str]:
+    def expand(self, provider: str = "deepseek", max_keywords: int = 50, progress_callback: Callable[[int, int, str], None] = None) -> List[str]:
         """
-        扩展关键词
+        基于 RAG 的数据驱动关键词逆向提取
         
         Args:
             provider: 模型提供商 (deepseek/openai/qwen)
             max_keywords: 最大输出数量
+            progress_callback: 供 UI 使用的回调函数，返回 (当前序号, 总数, 正在处理的游戏名)
+            
             
         Returns:
             扩展后的关键词列表
@@ -73,30 +77,55 @@ class KeywordExpander:
             logger.error(f"不支持的 LLM Provider: {provider}")
             return []
 
-        # 准备种子核心信息
-        games = self.config.keywords.games
-        categories = self.config.keywords.categories
+        taptap_targets = self.config.targets.taptap_games
+        if not taptap_targets:
+            logger.warning("目标配置中没有 TapTap 游戏，无法进行语义逆向提取")
+            return []
+
+        # 限制只抽取前 15 个，防止超出上下文且耗时过久
+        target_pool = taptap_targets[:15]
+        total_games = len(target_pool)
         
-        if not games and not categories:
-            logger.warning("没有配置种子关键词，无法扩展")
+        api = TapTapAdapter()
+        corpus_blocks = []
+
+        logger.info(f"开始拉取 {total_games} 款 SLG 侧游戏进行语料拼接...")
+        for idx, game in enumerate(target_pool, 1):
+            if progress_callback:
+                progress_callback(idx, total_games, game.name)
+            
+            info = api.get_game_info(game.app_id)
+            if info:
+                desc = str(info.get("description", "")).replace("\n", " ")[:500]  # 取前500字概述
+                tags = [t.get("value", "") for t in info.get("tags", []) if isinstance(t, dict)]
+                corpus_blocks.append(f"【{game.name}】\n官方标签：{','.join(tags)}\n简介摘要：{desc}")
+            
+            # API 礼貌间隔
+            if idx < total_games:
+                time.sleep(1.0)
+
+        compiled_corpus = "\n\n".join(corpus_blocks)
+
+        if not compiled_corpus:
+            logger.error("未能成功抓取任何语料，取消提取")
             return []
 
         prompt = f"""
-你是一名资深的游戏营销与舆情分析专家，专精于 SLG（策略类）手游。
-我需要你帮我扩展一套用于监控社交媒体（如B站、YouTube等）视频和评论的搜素关键词。
+你现在是一台纯粹的 NLP 自然语言标签提词器，专精于国内 SLG/策略类 手游领域。
+请详细通读我提供的这批各大顶级 SLG 游戏的【官方真实语料与标签库】。
 
-已知我们关注的核心游戏名称为：{', '.join(games)}
-已知我们关注的游戏品类为：{', '.join(categories)}
+{compiled_corpus}
 
-请基于以上种子，帮我联想和扩展出相关的搜索关键词。包括但不限于：
-1. 这些游戏的常见简称、俗称、黑话（如：“三战”、“率土”等）
-2. 游戏核心玩法的垂直词汇（如：“开荒”、“配将”、“打城”、“赛季”等）与上述游戏的组合组合词（如：“三战开荒”、“率土配将”）
-3. 同类竞品游戏的名称
-4. 目标受众可能会搜索或讨论的话题泛词
+指令任务：
+请从以上我提供的文字材料中，**逆向提取和提纯**出最具营销价值、最能代表 SLG 核心买量与圈层文化的 50 个搜索长尾词/黑话。
+包括但不限于：
+1. 游戏机制的垂直术语（如：沙盘、开荒、打城、走格子、抽卡、赛季制等）
+2. 这些游戏的官方推广用语与民间约定俗成的衍生词组合。
 
 要求：
-- 返回的核心搜索词总数不要超过 {max_keywords} 个。
-- 结果**必须**只返回一个 JSON 格式的数组，包含作为字符串的扩展词列表。不要有任何额外的文本或 Markdown 标记。例如：["词1", "词2"]。
+- 请严格基于我提供的语料库内容进行提取，不允许毫无根据的幻觉编造。
+- 返回总数不要超过 {max_keywords} 个词汇。
+- **必须且只能**返回一个合法的纯 JSON String 数组，包含这批提取出的字符串。绝不要输出任何其他前言后语或 Markdown 标记。例如：["沙盘策略", "四百万人开荒"]。
 """
 
         headers = {

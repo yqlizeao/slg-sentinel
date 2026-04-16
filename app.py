@@ -980,7 +980,10 @@ elif page == "设置":
             edit_cats = st.data_editor(c_df, num_rows="dynamic", use_container_width=True, key="ed_cat", hide_index=True)
 
         st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
-        st.markdown("##### 🤖 AI 扩词配置")
+        st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
+        st.markdown("##### 🤖 RAG 语义逆向提取 (数据驱动)")
+        
+        st.markdown("<p style='font-size:12px; color:#666;'>告别全凭 AI 脑补！系统将遍历靶标库内的头部 SLG 游戏，拉取真实文案与标签交由 AI 提纯重构。</p>", unsafe_allow_html=True)
         exp = kw_data.get("expansion", {})
         cc1, cc2, cc3 = st.columns(3)
         with cc1:
@@ -988,26 +991,62 @@ elif page == "设置":
         with cc2:
             exp_provider = st.selectbox("LLM Provider", ["deepseek", "openai", "qwen"], index=["deepseek", "openai", "qwen"].index(exp.get("llm_provider", "deepseek")) if exp.get("llm_provider", "deepseek") in ["deepseek", "openai", "qwen"] else 0)
         with cc3:
-            exp_max = st.number_input("最大扩展词数", min_value=10, max_value=200, value=exp.get("max_expanded_keywords", 50))
+            exp_max = st.number_input("最大提取数 (10-200)", min_value=10, max_value=200, value=exp.get("max_expanded_keywords", 50))
+            
+        c_btn, c_rag = st.columns([1, 1])
 
-        if st.button("保存 Keywords 配置", type="primary"):
-            new_games = [row["词条"] for _, row in edit_games.dropna(how="all").iterrows() if str(row["词条"]).strip()]
-            new_cats = [row["词条"] for _, row in edit_cats.dropna(how="all").iterrows() if str(row["词条"]).strip()]
-            
-            kw_data["seed_keywords"]["games"] = new_games
-            kw_data["seed_keywords"]["categories"] = new_cats
-            kw_data["expansion"] = {
-                "enabled": exp_enabled,
-                "llm_provider": exp_provider,
-                "max_expanded_keywords": exp_max
-            }
-            
-            try:
-                with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
-                    yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
-                st.success("🎉 keywords.yaml 已保存！下次运行将使用新配置。")
-            except Exception as e:
-                st.error(f"保存失败：{e}")
+        with c_btn:
+            if st.button("💾 保存 Keywords", type="primary", use_container_width=True):
+                new_games = [row["词条"] for _, row in edit_games.dropna(how="all").iterrows() if str(row["词条"]).strip()]
+                new_cats = [row["词条"] for _, row in edit_cats.dropna(how="all").iterrows() if str(row["词条"]).strip()]
+                kw_data["seed_keywords"]["games"] = new_games
+                kw_data["seed_keywords"]["categories"] = new_cats
+                kw_data["expansion"] = {
+                    "enabled": exp_enabled,
+                    "llm_provider": exp_provider,
+                    "max_expanded_keywords": exp_max
+                }
+                try:
+                    with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
+                        yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
+                    st.success("🎉 keywords.yaml 已保存！")
+                except Exception as e:
+                    st.error(f"保存失败：{e}")
+                    
+        with c_rag:
+            if st.button("🚀 立即执行 RAG 语义提取", type="secondary", use_container_width=True):
+                from src.core.config import load_config
+                from src.core.keyword_expander import KeywordExpander
+                
+                conf = load_config()
+                pbar = st.progress(0)
+                status_txt = st.empty()
+                
+                def cb(cur, tot, name):
+                    pbar.progress(cur / tot)
+                    status_txt.text(f"[{cur}/{tot}] 正在抓取语料: {name}")
+
+                with st.spinner("引擎提纯中，请勿刷新页面..."):
+                    expander = KeywordExpander(conf)
+                    results = expander.expand(provider=exp_provider, max_keywords=exp_max, progress_callback=cb)
+                    
+                    if results:
+                        status_txt.text("")
+                        st.success(f"✅ 成功提取 {len(results)} 个高潜长尾词！")
+                        # 注入回配置文件并保留
+                        new_cats = kw_data["seed_keywords"]["categories"]
+                        added = 0
+                        for r in results:
+                            if r not in new_cats:
+                                new_cats.append(r)
+                                added += 1
+                        with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
+                            yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
+                        st.info(f"已自动合并 {added} 个新词入库。请前往侧边栏或重新载入本页浏览！")
+                        with st.expander("查看本次提取词典"):
+                            st.json(results)
+                    else:
+                        st.error("提取失败或未获取到语料。")
 
     with t3:
         from src.core.config import DEFAULT_SECRETS_FILE, load_secrets
