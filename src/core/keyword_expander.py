@@ -39,7 +39,6 @@ class KeywordExpander:
 
     def __init__(self, config: SentinelConfig):
         self.config = config
-        self.api_key = config.deepseek_api_key
 
     def expand(self, provider: str = "deepseek", max_keywords: int = 50) -> List[str]:
         """
@@ -56,8 +55,17 @@ class KeywordExpander:
             logger.info("关键词扩展未启用（keywords.yaml expansion.enabled=false）")
             return []
 
-        if not self.api_key:
-            logger.error("未找到 DEEPSEEK_API_KEY 环境变量，无法执行关键词扩展")
+        # 获取对应 Provider 的 API Key
+        api_key = ""
+        if provider == "deepseek":
+            api_key = self.config.deepseek_api_key
+        elif provider == "openai":
+            api_key = self.config.openai_api_key
+        elif provider == "qwen":
+            api_key = self.config.qwen_api_key
+
+        if not api_key:
+            logger.error(f"未找到 {provider.upper()} 的 API Key 配置，无法执行关键词扩展")
             return []
 
         provider_cfg = PROVIDERS.get(provider)
@@ -93,8 +101,9 @@ class KeywordExpander:
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {api_key}",
         }
+
         
         # 兼容 OpenAI API 格式的 payload
         payload = {

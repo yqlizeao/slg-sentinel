@@ -1010,27 +1010,44 @@ elif page == "设置":
                 st.error(f"保存失败：{e}")
 
     with t3:
-        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1rem;'>当前进程中已加载的关键环境变量状态。如需修改，请在终端中 <code>export KEY=value</code> 后重启 GUI。</p>", unsafe_allow_html=True)
-        env_vars = [
-            ("DEEPSEEK_API_KEY", "AI 关键词扩展 / 情感增强"),
-            ("BILI_SESSDATA", "B站深度评论采集（Cookie）"),
-            ("MEDIA_CRAWLER_ROOT", "MediaCrawler 本地沙盒大本营挂载点"),
-        ]
-        rows = ""
-        for k, desc in env_vars:
-            v = os.environ.get(k, "")
-            status = f'<span style="color:#16a34a; font-weight:600;">已配置</span>' if v else f'<span style="color:#dc2626;">未配置</span>'
-            masked = v[:6] + "..." if len(v) > 6 else ("—" if not v else v)
-            rows += f'<tr style="border-bottom:1px solid #F0F0F0;"><td style="padding:12px 16px; font-size:13px; font-family:monospace; font-weight:600;">{k}</td><td style="padding:12px 16px; font-size:13px; color:#666;">{desc}</td><td style="padding:12px 16px;">{status}</td><td style="padding:12px 16px; font-size:12px; font-family:monospace; color:#888;">{masked}</td></tr>'
-        st.markdown(f"""
-        <div style="background:#fff;border:1px solid #EAEAEA;border-radius:8px;overflow:hidden;">
-        <table style="width:100%;border-collapse:collapse;">
-            <thead><tr style="background:#FAFAFA;border-bottom:2px solid #EAEAEA;">
-                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;text-align:left;">变量名</th>
-                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;text-align:left;">用途</th>
-                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;">状态</th>
-                <th style="padding:10px 16px;font-size:12px;color:#666;font-weight:500;">值预览</th>
-            </tr></thead>
-            <tbody>{rows}</tbody>
-        </table></div>
-        """, unsafe_allow_html=True)
+        from src.core.config import DEFAULT_SECRETS_FILE, load_secrets
+        
+        st.info("🔐 **凭据集中管控**：在此填写的敏感配置将直接存入本地 `secrets.yaml`，优先于系统环境变量读取，且绝不会被提交到代码仓库。")
+        
+        sec_data = load_secrets()
+        llm = sec_data.get("llm_keys", {})
+        bili = sec_data.get("bilibili", {})
+        mc = sec_data.get("mediacrawler", {})
+        
+        st.markdown("##### 🧠 AI 大模型密钥")
+        ds_key = st.text_input("DeepSeek API Key", value=llm.get("deepseek", ""), type="password", placeholder="sk-...")
+        oa_key = st.text_input("OpenAI API Key", value=llm.get("openai", ""), type="password", placeholder="sk-...")
+        qw_key = st.text_input("Qwen API Key (阿里云百炼)", value=llm.get("qwen", ""), type="password", placeholder="sk-...")
+        
+        st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
+        st.markdown("##### 🍪 平台会话身份 (Cookies / Sessions)")
+        st.markdown("<p style='font-size:12px; color:#666;'>用于穿透防抄防风控的重度接口，一般需要通过浏览器抓包 F12 提取。</p>", unsafe_allow_html=True)
+        
+        sess_bili = st.text_input("Bilibili SESSDATA", value=bili.get("sessdata", ""), type="password", placeholder="请输入 B站 SESSDATA...")
+        sess_mc = st.text_area("MediaCrawler Session/Cookie", value=mc.get("session", ""), height=100, placeholder="预留的跨平台通用长 Cookie 载体字符串...")
+        
+        if st.button("保存密钥配置", type="primary"):
+            new_sec = {
+                "llm_keys": {
+                    "deepseek": ds_key,
+                    "openai": oa_key,
+                    "qwen": qw_key
+                },
+                "bilibili": {
+                    "sessdata": sess_bili
+                },
+                "mediacrawler": {
+                    "session": sess_mc
+                }
+            }
+            try:
+                with open(DEFAULT_SECRETS_FILE, "w", encoding="utf-8") as f:
+                    yaml.safe_dump(new_sec, f, allow_unicode=True, sort_keys=False)
+                st.success("🎉 secrets.yaml 已加密保存至本地！运行大盘即刻生效。")
+            except Exception as e:
+                st.error(f"保存发生异常：{e}")

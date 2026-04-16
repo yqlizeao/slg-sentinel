@@ -23,6 +23,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 # 默认配置文件路径
 DEFAULT_KEYWORDS_FILE = PROJECT_ROOT / "keywords.yaml"
 DEFAULT_TARGETS_FILE = PROJECT_ROOT / "targets.yaml"
+DEFAULT_SECRETS_FILE = PROJECT_ROOT / "secrets.yaml"
 
 # 日志格式（规格书要求）
 LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
@@ -90,8 +91,10 @@ class SentinelConfig:
     keywords: KeywordsConfig = field(default_factory=KeywordsConfig)
     targets: TargetsConfig = field(default_factory=TargetsConfig)
 
-    # 环境变量注入的敏感配置
+    # 环境变量/Secrets 注入的敏感配置
     deepseek_api_key: str = ""
+    openai_api_key: str = ""
+    qwen_api_key: str = ""
     bili_sessdata: str = ""
 
 
@@ -186,23 +189,45 @@ def load_targets(filepath: str | Path | None = None) -> TargetsConfig:
     )
 
 
+def load_secrets(filepath: str | Path | None = None) -> dict:
+    """加载本地密钥文件 (secrets.yaml) 的内容，未提供时返回空字典"""
+    filepath = Path(filepath) if filepath else DEFAULT_SECRETS_FILE
+    if not filepath.exists():
+        return {}
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except Exception as e:
+        logger.error(f"加载密钥配置失败: {e}")
+        return {}
+
+
 def load_config(
     keywords_file: str | Path | None = None,
     targets_file: str | Path | None = None,
+    secrets_file: str | Path | None = None,
 ) -> SentinelConfig:
     """
-    加载完整配置（关键词 + 目标 + 环境变量）。
-
+    加载完整配置（关键词 + 目标 + 环境变量/secrets）。
+    如果 secrets.yaml 存在内容优先读取，否则后备读取 os.environ() 以兼容 Actions。
+    
     Args:
         keywords_file: keywords.yaml 路径
         targets_file: targets.yaml 路径
+        secrets_file: secrets.yaml 路径
 
     Returns:
         SentinelConfig 实例
     """
+    sec = load_secrets(secrets_file)
+    llm = sec.get("llm_keys", {})
+    bili = sec.get("bilibili", {})
+
     return SentinelConfig(
         keywords=load_keywords(keywords_file),
         targets=load_targets(targets_file),
-        deepseek_api_key=os.environ.get("DEEPSEEK_API_KEY", ""),
-        bili_sessdata=os.environ.get("BILI_SESSDATA", ""),
+        deepseek_api_key=llm.get("deepseek") or os.environ.get("DEEPSEEK_API_KEY", ""),
+        openai_api_key=llm.get("openai") or os.environ.get("OPENAI_API_KEY", ""),
+        qwen_api_key=llm.get("qwen") or os.environ.get("QWEN_API_KEY", ""),
+        bili_sessdata=bili.get("sessdata") or os.environ.get("BILI_SESSDATA", ""),
     )

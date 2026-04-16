@@ -55,3 +55,6 @@ third_party/MediaCrawler/
 
 # Python 虚拟环境
 .venv/
+
+# Local Configuration (Do not commit to git)
+secrets.yaml
