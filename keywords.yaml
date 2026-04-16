@@ -5,18 +5,23 @@
 # 种子关键词——AI会自动扩展
 seed_keywords:
   games:
-    - 率土之滨
     - 三国志战略版
+    - 无尽的拉格朗日
+    - 三国谋定天下
     - 万国觉醒
-    - 文明与征服
-    - 鸿图之下
-    - 寰宇之战
+    - 率土之滨
+    - 世界启元
+    - 重返帝国
+  
   categories:
-    - SLG手游
-    - 策略战争游戏
+    - SLG
+    - 策略手游
+    - 4X多文明
+    - 沙盘战略
+    - 同盟国战
 
 # 扩展配置
 expansion:
   enabled: true
-  llm_provider: deepseek   # 或 openai / qwen
-  max_expanded_keywords: 50
+  llm_provider: "deepseek"
+  max_expanded_keywords: 60
