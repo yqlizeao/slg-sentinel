@@ -1,0 +1,10 @@
+pyyaml>=6.0
+bilibili-api-python>=16.0
+httpx>=0.27
+yt-dlp>=2024.0
+scrapetube>=2.5
+youtube-comment-downloader>=0.1.68
+requests>=2.31
+beautifulsoup4>=4.12
+streamlit>=1.30.0
+pandas>=2.0.0
