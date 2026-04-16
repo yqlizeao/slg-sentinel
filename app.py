@@ -257,10 +257,40 @@ def count_csv_rows(path: Path) -> int:
     except Exception: return 0
 
 def get_platform_stats(platform: str) -> dict:
+    today = datetime.now().strftime("%Y-%m-%d")
     v_dir, c_dir, r_dir = DATA_DIR/platform/"videos", DATA_DIR/platform/"comments", DATA_DIR/platform/"reviews"
-    v = sum(count_csv_rows(f) for f in v_dir.glob("*.csv")) if v_dir.exists() else 0
-    c = sum(count_csv_rows(f) for f in c_dir.glob("*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob("*.csv")) if r_dir.exists() else 0
-    return {"videos": v, "comments": c}
+    v_total = sum(count_csv_rows(f) for f in v_dir.glob("*.csv")) if v_dir.exists() else 0
+    c_total = sum(count_csv_rows(f) for f in c_dir.glob("*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob("*.csv")) if r_dir.exists() else 0
+    v_today = sum(count_csv_rows(f) for f in v_dir.glob(f"{today}_*.csv")) if v_dir.exists() else 0
+    c_today = sum(count_csv_rows(f) for f in c_dir.glob(f"{today}_*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob(f"{today}_*.csv")) if r_dir.exists() else 0
+    return {"videos_total": v_total, "comments_total": c_total, "videos_today": v_today, "comments_today": c_today}
+
+def get_system_health() -> dict:
+    import os
+    total_v, total_c, last_sync = 0, 0, 0
+    for p in ["bilibili", "youtube", "taptap"]:
+        stt = get_platform_stats(p)
+        total_v += stt["videos_total"]
+        total_c += stt["comments_total"]
+    
+    if DATA_DIR.exists():
+        for f in DATA_DIR.rglob("*.csv"):
+            if f.is_file():
+                mtime = f.stat().st_mtime
+                if mtime > last_sync: last_sync = mtime
+            
+    t_data = load_yaml(TARGETS_FILE).get("targets", {})
+    total_targets = len(t_data.get("bilibili_channels", [])) + len(t_data.get("youtube_channels", [])) + len(t_data.get("taptap_games", []))
+    k_data = load_yaml(KEYWORDS_FILE).get("seed_keywords", {})
+    total_kws = sum(len(v) for v in k_data.values() if isinstance(v, list))
+    
+    return {
+        "capacity": total_v + total_c,
+        "last_sync": datetime.fromtimestamp(last_sync).strftime("%m-%d %H:%M") if last_sync else "静默状态",
+        "targets": total_targets,
+        "keywords": total_kws,
+        "api_health": bool(os.environ.get("DEEPSEEK_API_KEY"))
+    }
 
 def _build_slg_filter_terms() -> set[str]:
     """从 keywords.yaml 提取所有游戏名和分类词，用于内容相关性过滤"""
@@ -355,25 +385,37 @@ if page == "总览":
     st.markdown("<h1>数据大盘</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>实时监控矩阵内的媒体特征与用户反馈。</p>", unsafe_allow_html=True)
 
-    # ── 核心靶向产品 ──────────────────────────────────────────────────────────
-    st.markdown("<h3>核心靶向产品</h3>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    cols_ref = [c1, c2, c3]
-    for idx, game in enumerate(game_assets):
-        with cols_ref[idx]:
-            st.markdown(f"""
-            <div class="game-card">
-                <div style="width:56px; height:56px; border-radius:12px; border:1px solid #EAEAEA; background:{game['bg']}; display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px; font-weight:700; flex-shrink:0;">{game['char']}</div>
-                <div class="info">
-                    <p class="title">{game['name']}</p>
-                    <p class="subtitle">{game['developer']}</p>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    # ── 系统运行中枢 (Pulse Bar) ─────────────────────────────────────────────
+    st.markdown("<h3>哨兵中枢运行基线</h3>", unsafe_allow_html=True)
+    health = get_system_health()
+    st.markdown(f"""
+    <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;'>
+        <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
+            <div style='font-size:12px; color:#666;'>📡 监控探针网络</div>
+            <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['targets']} <span style='font-size:12px; font-weight:400; color:#666;'>频道</span></div>
+            <div style='font-size:11px; color:#999; margin-top:4px;'>映射 {health['keywords']} 项扩充词法谱系</div>
+        </div>
+        <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
+            <div style='font-size:12px; color:#666;'>📦 数据汪洋容量</div>
+            <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['capacity']} <span style='font-size:12px; font-weight:400; color:#666;'>组</span></div>
+            <div style='font-size:11px; color:#999; margin-top:4px;'>全局视讯与评论快照底座</div>
+        </div>
+        <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
+            <div style='font-size:12px; color:#666;'>🧠 舆情神经干线 (LLM)</div>
+            <div style='font-size:24px; font-weight:700; color:{"#16a34a" if health['api_health'] else "#dc2626"}; margin-top:8px;'>{"活跃 OK" if health['api_health'] else "断连 OFFLINE"}</div>
+            <div style='font-size:11px; color:#999; margin-top:4px;'>负责语义下发与情感萃取分析</div>
+        </div>
+        <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
+            <div style='font-size:12px; color:#666;'>🕑 最新潮汐探针返回</div>
+            <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['last_sync']}</div>
+            <div style='font-size:11px; color:#999; margin-top:4px;'>存储池最近一次成功落盘发生时刻</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── 平台增量指标 ──────────────────────────────────────────────────────────
     st.markdown("<br/>", unsafe_allow_html=True)
-    st.markdown("<h3>平台入库总量矩阵（累计）</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>平台活水量态阵列</h3>", unsafe_allow_html=True)
 
     cols = st.columns(3)
     p_data = [("bilibili", "哔哩哔哩"), ("youtube", "YouTube"), ("taptap", "TapTap")]
@@ -381,12 +423,14 @@ if page == "总览":
         stats = get_platform_stats(p_id)
         with cols[i]:
             st.markdown(f"<div style='margin-bottom:-35px; z-index:10; position:relative; padding:24px 24px 0 24px;'><img class='platform-icon' src='{platform_brand_icons[p_id]}'> <span style='font-size:14px; font-weight:500; color:#666;'>{p_label}</span></div>", unsafe_allow_html=True)
-            st.metric(label="​", value=str(stats['videos']) if stats['videos'] else "0", delta=f"共录得 {stats['comments']} 条评论反馈", delta_color="normal")
+            
+            delta_val = f"今日新增流 {stats['videos_today']} 基底, {stats['comments_today']} 评论"
+            st.metric(label="​", value=str(stats['videos_total']) if stats['videos_total'] else "0", delta=delta_val, delta_color="normal")
 
     # ── 内容热度增量（周度）表格视图 ─────────────────────────────────────────
     st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
-    st.markdown("<h3>内容热度增量（周度）</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>按播放量降序，点击标题跳转原平台，展开行可查看内嵌播放器。</p>", unsafe_allow_html=True)
+    st.markdown("<h3>🚨 全网热帖异动爆发阵列</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>动态拉取跨周期全网流量异动的头部内容，作为危机公关/传播研判首要输入。</p>", unsafe_allow_html=True)
 
     def fmt_num(n):
         try:
