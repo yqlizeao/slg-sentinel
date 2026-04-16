@@ -575,11 +575,15 @@ elif page == "采集":
     c1, c2 = st.columns([1, 1])
     with c1:
         st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>选择执行平台</p>", unsafe_allow_html=True)
-        platform = st.selectbox("选择执行平台", ["bilibili", "youtube", "taptap"], label_visibility="collapsed")
+        platform = st.selectbox("选择执行平台", ["bilibili", "youtube", "taptap", "xiaohongshu", "douyin", "kuaishou"], label_visibility="collapsed")
     
     with c2:
         st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>授权执行模式</p>", unsafe_allow_html=True)
-        mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "受限凭证模式 (需要载入本地会话环境)"], label_visibility="collapsed")
+        if platform in ["xiaohongshu", "douyin", "kuaishou"]:
+            mode = st.radio("授权执行模式", ["MediaCrawler 受限沙盒模式 (强制要求载入本地环境与扫码态)"], label_visibility="collapsed")
+            st.markdown("<p style='font-size:12px; color:#dc2626; margin-top:4px;'>⚠️ 该平台受极度严苛的指纹风控限制，完全阻断 Actions 免登调用。</p>", unsafe_allow_html=True)
+        else:
+            mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "受限凭证模式 (需要载入本地会话环境)"], label_visibility="collapsed")
 
     # ── 动态构造 HTML 探针穿透能力矩阵表 ─────────────────────────────────────
     matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -671,6 +675,16 @@ elif page == "采集":
         <tr><td>网民专属 UID</td><td><code>API /v2/review/thread</code></td><td class="desc">深度锁定核心目标后为二次高维解析埋下接口锚</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
         <tr><td>玩家曾游玩游戏库</td><td><code>API /v2/game/games</code></td><td class="desc">通过玩过的交集列表判定是否对三消等有强力沉淀</td><td><span class="g">✅ 免 Cookie 高频并发下行</span></td></tr>
         <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">找出该玩家从三战开溜入驻新端的核心缘由缩影</td><td><span class="g">✅ 免 Cookie 高频并发下行</span></td></tr>"""
+    elif platform in ["xiaohongshu", "douyin", "kuaishou"]:
+        comp_title = "外部核心桥接库: <a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>MediaCrawler (16.9k⭐)</a> · <span style='font-family:monospace; color:#333; font-weight:600; font-size:11px;'>(Playwright 子进程挂载)</span>"
+        iframe_height = 420
+        rows = """
+        <tr><td>多端防风控突破口</td><td><code>Playwright / JS 逆向解构</code></td><td class="desc">扫码与无头浏览器组合拳完全粉碎抖音/小黑盒墙盾</td><td><span class="y">⚠️ 极强风控：拒绝一切免登</span></td></tr>
+        <tr><td>原生沙盒进程调度</td><td><code>subprocess.run('main.py')</code></td><td class="desc">基于独立沙盒调用引擎，确保核心主进程完全免疫崩溃</td><td><span class="g">✅ 本地终端环境独占放行</span></td></tr>
+        <tr><td>原生数据统一清洗</td><td><code>MediaCrawlerBridge.import...</code></td><td class="desc">将外来杂乱字典映射并同构组装回 VideoSnapshot 规范</td><td><span class="g">✅ 聚合入库，免数据分裂</span></td></tr>
+        <tr><td>精准瀑布流拦截</td><td><code>aweme_id / note_id 下发</code></td><td class="desc">极速阻击竞品短视频买量黑马，提取标题与播放池基数</td><td><span class="g">✅ 彻底剥离落盘分析</span></td></tr>
+        <tr><td>种草神评长尾拦截</td><td><code>comment_id 万级穿透</code></td><td class="desc">提取抖音与红书下的真实用户评价，汇聚最强舆情宣泄口</td><td><span class="g">✅ 完整挂载至下属文件树</span></td></tr>
+        <tr><td>发帖/点赞/收藏数</td><td><code>CSV 二次解包聚合</code></td><td class="desc">重塑买量平台在短视频维度的社交传播穿透力</td><td><span class="g">✅ 全量导出归入系统仓库</span></td></tr>"""
 
     matrix_html = matrix_html_base + rows + "</tbody></table></body></html>"
     
