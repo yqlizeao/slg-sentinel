@@ -1033,7 +1033,7 @@ elif page == "设置":
         env_vars = [
             ("DEEPSEEK_API_KEY", "AI 关键词扩展 / 情感增强"),
             ("BILI_SESSDATA", "B站深度评论采集（Cookie）"),
-            ("MEDIA_CRAWLER_DIR", "MediaCrawler 本地数据目录"),
+            ("MEDIA_CRAWLER_ROOT", "MediaCrawler 本地沙盒大本营挂载点"),
         ]
         rows = ""
         for k, desc in env_vars:
