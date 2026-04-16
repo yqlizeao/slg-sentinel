@@ -607,37 +607,72 @@ elif page == "采集":
         <tbody>"""
     
     if platform == "bilibili":
+        comp_title = "底层开源代理组件: <a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>bilibili-api-python (3.8k⭐)</a>"
         if "基础免登录" in mode:
             rows = """
-        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">BV号、视频标题、发布日</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">播放、点赞、投币、收藏</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>视频评论区</td><td><code>video.Video().get_comments()</code></td><td class="desc">用户UID、文本内容、点赞数</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
-        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list()</code></td><td class="desc">收藏的视频实体列表</td><td><span class="r">❌ 拦截: 无凭证不予下发</span></td></tr>
-        <tr><td>用户关注列表</td><td><code>API /x/relation/followings</code></td><td class="desc">关注的UP主、游戏官方号</td><td><span class="r">❌ 拦截: 需登录态Cookie</span></td></tr>"""
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">BV 号 (ID)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">视频标题 (Title)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">UP主名称 (Author)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">发布时间 (Pubdate)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">播放量 (View)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">点赞数 (Like)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">投币数 (Coin)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">收藏数 (Favorite)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">分享数 (Share)</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
+        <tr><td>视频评论流</td><td><code>video.Video().get_comments()</code></td><td class="desc">评论者 UID</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
+        <tr><td>视频评论流</td><td><code>video.Video().get_comments()</code></td><td class="desc">文本内容 (Content)</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
+        <tr><td>视频评论流</td><td><code>video.Video().get_comments()</code></td><td class="desc">被点赞数 (Like)</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
+        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">收藏的视频列表</td><td><span class="r">❌ 拦截: 无凭证不予下发</span></td></tr>
+        <tr><td>公开关注列表</td><td><code>API /x/relation/followings</code></td><td class="desc">关注的UP主列表</td><td><span class="r">❌ 拦截: 需 SESSDATA</span></td></tr>"""
         else:
             rows = """
-        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">BV号、视频标题、发布日</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
-        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">播放、点赞、投币、收藏</td><td><span class="g">✅ 高并发安全下行</span></td></tr>
-        <tr><td>视频评论区</td><td><code>video.Video().get_comments()</code></td><td class="desc">用户UID、文本内容、点赞数</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
-        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list()</code></td><td class="desc">收藏的视频实体列表</td><td><span class="g">✅ 若用户公开即完全采集</span></td></tr>
-        <tr><td>用户关注列表</td><td><code>API /x/relation/followings</code></td><td class="desc">关注的UP主、游戏官方号</td><td><span class="g">✅ 解除屏蔽获得高阶权限</span></td></tr>"""
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">BV 号 (ID)</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">视频标题 (Title)</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">UP主名称 (Author)</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
+        <tr><td>视频全局检索</td><td><code>search.search_by_type()</code></td><td class="desc">发布时间 (Pubdate)</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">播放量 (View)</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">点赞数 (Like)</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">投币数 (Coin)</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">收藏数 (Favorite)</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
+        <tr><td>视频元数据</td><td><code>video.Video().get_info()</code></td><td class="desc">分享数 (Share)</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
+        <tr><td>视频评论流</td><td><code>video.Video().get_comments()</code></td><td class="desc">评论者 UID</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
+        <tr><td>视频评论流</td><td><code>video.Video().get_comments()</code></td><td class="desc">文本内容 (Content)</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
+        <tr><td>视频评论流</td><td><code>video.Video().get_comments()</code></td><td class="desc">被点赞数 (Like)</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
+        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">收藏的视频列表</td><td><span class="g">✅ 若用户公开即完全采集</span></td></tr>
+        <tr><td>公开关注列表</td><td><code>API /x/relation/followings</code></td><td class="desc">关注的UP主列表</td><td><span class="g">✅ 解除屏蔽获得高阶权限</span></td></tr>"""
     elif platform == "youtube":
+        comp_title = "底层开源代理组件: <a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-dlp (155k⭐)</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>scrapetube (500⭐)</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>youtube-comment-downloader (1.2k⭐)</a>"
         rows = """
-        <tr><td>引擎检索提取</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">videoId、标题、频道名</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
-        <tr><td>频道极速扫流</td><td><code>scrapetube.get_channel()</code></td><td class="desc">频道内全体视频库清单</td><td><span class="g">✅ 突破万级网页限制</span></td></tr>
-        <tr><td>视频元数据</td><td><code>yt-dlp --dump-json</code></td><td class="desc">viewCount、likeCount、Tags</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
-        <tr><td>评论区穿刺</td><td><code>youtube-comment-downloader</code></td><td class="desc">评论者、内容、点赞、时间</td><td><span class="g">✅ 承载千万级弹幕导出</span></td></tr>"""
+        <tr><td>引擎检索提取</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">视频 ID (videoId)</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
+        <tr><td>引擎检索提取</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">视频标题 (Title)</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
+        <tr><td>引擎检索提取</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">所属频道 (Channel)</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
+        <tr><td>频道瀑布清单</td><td><code>scrapetube.get_channel()</code></td><td class="desc">下辖视频 UID 列表</td><td><span class="g">✅ 突破万级接口限制</span></td></tr>
+        <tr><td>频道瀑布清单</td><td><code>scrapetube.get_channel()</code></td><td class="desc">基础发布日期</td><td><span class="g">✅ 突破万级接口限制</span></td></tr>
+        <tr><td>频道瀑布清单</td><td><code>scrapetube.get_channel()</code></td><td class="desc">基础播放量</td><td><span class="g">✅ 突破万级接口限制</span></td></tr>
+        <tr><td>视频精确数据</td><td><code>yt-dlp --dump-json</code></td><td class="desc">精准真实播放 (viewCount)</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
+        <tr><td>视频精确数据</td><td><code>yt-dlp --dump-json</code></td><td class="desc">精准点赞数 (likeCount)</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
+        <tr><td>视频精确数据</td><td><code>yt-dlp --dump-json</code></td><td class="desc">视频受众标签 (Tags)</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
+        <tr><td>无尽评论穿刺</td><td><code>youtube-comment-downloader</code></td><td class="desc">网民 ID 与昵称</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>
+        <tr><td>无尽评论穿刺</td><td><code>youtube-comment-downloader</code></td><td class="desc">高价值点赞数</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>
+        <tr><td>无尽评论穿刺</td><td><code>youtube-comment-downloader</code></td><td class="desc">详细发送时间戳</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>
+        <tr><td>无尽评论穿刺</td><td><code>youtube-comment-downloader</code></td><td class="desc">评论完整内容纯文本</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>"""
     elif platform == "taptap":
+        comp_title = "底层支撑策略: <span style='font-family:monospace; font-weight:600; color:#333; background:#e2e8f0; padding:4px 8px; border-radius:6px;'>自有协议解析引擎 (Requests + BS4 + 指纹 Header)</span>"
         rows = """
-        <tr><td>游戏长评截取</td><td><code>API /v2/review/thread</code></td><td class="desc">评分星级、测评内容、点赞</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>发帖设备透视</td><td><code>API /v2/review/thread</code></td><td class="desc">device_name(如 iPhone15)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>硬核游玩时长</td><td><code>API /v2/review/thread</code></td><td class="desc">spent_time(如 125.5小时)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>玩家跨游图谱</td><td><code>API /v2/game/games</code></td><td class="desc">该玩家曾玩过的所有游戏</td><td><span class="g">✅ 免 Cookie 高频并发下发</span></td></tr>"""
+        <tr><td>游戏长评截取</td><td><code>API /v2/review/thread</code></td><td class="desc">核心星级评分 (1-5星)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>游戏长评截取</td><td><code>API /v2/review/thread</code></td><td class="desc">测评明文大段内容</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>游戏长评截取</td><td><code>API /v2/review/thread</code></td><td class="desc">社区支持度 (ups)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>游戏长评截取</td><td><code>API /v2/review/thread</code></td><td class="desc">社区反对数 (downs)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>深度用户透视</td><td><code>API /v2/review/thread</code></td><td class="desc">发帖物理设备 (如 iPhone 15)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>深度用户透视</td><td><code>API /v2/review/thread</code></td><td class="desc">硬核游玩时长 (如 125.5小时)</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>深度用户透视</td><td><code>API /v2/review/thread</code></td><td class="desc">网民专属社区 UID</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
+        <tr><td>玩家跨游图谱</td><td><code>API /v2/game/games</code></td><td class="desc">该玩家曾玩过的所有游戏</td><td><span class="g">✅ 免 Cookie 高频并发下行</span></td></tr>
+        <tr><td>玩家跨游图谱</td><td><code>API /v2/game/games</code></td><td class="desc">对外部竞品给出的同横向评价</td><td><span class="g">✅ 免 Cookie 高频并发下行</span></td></tr>"""
 
     matrix_html = matrix_html_base + rows + "</tbody></table></body></html>"
     
-    st.markdown("<p style='font-size:14px; color:#111; font-weight:600; margin-top:1.5rem; margin-bottom:0.5rem;'>当前选中模式探针约束矩阵</p>", unsafe_allow_html=True)
-    st_components.html(matrix_html, height=270, scrolling=False)
+    st.markdown(f"<div style='margin-top:1.5rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end;'><div><p style='font-size:14px; color:#111; font-weight:600; margin:0;'>当前选中模式探针约束矩阵</p></div><div style='font-size:12px; color:#666;'>{comp_title}</div></div>", unsafe_allow_html=True)
+    st_components.html(matrix_html, height=480, scrolling=True)
 
     st.markdown("<br/>", unsafe_allow_html=True)
     if st.button(f"启动 {platform.capitalize()} 采集链路", type="primary"):
