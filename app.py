@@ -499,14 +499,28 @@ if page == "总览":
     else:
         st.markdown("<p style='color:#666; font-size:14px;'>当前采集库中暂未发现内容，请先执行策略采集。</p>", unsafe_allow_html=True)
 
-    # ── 最新周报 ──────────────────────────────────────────────────────────────
+    # ── 深度数据引擎舱走廊 ────────────────────────────────────────────────────────
     st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
-    st.markdown("<h3>最新已定稿周报</h3>", unsafe_allow_html=True)
-    report = get_latest_report()
-    if report:
-        st.markdown(report.read_text(encoding="utf-8"))
-    else:
-        st.markdown("<p style='color: #666; font-size: 14px;'>当前目录下尚未检测到输出文件，请优先进行采集处理。</p>", unsafe_allow_html=True)
+    st.markdown("<h3>深度数据引擎舱</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>系统高阶分析能力层（AI/特征工程）状态巡检。</p>", unsafe_allow_html=True)
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown("<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:20px; border-radius:8px; height: 140px;'>", unsafe_allow_html=True)
+        st.markdown("<h5 style='margin-top:0'>📜 智能舆情大模型提纯器</h5>", unsafe_allow_html=True)
+        report = get_latest_report()
+        if report:
+            time_str = datetime.fromtimestamp(report.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+            st.markdown(f"<p style='font-size:13px; color:#16a34a; font-weight:500;'>✅ 最新快报已于 {time_str} 定稿产出。<br><br>👉 请前往侧边栏导航 <b>[周报]</b> 面板通读深维长卷。</p>", unsafe_allow_html=True)
+        else:
+            st.markdown("<p style='font-size:13px; color:#d97706; font-weight:500;'>💤 舆情分析层处于静默期未介入。<br><br>👉 请在采集收网后，前往侧边栏导航 <b>[周报]</b> 手动激发。</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+    with col_b:
+        st.markdown("<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:20px; border-radius:8px; height: 140px;'>", unsafe_allow_html=True)
+        st.markdown("<h5 style='margin-top:0'>👤 跨域竞品玩家画像侧写 (Profiler)</h5>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:13px; color:#666;'><span style='background:#EAEAEA; color:#333; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;'>🚀 NEXT PHASE</span><br><br>即将释出关联 TapTap 与 B站/YouTube 的长尾数据缝合能力，逆向推演玩家核心特征标签，实现精准靶向打击。</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 
