@@ -1,173 +1,97 @@
-# Gemini.md — SLG Sentinel AI 助手指南
+# SLG Sentinel – 面向 AI 编程助手的工程指南 
 
-本文件为 AI 编程助手（Gemini、Claude 等）提供上下文，帮助快速理解代码库结构、约定和关键设计决策，在继续开发前请先阅读本文件。
-
----
-
-## 项目一句话概述
-
-**SLG Sentinel** 是一套针对 SLG（策略类）手游营销赛道的多平台竞品舆情监控系统。通过定时采集 B 站、YouTube、TapTap 的视频/评论数据，进行情感分析和竞品提及提取，每周自动产出 Markdown 格式的舆情周报。
-
-系统支持两种运行模式：
-- **`--mode actions`**：GitHub Actions 云端免登录自动化（主力生产模式）
-- **`--mode local`**：本地 CLI 全功能运行（含 Cookie 深度采集、MediaCrawler 桥接）
+> **AI Assistant 请注意**：在继续执行任何代码修改之前，请务必完整阅读本文件。本文件整合了本工程的核心架构哲学、依赖选型原因以及平台数据隔离边界。这是确保代码风格与项目基调一致的最高优先级指导原则。
 
 ---
 
-## 目录结构
+## 1. 项目定义与三条铁律
 
-```
+**SLG Sentinel** 是一套面向 SLG（策略类）手游营销赛道的多平台竞品舆情监控系统。它不仅仅是一个爬虫工具，而是一个集成了数据抓取、历史增量快照对比、自然语言情感分析以及 Streamlit 现代化 GUI 的企业级监控系统。
+
+我们在系统实现和架构设计中严格遵循以下 **三条铁律**。AI 生成的任何代码方案或设计均不可违背：
+
+1. **铁律 ①：零侵入 (Zero-Intrusion)** 
+   所有第三方采集仓库仅通过 `pip` 引入（或作为完全沙盒隔离的 submodule）。不修改任何第三方应用或库的源码。任何定制需求都必须通过子类化 (subclass) 或外挂注入执行。
+2. **铁律 ②：双模架构 (Dual-Mode Architecture)** 
+   同一套底层业务逻辑必须适应双模切换：
+   - `--mode actions`：部署在 GitHub Actions 的免登录极简云模式，仅从不需要重度验证（脱网Cookie）的基础设施进行高频快照的持久捕获。
+   - `--mode local`：本地/专属服务器全功能模式，支持强状态的 Cookie 深度抓取模型，并配合本地的 Streamlit 现代化企业级面板展现（`app.py`）。
+3. **铁律 ③：CSV 即数据库 (CSV as Database)** 
+   全量业务数据严禁使用传统或笨重的 DBMS（如 MySQL/Postgres 等）。统一遵循带 BOM 头支持 Excel 原生开启的 `UTF-8-SIG` 格式，利用 Git `data` 独立分支在 Actions 中解决版本数据推盘。
+
+---
+
+## 2. 工具链与其背后的选型决策
+
+为保证免登录的稳定性和“零侵入”铁律，我们在各平台组件的设计中进行了深度验证（这曾是原先基于 Copilot 讨论后的最佳共识）：
+
+### 2.1 Bilibili 平台 (`bilibili-api-python`)
+- **抉择本质**：B 站对反爬有严防死守（如 Wbi）。我们依靠目前封装最牢固的 Python 开源 SDK 处理底层通信和自动 Wbi 签名更新。
+- **免登范围**：不登录情况下依然可拿到高完整度视频快照、浅层瀑布流评论以及热门排行榜。
+
+### 2.2 YouTube 平台（三工具混编）
+不去用 YouTube 官方 Data API 是为了防止 `10,000` 日请求配额用尽（针对营销海量采集来说极其容易触顶）。因此采用了以下铁三角免配额组件组合：
+- **`yt-dlp`**：负责发起类似 `ytsearch:竞品` 的引擎搜索调用。它提取完整的 JSON metadata，而不去下载真实视讯本体。
+- **`scrapetube`**：专注“频道页全量检索”。因为 yt-dlp 在获取 Channel Timeline 瀑布流方面非常臃肿且效能不足。
+- **`youtube-comment-downloader`**：因 yt-dlp 是一个下载器，批量处理数十万的文字弹幕评论会产生阻塞及溢出问题，于是改用这种独立的 json 请求伪装工具做评论的穿刺。
+
+### 2.3 TapTap 平台 (自建 `requests` + 面向公开 API)
+- 无需厚重封装。直接伪造手机游标或者访问 `v2 webapi` 端点能直接捞取用户的打分与设备特征等参数。TapTapAdapter 因此独立由自己开发和维护。
+
+### 2.4 MediaCrawler（慎用！禁止引入远端自动化）
+- 对于小红书、快手、抖音。因必须高度依赖 App 扫码（风控严苛），故这些通过 `subprocess` （子进程桥接）强行仅可执行于 `--mode local`。一旦你在 Actions 里呼叫此等适配器，则一定造成构建失败。
+
+---
+
+## 3. 面向平台隐私墙的「用户画像」
+
+对于 SLG 而言，分析核心用户群体玩过什么，是重中之重。但请切记：
+- ⛔ **绝对无法获取的死穴**：所有平台用户的“本人浏览记录”，这些在任何互联网世界都是不通过抓包和公开协议透出的黑核。不能提供相关不切实际的需求代码妄想爬取。
+- 🟢 **我们用何种逆向工程来获取喜好推断：**
+  在 `user_profiler.py` 内部基于多维度拼图：
+  1. 获取竞品核心长测验下的活跃有效评论者 UID
+  2. B 站探查：查其公开收藏夹和被公开访问的关注列表（这很大几率挂满原神的攻略，或三战的战报）
+  3. TapTap 探查：TapTap 是少见的愿意大方展示“他玩过这些游戏总计多少小时”和他的“给分历史”的平台。提取其玩过的长列表。
+  4. 使用在 `keywords.yaml` 已经配好的 SLG 字典扫描交集，最后输出此 ID 拥有高度特征的 SLG "三战&率土双游活跃" 等词法标签。
+
+---
+
+## 4. 全局项目版图 
+
+```text
 slg-sentinel/
-├── src/
-│   ├── cli.py                    # 唯一入口，argparse 分发所有子命令
+├── app.py                      # (🔥重点) Streamlit 构建的轻量极简企业级中台控制端
+├── src/                        # 后端心智代码
+│   ├── cli.py                  # 各界面的 CLI 分发网关
 │   ├── core/
-│   │   ├── models.py             # 全部数据模型 (dataclass)
-│   │   ├── csv_store.py          # CSV 持久化引擎（唯一存储层）
-│   │   ├── config.py             # YAML 配置加载 + 环境变量注入
-│   │   └── keyword_expander.py  # DeepSeek/OpenAI API 关键词扩展
-│   ├── adapters/
-│   │   ├── base.py               # 抽象基类 BaseAdapter
-│   │   ├── bilibili.py           # B站适配器 (bilibili-api-python)
-│   │   ├── youtube.py            # YouTube适配器 (yt-dlp + scrapetube + ycd)
-│   │   ├── taptap.py             # TapTap适配器 (requests + webapiv2)
-│   │   └── media_crawler.py     # MediaCrawler 桥接 (抖音/快手/小红书)
-│   └── analysis/
-│       ├── sentiment.py          # 离线规则情感分析 + 竞品实体提取
-│       ├── weekly_report.py      # 周报生成器，输出 Markdown
-│       └── profiler.py           # 用户画像推断 (启发式规则)
-├── .github/workflows/
-│   ├── crawl-bilibili.yml        # 每日 UTC 16:00
-│   ├── crawl-youtube.yml         # 每日 UTC 16:30
-│   ├── crawl-taptap.yml          # 每日 UTC 17:00
-│   └── weekly-analysis.yml       # 每周一 UTC 02:00
-├── data/                         # 数据分支 (data branch)，不提交到 main
-│   ├── bilibili/videos/          # {date}_videos.csv
-│   ├── bilibili/comments/        # {date}_{video_id}_comments.csv
-│   ├── youtube/videos/
-│   ├── youtube/comments/
-│   ├── taptap/videos/
-│   ├── taptap/reviews/           # TapTapReview 格式，非 Comment
-│   ├── snapshots/                # 跨平台合并快照（用于周增量计算）
-│   └── profiles/                 # 用户画像输出
-├── reports/                      # 周报 Markdown 输出（由 data 分支管理）
-├── keywords.yaml                 # 种子关键词配置（可公开提交）
-├── targets.yaml                  # 跟踪目标配置（含真实 app_id，可公开提交）
-└── pyproject.toml                # 项目元信息和分平台可选依赖
+│   │   ├── models.py           # 四大数据模型定义 (VideoSnapshot, Comment, TapTapReview, UserProfile)，只有变动这里，后续保存 CSV 才会变 Headers
+│   │   ├── csv_store.py        # 去重、BOM修复与数据历史差值追踪模块
+│   │   ├── keyword_expander.py # LLM 发散型语义扩充联想器
+│   │   └── config.py           # YML 装配挂载
+│   ├── adapters/               # 各平台封装桥接中心
+│   │   ├── base.py             
+│   │   ├── bilibili.py         
+│   │   ├── youtube.py
+│   │   ├── taptap.py
+│   │   └── media_crawler.py    
+│   └── analysis/               
+│       ├── sentiment.py        
+│       └── weekly_report.py    
+├── .github/workflows/          # 所有定时流采集设定 (各个平台的 cron 从 16:00 UTC 开始错开以防并发 Git 锁冲突)
+├── keywords.yaml               # (可通过前端修改) 保存大盘所需监测的核心赛道黑话、同义词扩展
+└── targets.yaml                # (可通过前端修改) 各平台要定向刺探的头部竞品 Up/频道
 ```
 
----
-
-## 核心数据模型（`src/core/models.py`）
-
-| 模型 | 用途 | 主键字段 |
-|------|------|---------|
-| `VideoSnapshot` | 视频每日指标快照 | `video_id` |
-| `Comment` | B站/YouTube 评论 | `comment_id` |
-| `TapTapReview` | TapTap 游戏长评 | `review_id` |
-| `UserProfile` | 推断式用户画像 | `user_id` |
-
-> **⚠️ 注意**：TapTap 评论存储格式是 `TapTapReview`，**不是** `Comment`。在 `weekly_report.py` 中读取 TapTap reviews 时需先用 `TapTapReview` 加载再手动转换为 `Comment`。
+### 存储模式
+必须遵照：`data/{platform}/{videos | comments | reviews | user_games}/{YYYY-MM-DD}_xxx.csv` 这一结构。所有的时序增长对比（如分析上周到本周增加了多少点赞），强依赖这种日期分割文件策略计算差量。
 
 ---
 
-## CSV 存储约定（`src/core/csv_store.py`）
+## 5. UI 与配置层维系指引 (AI 修改警示)
 
-- **编码**：UTF-8 with BOM（`utf-8-sig`），确保 Excel 可直接打开
-- **路径规则**：
-  - 视频: `data/{platform}/videos/{YYYY-MM-DD}_videos.csv`
-  - 评论: `data/{platform}/comments/{YYYY-MM-DD}_{video_id}_comments.csv`
-  - TapTap 评论: `data/taptap/reviews/{YYYY-MM-DD}_reviews.csv`（**无 video_id**）
-  - 全局快照: `data/snapshots/{YYYY-MM-DD}_snapshots.csv`
-- **幂等性**：同一天重复运行只追加新记录，按 `{data_type}` 对应的 ID 字段去重
-- **周增量**：`get_weekly_delta(platform, video_id)` 比较今日与 7 天前 snapshots 目录里同 video_id 的数值差
+现在本项目不再是一个冷冰冰挂在后台的单纯爬虫。我们在 `app.py` 内实现了一整套符合 Vercel / Linear 黑白暗色调、具有强留白和数据一目的仪表盘级应用。同时具有：
+1. 内联组件级别的媒体与图片渲染
+2. 配置编辑所见即所得
 
----
-
-## 配置系统（`keywords.yaml` + `targets.yaml`）
-
-**`keywords.yaml`** — 种子关键词，`load_config()` 读取后作为搜索词传入各适配器：
-```yaml
-seed_keywords:
-  games: [率土之滨, 三国志战略版, ...]
-  categories: [SLG手游, ...]
-expansion:
-  enabled: true
-  llm_provider: deepseek
-```
-
-**`targets.yaml`** — 指定跟踪目标，已填入真实 ID：
-```yaml
-targets:
-  bilibili_channels:
-    - name: "xxx"
-      uid: "xxx"         # B站 UID，填真实值后自动采集该频道
-  youtube_channels:
-    - channel_id: "UCxxx"  # YouTube 频道 ID
-  taptap_games:
-    - name: "率土之滨"
-      app_id: "4682"     # ✅ 已验证
-    - name: "三国志战略版"
-      app_id: "139546"   # ✅ 已验证
-    - name: "万国觉醒"
-      app_id: "82921"    # ✅ 已验证
-```
-
-**敏感配置**一律通过环境变量注入：
-
-| 变量名 | 用途 |
-|--------|------|
-| `DEEPSEEK_API_KEY` | AI 关键词扩展、（未来）情感增强分析 |
-| `BILI_SESSDATA` | B站深度采集（Cookie，可选） |
-| `MEDIA_CRAWLER_DIR` | MediaCrawler 本地数据目录路径 |
-
----
-
-## 各适配器关键细节
-
-### B站 (`bilibili.py`)
-- 使用 `bilibili-api-python`（自动处理 Wbi 签名，免登录）
-- 关键导入：`from bilibili_api import search as bili_search, video as bili_video`
-- `get_comments()` 需要 `oid`（视频的数值 ID），通过 `bili_video.Video(bvid).get_cid()` 获取
-
-### YouTube (`youtube.py`)
-- **三工具组合**：`yt-dlp`（搜索/元数据） + `scrapetube`（频道列表） + `youtube-comment-downloader`（评论）
-- 评论点赞数格式为 `"1.9K"` 字符串，使用 `_parse_view_count()` 统一解析
-- 每个关键词搜索耗时约 60-75 秒（yt-dlp 正常），8 个关键词约需 10 分钟
-
-### TapTap (`taptap.py`)
-- API 端点：`https://www.taptap.cn/webapiv2/`（2026-04 有效）
-- `title` 字段为纯字符串（不是 dict），`developer` 可能为 `null`，代码已做 `isinstance` 防御
-- 评论使用 cursor-based 分页（`next_cursor`），不是 offset
-- 统计字段名：`hits_total`（播放量）、`fans_count`（关注）、`review_count`（评分数）、`wish_count`（心愿单）
-
-### MediaCrawler 桥接 (`media_crawler.py`)
-- **不自行爬取**，只读取 MediaCrawler 工具产出的 CSV
-- 路径通过环境变量 `MEDIA_CRAWLER_DIR` 注入，默认 `MediaCrawler/data`
-- 兼容抖音（`aweme_id`）和小红书（`note_id`）的不同字段命名
-
----
-
-## 添加新功能的约定
-
-### 添加新平台适配器
-1. 继承 `src/adapters/base.py` 中的 `BaseAdapter`，实现 `search_videos()`、`get_video_info()`、`get_comments()`
-2. 在 `src/cli.py` 的 `cmd_crawl()` 中添加 `elif args.platform == "xxx":` 分支，调用对应的 `_crawl_xxx()` 函数
-3. 在 `pyproject.toml` 的 `[project.optional-dependencies]` 中添加该平台依赖
-4. 在 `.github/workflows/` 中创建对应工作流，错开触发时间避免并发 git push 冲突
-
-### 修改数据模型
-- 所有模型在 `src/core/models.py`，字段即 CSV 列头，增减字段后**同时更新** `CSVStore._get_id_field()` 中的去重字段映射
-
-### 部署到 GitHub Actions
-- 数据写入 `data/` 分支，代码在 `main` 分支
-- 工作流标准范式：先 checkout `data` 分支，再 `git checkout origin/main -- src/` 拉取代码，运行后 commit 回 `data` 分支
-
----
-
-## 已知限制与 TODO
-
-- **B站评论**：免登录时评论 API 对热门视频有风控限制，获取量可能为 0。配置 `BILI_SESSDATA` 后可解除
-- **YouTube 采集速度慢**：yt-dlp 搜索本身较慢（~75s/关键词），这是 Actions 模式下可接受的延迟
-- **TapTap 用户游戏列表**：`get_user_games()` 的旧版 API 端点已弃用，待找到新端点
-- **抖音/快手/小红书**：需要先在本地运行 MediaCrawler 采集，再用桥接器导入数据
-- **情感分析**：当前为离线规则版（成本趋零），可在配置 `DEEPSEEK_API_KEY` 后升级到 LLM 增强版
+> **[注意]** 如果你需要扩充 `keywords.yaml` 及 `targets.yaml` 的实体属性：
+> 请务必联动在 GUI 控制面板 （`app.py` 内的 `st.data_editor` DataFrame映射区域）加入对应的列。这套前端支持动态行列与行内自检保护，切勿因底层改动破坏前端用户输入的自洽性与一致性。

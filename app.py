@@ -9,9 +9,10 @@ from pathlib import Path
 import csv
 import html as _html
 import streamlit.components.v1 as st_components
+import yaml
+import pandas as pd
 
 import streamlit as st
-import yaml
 
 # ─── 页面配置 ──────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -512,7 +513,183 @@ if page == "总览":
 
 elif page == "采集":
     st.markdown("<h1>内容采集</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>手动介入向指定媒介触发爬虫网络或更新快照状态。</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 1.5rem;'>手动介入向指定媒介触发爬虫网络或更新快照状态。</p>", unsafe_allow_html=True)
+
+    # ── 用户数据可访问性矩阵 ──────────────────────────────────────────────────
+    st.markdown("<h3>用户数据可访问性矩阵</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:0.8rem;'>各平台用户维度数据的公开程度与采集可行性总览。</p>", unsafe_allow_html=True)
+    privacy_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        thead tr { background:#1a1a2e; }
+        th { padding:12px 14px; font-size:12px; font-weight:600; color:#ccc; text-align:left; white-space:nowrap; }
+        td { padding:12px 14px; border-bottom:1px solid #F0F0F0; vertical-align:middle; font-size:13px; color:#333; }
+        tr:hover td { background:#FAFAFA; }
+        td:first-child { font-weight:600; color:#111; white-space:nowrap; }
+        .r { color:#dc2626; } .y { color:#d97706; } .g { color:#16a34a; }
+        .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+        .dot-r { background:#dc2626; } .dot-y { background:#d97706; } .dot-g { background:#16a34a; }
+        .na { color:#999; font-size:12px; }
+    </style></head><body>
+    <table>
+        <thead><tr>
+            <th>数据类型</th><th>B站</th><th>抖音</th><th>快手</th><th>小红书</th><th>TapTap</th><th>YouTube</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td>浏览记录</td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+        </tr>
+        <tr>
+            <td>收藏夹</td>
+            <td><span class="dot dot-y"></span><span class="y">用户设公开时可见</span></td>
+            <td><span class="dot dot-r"></span><span class="r">默认私密</span></td>
+            <td><span class="dot dot-r"></span><span class="r">默认私密</span></td>
+            <td><span class="dot dot-y"></span><span class="y">部分可见</span></td>
+            <td class="na">N/A</td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+        </tr>
+        <tr>
+            <td>点赞/喜欢列表</td>
+            <td><span class="dot dot-r"></span><span class="r">仅自己可见</span></td>
+            <td><span class="dot dot-y"></span><span class="y">用户可选公开/私密</span></td>
+            <td><span class="dot dot-y"></span><span class="y">用户可选</span></td>
+            <td><span class="dot dot-y"></span><span class="y">部分可见</span></td>
+            <td class="na">N/A</td>
+            <td><span class="dot dot-r"></span><span class="r">私有</span></td>
+        </tr>
+        <tr>
+            <td>关注列表</td>
+            <td><span class="dot dot-g"></span><span class="g">公开（需Cookie）</span></td>
+            <td><span class="dot dot-y"></span><span class="y">用户可选</span></td>
+            <td><span class="dot dot-y"></span><span class="y">用户可选</span></td>
+            <td><span class="dot dot-y"></span><span class="y">部分可见</span></td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+            <td><span class="dot dot-g"></span><span class="g">默认私有</span></td>
+        </tr>
+        <tr>
+            <td>发布内容/评论</td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+        </tr>
+        <tr>
+            <td>玩过的游戏列表</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td><span class="dot dot-g"></span><span class="g">公开</span></td>
+            <td class="na">N/A</td>
+        </tr>
+        </tbody>
+    </table>
+    </body></html>"""
+    st_components.html(privacy_matrix_html, height=340, scrolling=False)
+
+    # ── 视频指标可采集性矩阵 ──────────────────────────────────────────────────
+    st.markdown("<h3>视频指标可采集性矩阵</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:0.8rem;'>各平台视频/内容维度指标的可用性与对应字段名。</p>", unsafe_allow_html=True)
+    metrics_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        thead tr { background:#1a1a2e; }
+        th { padding:12px 14px; font-size:12px; font-weight:600; color:#ccc; text-align:left; white-space:nowrap; }
+        td { padding:12px 14px; border-bottom:1px solid #F0F0F0; vertical-align:middle; font-size:13px; color:#333; }
+        tr:hover td { background:#FAFAFA; }
+        td:first-child { font-weight:600; color:#111; white-space:nowrap; }
+        .g { color:#16a34a; }
+        .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+        .dot-g { background:#16a34a; }
+        .na { color:#999; font-size:12px; }
+        code { background:#e8f5e9; color:#16a34a; font-size:11px; padding:2px 6px; border-radius:3px; font-family:'SF Mono','Fira Code',monospace; font-weight:600; }
+    </style></head><body>
+    <table>
+        <thead><tr>
+            <th>指标</th><th>B站</th><th>抖音</th><th>快手</th><th>小红书</th><th>TapTap</th><th>YouTube</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td>播放量</td>
+            <td><span class="dot dot-g"></span><code>view</code></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">阅读数</span></td>
+            <td class="na">N/A（非视频平台）</td>
+            <td><span class="dot dot-g"></span><code>viewCount</code></td>
+        </tr>
+        <tr>
+            <td>点赞数</td>
+            <td><span class="dot dot-g"></span><code>like</code></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">评分</span></td>
+            <td><span class="dot dot-g"></span><code>likeCount</code></td>
+        </tr>
+        <tr>
+            <td>转发/分享</td>
+            <td><span class="dot dot-g"></span><code>share</code></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td class="na">N/A</td>
+            <td class="na">N/A（已隐藏）</td>
+        </tr>
+        <tr>
+            <td>收藏数</td>
+            <td><span class="dot dot-g"></span><code>favorite</code></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+        </tr>
+        <tr>
+            <td>投币数</td>
+            <td><span class="dot dot-g"></span><code>coin</code></td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+        </tr>
+        <tr>
+            <td>弹幕数</td>
+            <td><span class="dot dot-g"></span><code>danmaku</code></td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+            <td class="na">N/A</td>
+        </tr>
+        <tr>
+            <td>评论数</td>
+            <td><span class="dot dot-g"></span><code>reply</code></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><span class="g">✓</span></td>
+            <td><span class="dot dot-g"></span><code>commentCount</code></td>
+        </tr>
+        </tbody>
+    </table>
+    </body></html>"""
+    st_components.html(metrics_matrix_html, height=380, scrolling=False)
+
+    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
 
     t_exec, t_doc = st.tabs(["下发采集指令", "平台组件穿透能力约束清单"])
 
@@ -601,36 +778,92 @@ elif page == "设置":
     t1, t2, t3 = st.tabs(["追踪目标 (targets.yaml)", "关键词库 (keywords.yaml)", "运行环境变量"])
 
     with t1:
-        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:0.5rem;'>编辑完成后点击「保存」，文件将立即写入磁盘。</p>", unsafe_allow_html=True)
-        targets_content = st.text_area(
-            "targets.yaml",
-            value=TARGETS_FILE.read_text(encoding="utf-8"),
-            height=400,
-            label_visibility="collapsed",
-        )
-        if st.button("保存 targets.yaml", type="primary"):
+        targets_data = load_yaml(TARGETS_FILE)
+        if "targets" not in targets_data: targets_data["targets"] = {}
+        t_data = targets_data["targets"]
+
+        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>在表格单元格双击可直接修改追踪目标。在末尾空白行输入即可新增，选中行按 Delete 键可删除。编辑完成后点击底部保存。</p>", unsafe_allow_html=True)
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("##### 📺 Bilibili 频道", unsafe_allow_html=True)
+            bili_df = pd.DataFrame(t_data.get("bilibili_channels", []))
+            if bili_df.empty: bili_df = pd.DataFrame(columns=["name", "uid"])
+            edit_bili = st.data_editor(bili_df, num_rows="dynamic", use_container_width=True, key="ed_bili", hide_index=True)
+            
+        with c2:
+            st.markdown("##### 🟥 YouTube 频道", unsafe_allow_html=True)
+            yt_df = pd.DataFrame(t_data.get("youtube_channels", []))
+            if yt_df.empty: yt_df = pd.DataFrame(columns=["name", "channel_id"])
+            edit_yt = st.data_editor(yt_df, num_rows="dynamic", use_container_width=True, key="ed_yt", hide_index=True)
+            
+        with c3:
+            st.markdown("##### 🎮 TapTap 游戏", unsafe_allow_html=True)
+            tap_df = pd.DataFrame(t_data.get("taptap_games", []))
+            if tap_df.empty: tap_df = pd.DataFrame(columns=["name", "app_id"])
+            edit_tap = st.data_editor(tap_df, num_rows="dynamic", use_container_width=True, key="ed_tap", hide_index=True)
+
+        if st.button("保存 Targets 配置", type="primary"):
+            t_data["bilibili_channels"] = edit_bili.dropna(how="all").to_dict("records")
+            t_data["youtube_channels"] = edit_yt.dropna(how="all").to_dict("records")
+            t_data["taptap_games"] = edit_tap.dropna(how="all").to_dict("records")
+            
             try:
-                yaml.safe_load(targets_content)  # 语法校验
-                TARGETS_FILE.write_text(targets_content, encoding="utf-8")
-                st.success("targets.yaml 已保存。")
-            except yaml.YAMLError as e:
-                st.error(f"YAML 语法错误，未保存：{e}")
+                with open(TARGETS_FILE, "w", encoding="utf-8") as f:
+                    yaml.safe_dump({"targets": t_data}, f, allow_unicode=True, sort_keys=False)
+                st.success("🎉 targets.yaml 已保存！后续采集将按新目标执行。")
+            except Exception as e:
+                st.error(f"保存失败：{e}")
 
     with t2:
-        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:0.5rem;'>编辑完成后点击「保存」，文件将立即写入磁盘。</p>", unsafe_allow_html=True)
-        kw_content = st.text_area(
-            "keywords.yaml",
-            value=KEYWORDS_FILE.read_text(encoding="utf-8"),
-            height=400,
-            label_visibility="collapsed",
-        )
-        if st.button("保存 keywords.yaml", type="primary"):
+        kw_data = load_yaml(KEYWORDS_FILE)
+        if "seed_keywords" not in kw_data: kw_data["seed_keywords"] = {"games": [], "categories": []}
+        if "expansion" not in kw_data: kw_data["expansion"] = {"enabled": True, "llm_provider": "deepseek", "max_expanded_keywords": 50}
+
+        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>双击单元格可修改或新增系统追踪关键词（支持按 Delete 键删除行）。</p>", unsafe_allow_html=True)
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("##### ⚔️ 游戏名称种子词")
+            g_df = pd.DataFrame([{"词条": k} for k in kw_data["seed_keywords"].get("games", []) if k])
+            if g_df.empty: g_df = pd.DataFrame(columns=["词条"])
+            edit_games = st.data_editor(g_df, num_rows="dynamic", use_container_width=True, key="ed_game", hide_index=True)
+
+        with c2:
+            st.markdown("##### 🏷️ 游戏品类种子词")
+            c_df = pd.DataFrame([{"词条": k} for k in kw_data["seed_keywords"].get("categories", []) if k])
+            if c_df.empty: c_df = pd.DataFrame(columns=["词条"])
+            edit_cats = st.data_editor(c_df, num_rows="dynamic", use_container_width=True, key="ed_cat", hide_index=True)
+
+        st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
+        st.markdown("##### 🤖 AI 扩词配置")
+        exp = kw_data.get("expansion", {})
+        cc1, cc2, cc3 = st.columns(3)
+        with cc1:
+            exp_enabled = st.toggle("启用自动扩词", value=exp.get("enabled", True))
+        with cc2:
+            exp_provider = st.selectbox("LLM Provider", ["deepseek", "openai", "qwen"], index=["deepseek", "openai", "qwen"].index(exp.get("llm_provider", "deepseek")) if exp.get("llm_provider", "deepseek") in ["deepseek", "openai", "qwen"] else 0)
+        with cc3:
+            exp_max = st.number_input("最大扩展词数", min_value=10, max_value=200, value=exp.get("max_expanded_keywords", 50))
+
+        if st.button("保存 Keywords 配置", type="primary"):
+            new_games = [row["词条"] for _, row in edit_games.dropna(how="all").iterrows() if str(row["词条"]).strip()]
+            new_cats = [row["词条"] for _, row in edit_cats.dropna(how="all").iterrows() if str(row["词条"]).strip()]
+            
+            kw_data["seed_keywords"]["games"] = new_games
+            kw_data["seed_keywords"]["categories"] = new_cats
+            kw_data["expansion"] = {
+                "enabled": exp_enabled,
+                "llm_provider": exp_provider,
+                "max_expanded_keywords": exp_max
+            }
+            
             try:
-                yaml.safe_load(kw_content)
-                KEYWORDS_FILE.write_text(kw_content, encoding="utf-8")
-                st.success("keywords.yaml 已保存。")
-            except yaml.YAMLError as e:
-                st.error(f"YAML 语法错误，未保存：{e}")
+                with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
+                    yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
+                st.success("🎉 keywords.yaml 已保存！下次运行将使用新配置。")
+            except Exception as e:
+                st.error(f"保存失败：{e}")
 
     with t3:
         st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1rem;'>当前进程中已加载的关键环境变量状态。如需修改，请在终端中 <code>export KEY=value</code> 后重启 GUI。</p>", unsafe_allow_html=True)

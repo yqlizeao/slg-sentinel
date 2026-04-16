@@ -1,200 +1,90 @@
 # SLG Sentinel
 
 > **SLG 游戏跨平台竞品舆情监控系统**
-> 自动采集 B 站、YouTube、TapTap 数据，每周产出竞品动态 + 玩家情感周报。
+> 自动采集 B 站、YouTube、TapTap 数据，每周产出竞品动态 + 玩家情感周报。现已配备现代化企业级 GUI 控制台。
 
 [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-自动化-2088FF?logo=github-actions&logoColor=white)](https://github.com/yqlizeao/slg-sentinel/actions)
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-GUI-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
+## 核心哲学: 三条铁律
+
+1. **零侵入**：所有第三方采集库通过 pip 包引入，绝不修改第三方源码，随时可跨平台升级。
+2. **双模运行**：免登录平台（B站搜索/评论、YouTube、TapTap）可通过 `GitHub Actions` 云端定时执行；需登录/高级分析操作通过本地全功能模式执行。
+3. **CSV 即数据库**：所有数据存储使用 `UTF-8 BOM` 的 CSV 文件，不引入任何重型数据库，方便直接以 Excel 开启并用 Git `data` 分支进行天然版本版本控制。
+
 ## 功能概览
 
-| 能力 | 说明 |
+| 模块 | 说明 |
 |------|------|
-| 📱 **多平台采集** | B 站（视频+评论）、YouTube（视频+评论）、TapTap（游戏评分+长评） |
-| 🤖 **GitHub Actions** | 三套采集 + 一套周报，全自动定时运行，无需服务器 |
-| 📊 **舆情周报** | 播放量增量 Top10、情感分布、竞品提及频次、负面预警摘录 |
-| 🧠 **AI 关键词扩展** | 接入 DeepSeek / OpenAI 自动联想竞品话术与长尾搜索词 |
-| 👤 **用户画像** | 基于评论语义推断玩家年龄段、付费倾向、硬核/休闲标签 |
-| 🔌 **MediaCrawler 桥接** | 本地 MediaCrawler 采集抖音/快手/小红书后一键导入 |
+| 🖥 **企业级大盘 (GUI)** | 极简 Linear/Vercel 风格的 Streamlit 控制台，一站式管理采集、查看热度增量矩阵、编辑关键词与目标，支持图文并茂的内嵌播放器 |
+| 📱 **多平台数据采集** | 原生覆盖 B站 (视频/评论)、YouTube (视频/评论)、TapTap (长评)；可通过桥接支持 抖音/快手/小红书 |
+| 🤖 **云端自动化化** | 云端 GitHub Actions 每日自动存快照，每周一自动生成舆情 markdown 周报 |
+| 🧠 **AI 与情感分析** | 借助 DeepSeek/OpenAI 实现大语言模型自动扩写种子搜索词，并在离线端执行玩家情感极性判断 |
+| 👤 **用户画像降维推断** | 突破平台隐私限制：通过交叉比对 TapTap 玩过的游戏、B站公开收藏夹及评论区提及提取，逆向合成竞品偏好画像 |
 
 ---
 
 ## 快速开始
 
-### 1. 安装
+### 1. 环境准备
+
+推荐使用 Python 3.11 或 3.12 (macOS 用户推荐使用 `brew install python@3.12`)：
 
 ```bash
 git clone https://github.com/yqlizeao/slg-sentinel.git
 cd slg-sentinel
 
-# 全量安装（本地开发）
+# 创建虚拟环境
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 安装全量依赖 (含 GUI)
 pip install -e ".[all]"
-
-# 仅安装特定平台（按需）
-pip install -e ".[bilibili]"    # B站
-pip install -e ".[youtube]"     # YouTube
-pip install -e ".[taptap]"      # TapTap
+pip install streamlit pandas
 ```
 
-### 2. 配置关键词与目标
+### 2. 启动企业级控制台 (GUI)
 
-编辑 `keywords.yaml`（搜索词）和 `targets.yaml`（指定跟踪目标）：
-
-```yaml
-# keywords.yaml — 种子关键词，AI 会自动扩展
-seed_keywords:
-  games:
-    - 率土之滨
-    - 三国志战略版
-    - 万国觉醒
-  categories:
-    - SLG手游
-```
-
-```yaml
-# targets.yaml — 配置具体游戏和频道
-targets:
-  taptap_games:
-    - name: "率土之滨"
-      app_id: "4682"        # TapTap 游戏 ID
-  bilibili_channels:
-    - name: "官方账号名称"
-      uid: "123456789"      # B站 UID
-```
-
-### 3. 配置密钥（可选）
+在终端执行通过 Streamlit 启动系统：
 
 ```bash
-export DEEPSEEK_API_KEY="sk-xxx"    # AI 关键词扩展
-export BILI_SESSDATA="xxx"           # B站深度采集（无则免登录运行）
+streamlit run app.py
 ```
 
-### 4. 本地运行
+在系统设置页面（GUI 的“设置”导航栏），您可以直接以可视化表格的方式编辑 `targets.yaml` 和 `keywords.yaml`，完全摒弃易错的代码更改。
+
+### 3. CLI 运行方式 (Actions / 服务器使用)
+
+在没有界面的云端或服务器中，可通过强大的 CLI 进行全自动化采集与分析：
 
 ```bash
-# 采集数据
-python -m src.cli crawl --platform bilibili --mode local
-python -m src.cli crawl --platform youtube  --mode local
-python -m src.cli crawl --platform taptap   --mode local
+# 执行 B站 免登录快照采集
+python -m src.cli crawl --platform bilibili --mode actions
 
-# 生成本周舆情周报
+# 执行 YouTube 采集
+python -m src.cli crawl --platform youtube --mode local
+
+# 生成舆情周报
 python -m src.cli analyze --type weekly
-
-# 用 AI 扩展关键词（需 DEEPSEEK_API_KEY）
-python -m src.cli expand-keywords --provider deepseek
-
-# 生成视频的用户画像
-python -m src.cli profile --platform youtube --video-id OiN5f7DT1Og
 ```
 
 ---
 
-## GitHub Actions 自动化
+## 项目架构与依赖
 
-将代码推送到 GitHub 后，以下工作流将**自动定时执行**：
+基于解耦与零侵入的设计原则：
+- **依赖库组合**：
+  - B站：`bilibili-api-python` (处理了复杂的 Wbi 签名)
+  - YouTube：`yt-dlp` (元数据获取) + `scrapetube` (频道列表检索) + `youtube-comment-downloader` (无配额的高效评论扒取) 
+  - TapTap：原生 `requests` 模拟，利用公开 WebAPI
+- **数据结构层** (`src/core/models.py`)： 
+  使用 `VideoSnapshot` / `Comment` / `TapTapReview` / `UserProfile` 抽象各平台数据统一落盘。
 
-| 工作流 | 触发时间（UTC） | 北京时间 | 说明 |
-|--------|----------------|----------|------|
-| `crawl-bilibili.yml` | 每日 16:00 | 次日 00:00 | 采集 B 站视频快照 |
-| `crawl-youtube.yml`  | 每日 16:30 | 次日 00:30 | 采集 YouTube 视频快照 |
-| `crawl-taptap.yml`   | 每日 17:00 | 次日 01:00 | 采集 TapTap 游戏评分 |
-| `weekly-analysis.yml`| 每周一 02:00 | 周一 10:00 | 生成竞品舆情周报 |
-
-数据自动提交到独立的 **`data` 分支**，代码在 **`main` 分支**，互不干扰。
-
-### 配置 GitHub Secrets
-
-在 `Settings → Secrets and variables → Actions` 中添加：
-
-| Secret 名称 | 说明 | 必填 |
-|-------------|------|------|
-| `DEEPSEEK_API_KEY` | DeepSeek API Key，用于 AI 关键词扩展 | 可选 |
-| `BILI_SESSDATA` | B站 Cookie，用于深度评论采集 | 可选 |
-
----
-
-## 数据存储结构
-
-所有数据以 **UTF-8 BOM 编码的 CSV** 存储（可直接用 Excel 打开），按日期分片：
-
-```
-data/
-├── bilibili/
-│   ├── videos/   2026-04-15_videos.csv
-│   └── comments/ 2026-04-15_{video_id}_comments.csv
-├── youtube/
-│   ├── videos/   2026-04-15_videos.csv
-│   └── comments/ 2026-04-15_{video_id}_comments.csv
-├── taptap/
-│   ├── videos/   2026-04-15_videos.csv       # 游戏基础信息快照
-│   └── reviews/  2026-04-15_reviews.csv       # 玩家长评（TapTapReview 格式）
-├── snapshots/    2026-04-15_snapshots.csv      # 跨平台合并快照，用于计算周增量
-└── profiles/     user_games/                  # 用户画像
-reports/
-└── 2026-04-15_weekly_report.md               # Markdown 周报
-```
-
----
-
-## 项目架构
-
-```
-src/
-├── cli.py                    # 命令行入口（argparse）
-├── core/
-│   ├── models.py             # 数据模型（VideoSnapshot, Comment, TapTapReview, UserProfile）
-│   ├── csv_store.py          # 存储引擎（UTF-8 BOM, 幂等去重, 周增量计算）
-│   ├── config.py             # 配置加载（YAML + 环境变量）
-│   └── keyword_expander.py  # LLM 关键词扩展
-├── adapters/
-│   ├── base.py               # 抽象基类
-│   ├── bilibili.py           # B站（bilibili-api-python）
-│   ├── youtube.py            # YouTube（yt-dlp + scrapetube + ycd）
-│   ├── taptap.py             # TapTap（requests, webapiv2 接口）
-│   └── media_crawler.py     # MediaCrawler 桥接（抖音/快手/小红书）
-└── analysis/
-    ├── sentiment.py          # 离线情感分析 + 竞品实体提取
-    ├── weekly_report.py      # 周报生成
-    └── profiler.py           # 用户画像推断
-```
-
----
-
-## 本地全流程验证结果
-
-| 命令 | 状态 | 产出 |
-|------|------|------|
-| `crawl bilibili --mode actions` | ✅ | 336 条视频快照 |
-| `crawl youtube --mode local` | ✅ | 160 条视频 + 446 条评论 |
-| `crawl taptap --mode local` | ✅ | 3 款游戏快照 + 30 条评论 |
-| `analyze --type weekly` | ✅ | Markdown 周报（三平台全覆盖） |
-| `profile youtube {video_id}` | ✅ | 100 个用户画像 |
-
----
-
-## 扩展新平台
-
-1. 在 `src/adapters/` 新建适配器，继承 `BaseAdapter`
-2. 在 `src/cli.py` 的 `cmd_crawl()` 中添加分支
-3. 在 `pyproject.toml` 中添加可选依赖
-4. 添加对应 GitHub Actions 工作流（时间错开 30 分钟，避免并发 git push 冲突）
-
-详见 [Gemini.md](./Gemini.md) 中的完整开发者指南。
-
----
-
-## 依赖说明
-
-| 平台 | 核心库 | 安装命令 |
-|------|--------|---------|
-| B站 | `bilibili-api-python`, `httpx` | `pip install -e ".[bilibili]"` |
-| YouTube | `yt-dlp`, `scrapetube`, `youtube-comment-downloader` | `pip install -e ".[youtube]"` |
-| TapTap | `requests`, `beautifulsoup4` | `pip install -e ".[taptap]"` |
-| 分析层 | `requests` (调用 LLM API) | `pip install -e ".[analysis]"` |
-| 全部 | — | `pip install -e ".[all]"` |
+完整的 Agent 开发上下文，请参阅 [GEMINI.md](./GEMINI.md) 面向 AI 研发助手的工程规格架构指南。
 
 ---
 
