@@ -473,6 +473,7 @@ if page == "总览":
                 player_cell = ''
 
             fav_val = fmt_num(vid.get('favorite_count', 0)) if plat == 'bilibili' else '—'
+            coin_val = fmt_num(vid.get('coin_count', 0)) if plat == 'bilibili' else '—'
             share_val = fmt_num(vid.get('share_count', 0)) if plat == 'bilibili' else '—'
             danmaku_val = fmt_num(vid.get('danmaku_count', 0)) if plat == 'bilibili' else '—'
 
@@ -503,6 +504,7 @@ if page == "总览":
                 <td class="stat">{fmt_num(vid.get('comment_count',0))}</td>
                 <td class="stat">{fav_val}</td>
                 <td class="stat">{share_val}</td>
+                <td class="stat">{coin_val}</td>
                 <td class="stat">{danmaku_val}</td>
                 <td class="stat muted">{vid.get('publish_date','')[:10]}</td>
             </tr>
@@ -538,8 +540,8 @@ if page == "总览":
                 <th>#</th><th>视频</th><th>视频标题</th>
                 <th class="right">播放</th><th class="right">点赞</th>
                 <th class="right">评论</th><th class="right">收藏</th>
-                <th class="right">分享</th><th class="right">弹幕</th>
-                <th class="right">发布日</th>
+                <th class="right">分享</th><th class="right">投币</th>
+                <th class="right">弹幕</th><th class="right">发布日</th>
             </tr></thead>
             <tbody>{all_rows}</tbody>
         </table>
