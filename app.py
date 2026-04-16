@@ -924,7 +924,7 @@ elif page == "设置":
         if "targets" not in targets_data: targets_data["targets"] = {}
         t_data = targets_data["targets"]
 
-        st.info("🎯 **追踪目标 (Targets) 用途**: 专用于定义需要进行**深度下探监听的具体游戏阵地和频道主体**。比如追踪《三国志·战略版》官方频道的全部动态，或者抓取 TapTap 上特定游戏专区的硬核长评。它是我们进行**“定向狙击与定点监控”**的具体标靶。")
+        st.info("🎯 **追踪目标 (Targets)**：用于**“定向狙击”**。指定确切的官方频道或游戏专区，对其发布的所有动作实施无死角的深度监听与全量捕获。")
         st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>操作说明：在下方表格单元格双击可直接修改追踪目标。在末尾空白行输入即可新增，选中行首数字按 Delete 键可删除整行。编辑完成后请点击底部保存。</p>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
@@ -963,7 +963,7 @@ elif page == "设置":
         if "seed_keywords" not in kw_data: kw_data["seed_keywords"] = {"games": [], "categories": []}
         if "expansion" not in kw_data: kw_data["expansion"] = {"enabled": True, "llm_provider": "deepseek", "max_expanded_keywords": 50}
 
-        st.info("🔑 **关键词库 (Keywords) 用途**: 专用于定义我们需要进行**大范围撒网搜索的同义词、营销术语与黑话**。例如我们会去短视频平台搜索带有“SLG开荒”、“强力配将”的大盘买量短片。并且这部分种子词可以通过下方的 AI 扩写功能，无限裂变出更多黑产/下沉关键词。")
+        st.info("🔑 **关键词库 (Keywords)**：用于**“大范围撒网”**。在各平台输入这些词搜捕野生爆款。\n\n*注：特意将「游戏名」与「品类」拆分成两列，是为了向下方的大模型输送立体参照物，从而更精准地诱发 AI 为你裂变出类似“三战开荒队”这样的专属黑话集合。*")
         st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>操作说明：在下方表格双击单元格即可修改或新增系统追踪词条（支持选中行首数字后按 Delete 键删除行）。</p>", unsafe_allow_html=True)
 
         c1, c2 = st.columns(2)
