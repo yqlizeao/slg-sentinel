@@ -430,7 +430,11 @@ if page == "总览":
     # ── 内容热度增量（周度）表格视图 ─────────────────────────────────────────
     st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
     st.markdown("<h3>🚨 全网热帖异动爆发阵列</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>动态拉取跨周期全网流量异动的头部内容，作为危机公关/传播研判首要输入。</p>", unsafe_allow_html=True)
+    c_desc, c_ctrl = st.columns([8, 2])
+    with c_desc:
+        st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>动态拉取跨周期全网流量异动的头部内容，作为危机公关/传播研判首要输入。</p>", unsafe_allow_html=True)
+    with c_ctrl:
+        view_limit = st.selectbox("单屏显示限额", [10, 20, 50, 100, 300, 500], index=2, label_visibility="collapsed")
 
     def fmt_num(n):
         try:
@@ -441,7 +445,7 @@ if page == "总览":
             return f"{n:,}"
         except: return str(n) if n else "—"
 
-    trending = get_trending_videos(20)  # 表格可承载更多
+    trending = get_trending_videos(view_limit)
     if trending:
         # ── 用 st_components.html() 渲染，完全绕过 Streamlit markdown 解析器 ──────
         rows_html_parts = []
@@ -469,7 +473,8 @@ if page == "总览":
                 player_cell = ''
 
             fav_val = fmt_num(vid.get('favorite_count', 0)) if plat == 'bilibili' else '—'
-            coin_val = fmt_num(vid.get('coin_count', '0')) if plat == 'bilibili' else '—'
+            share_val = fmt_num(vid.get('share_count', 0)) if plat == 'bilibili' else '—'
+            danmaku_val = fmt_num(vid.get('danmaku_count', 0)) if plat == 'bilibili' else '—'
 
             # ── 标签命中可视化 ─────────────────────────────────────────────────────────
             raw_tags = str(vid.get('tags', '') or '')
@@ -497,7 +502,8 @@ if page == "总览":
                 <td class="stat">{fmt_num(vid.get('like_count',0))}</td>
                 <td class="stat">{fmt_num(vid.get('comment_count',0))}</td>
                 <td class="stat">{fav_val}</td>
-                <td class="stat">{coin_val}</td>
+                <td class="stat">{share_val}</td>
+                <td class="stat">{danmaku_val}</td>
                 <td class="stat muted">{vid.get('publish_date','')[:10]}</td>
             </tr>
             """)
@@ -532,14 +538,14 @@ if page == "总览":
                 <th>#</th><th>视频</th><th>视频标题</th>
                 <th class="right">播放</th><th class="right">点赞</th>
                 <th class="right">评论</th><th class="right">收藏</th>
-                <th class="right">投币</th><th class="right">发布日</th>
+                <th class="right">分享</th><th class="right">弹幕</th>
+                <th class="right">发布日</th>
             </tr></thead>
             <tbody>{all_rows}</tbody>
         </table>
         </body></html>"""
-        # 每行约 130px（播放器 90 + 标题作者标签行）
-        table_height = min(len(trending) * 130 + 60, 3200)
-        st_components.html(table_doc, height=table_height, scrolling=False)
+        # 固定一个比较开阔的数据格栅高度，启用内部独立滚动以防撑爆外层结构
+        st_components.html(table_doc, height=900, scrolling=True)
     else:
         st.markdown("<p style='color:#666; font-size:14px;'>当前采集库中暂未发现内容，请先执行策略采集。</p>", unsafe_allow_html=True)
 
@@ -572,7 +578,7 @@ elif page == "采集":
     st.markdown("<h1>内容采集</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 1.5rem;'>手动介入向指定媒介触发爬虫网络或更新快照状态。</p>", unsafe_allow_html=True)
     
-    c1, c2 = st.columns([1, 1])
+    c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
         st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>选择执行平台</p>", unsafe_allow_html=True)
         platform = st.selectbox("选择执行平台", ["bilibili", "youtube", "taptap", "xiaohongshu", "douyin", "kuaishou"], label_visibility="collapsed")
@@ -580,10 +586,17 @@ elif page == "采集":
     with c2:
         st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>授权执行模式</p>", unsafe_allow_html=True)
         if platform in ["xiaohongshu", "douyin", "kuaishou"]:
-            mode = st.radio("授权执行模式", ["MediaCrawler 受限沙盒模式 (强制要求载入本地环境与扫码态)"], label_visibility="collapsed")
-            st.markdown("<p style='font-size:12px; color:#dc2626; margin-top:4px;'>⚠️ 该平台受极度严苛的指纹风控限制，完全阻断 Actions 免登调用。</p>", unsafe_allow_html=True)
+            mode = st.radio("授权执行模式", ["MediaCrawler 受限沙盒模式 (强制要求本地环境)"], label_visibility="collapsed")
+            st.markdown("<p style='font-size:12px; color:#dc2626; margin-top:4px;'>⚠️ 必须本地扫码。</p>", unsafe_allow_html=True)
         else:
             mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "受限凭证模式 (需要载入本地会话环境)"], label_visibility="collapsed")
+
+    with c3:
+        st.markdown("<p style='font-weight:500; font-size:13px; color:#666;'>爬取深度策略</p>", unsafe_allow_html=True)
+        if platform in ["xiaohongshu", "douyin", "kuaishou"]:
+            depth = st.radio("采集深度", ["受限单体深度遍历"], label_visibility="collapsed", disabled=True)
+        else:
+            depth = st.radio("采集深度", ["简易采集 (仅广域搜索，极速过滤)", "详细采集 (包含单视频详情节点下钻)"], label_visibility="collapsed")
 
     # ── 动态构造 HTML 探针穿透能力矩阵表 ─────────────────────────────────────
     matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -613,38 +626,35 @@ elif page == "采集":
     if platform == "bilibili":
         comp_title = "底层开源代理组件: <a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>bilibili-api-python (3.8k⭐)</a>"
         iframe_height = 680
-        if "基础免登录" in mode:
-            rows = """
-        <tr><td>BV号 (ID)</td><td><code>search.search_by_type()</code></td><td class="desc">作为视频全局唯一标识符主键</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>视频标题 (Title)</td><td><code>search.search_by_type()</code></td><td class="desc">做包含特定游戏名切分的语料</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>UP主名称 (Author)</td><td><code>search.search_by_type()</code></td><td class="desc">追踪头部 KOL 和腰部发声者</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>发布日期 (Pubdate)</td><td><code>search.search_by_type()</code></td><td class="desc">进行周报的增量周期界定标准</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>播放量 (View)</td><td><code>video.Video().get_info()</code></td><td class="desc">最核心的曝光量级评判指标</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>点赞数 (Like)</td><td><code>video.Video().get_info()</code></td><td class="desc">计算互动率 (Like/View) 核心参考数</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>投币数 (Coin)</td><td><code>video.Video().get_info()</code></td><td class="desc">体现高优硬派用户认可度的硬核指标</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>收藏数 (Favorite)</td><td><code>video.Video().get_info()</code></td><td class="desc">沉淀为用户长尾关注的囤积量转化</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>分享数 (Share)</td><td><code>video.Video().get_info()</code></td><td class="desc">衡量跨平台破圈能力的传播量标识</td><td><span class="g">✅ 基于自算 Wbi 放行</span></td></tr>
-        <tr><td>评论者 UID</td><td><code>video.Video().get_comments()</code></td><td class="desc">用以溯源画像的长尾横向指标来源</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
-        <tr><td>评论内容纯文本</td><td><code>video.Video().get_comments()</code></td><td class="desc">用于 NLP 情感计算极性(正向/负向)</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
-        <tr><td>被点赞数 (Like)</td><td><code>video.Video().get_comments()</code></td><td class="desc">作为该条神评在玩家群中影响力的权重</td><td><span class="y">⚠️ 仅可穿透最外层浅页</span></td></tr>
-        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">反向暴露这名核心玩家它游心智偏好</td><td><span class="r">❌ 拦截: 无凭证不予下发</span></td></tr>
-        <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">挖掘订阅重合度及竞品官方追随意向</td><td><span class="r">❌ 拦截: 需 SESSDATA</span></td></tr>"""
-        else:
-            rows = """
-        <tr><td>BV号 (ID)</td><td><code>search.search_by_type()</code></td><td class="desc">作为视频全局唯一标识符主键</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
-        <tr><td>视频标题 (Title)</td><td><code>search.search_by_type()</code></td><td class="desc">做包含特定游戏名切分的语料</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
-        <tr><td>UP主名称 (Author)</td><td><code>search.search_by_type()</code></td><td class="desc">追踪头部 KOL 和腰部发声者</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
-        <tr><td>发布日期 (Pubdate)</td><td><code>search.search_by_type()</code></td><td class="desc">进行周报的增量周期界定标准</td><td><span class="g">✅ SESSDATA 穿梭放行</span></td></tr>
-        <tr><td>播放量 (View)</td><td><code>video.Video().get_info()</code></td><td class="desc">最核心的曝光量级评判指标</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
-        <tr><td>点赞数 (Like)</td><td><code>video.Video().get_info()</code></td><td class="desc">计算互动率 (Like/View) 核心参考数</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
-        <tr><td>投币数 (Coin)</td><td><code>video.Video().get_info()</code></td><td class="desc">体现高优硬派用户认可度的硬核指标</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
-        <tr><td>收藏数 (Favorite)</td><td><code>video.Video().get_info()</code></td><td class="desc">沉淀为用户长尾关注的囤积量转化</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
-        <tr><td>分享数 (Share)</td><td><code>video.Video().get_info()</code></td><td class="desc">衡量跨平台破圈能力的传播量标识</td><td><span class="g">✅ SESSDATA 高效下行</span></td></tr>
-        <tr><td>评论者 UID</td><td><code>video.Video().get_comments()</code></td><td class="desc">用以溯源画像的长尾横向指标来源</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
-        <tr><td>评论内容纯文本</td><td><code>video.Video().get_comments()</code></td><td class="desc">用于 NLP 情感计算极性(正向/负向)</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
-        <tr><td>被点赞数 (Like)</td><td><code>video.Video().get_comments()</code></td><td class="desc">作为该条神评在玩家群中影响力的权重</td><td><span class="g">✅ 全量抽取无尽长尾评论</span></td></tr>
-        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">反向暴露这名核心玩家它游心智偏好</td><td><span class="g">✅ 若用户公开即完全采集</span></td></tr>
-        <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">挖掘订阅重合度及竞品官方追随意向</td><td><span class="g">✅ 解除屏蔽获得高阶权限</span></td></tr>"""
+        
+        is_simple = "简易" in depth
+        is_basic = "免登录" in mode
+        
+        sess_status = "<span class='g'>✅ 基于自算 Wbi 放行</span>" if is_basic else "<span class='g'>✅ SESSDATA 穿梭放行</span>"
+        deep_status = "<span class='g'>✅ 基于自算 Wbi 放行</span>" if is_basic else "<span class='g'>✅ SESSDATA 高效下行</span>"
+        
+        api_call = "<code>search.search_by_type()</code>" if is_simple else "<code>video.Video().get_info()</code>"
+        b_coin_status = "<span class='r'>❌ (简易广域搜索不返回)</span>" if is_simple else deep_status
+        
+        cmt_status = "<span class='y'>⚠️ 仅可穿透最外层浅页</span>" if is_basic else "<span class='g'>✅ 全量抽取无尽长尾评论</span>"
+        fav_status = "<span class='r'>❌ 拦截: 无凭证不予下发</span>" if is_basic else "<span class='g'>✅ 若用户公开即完全采集</span>"
+        follow_status = "<span class='r'>❌ 拦截: 需 SESSDATA</span>" if is_basic else "<span class='g'>✅ 解除屏蔽获得高阶权限</span>"
+
+        rows = f"""
+        <tr><td>BV号 (ID)</td><td><code>search.search_by_type()</code></td><td class="desc">作为视频全局唯一标识符主键</td><td>{sess_status}</td></tr>
+        <tr><td>视频标题 (Title)</td><td><code>search.search_by_type()</code></td><td class="desc">做包含特定游戏名切分的语料</td><td>{sess_status}</td></tr>
+        <tr><td>UP主名称 (Author)</td><td><code>search.search_by_type()</code></td><td class="desc">追踪头部 KOL 和腰部发声者</td><td>{sess_status}</td></tr>
+        <tr><td>发布日期 (Pubdate)</td><td><code>search.search_by_type()</code></td><td class="desc">进行周报的增量周期界定标准</td><td>{sess_status}</td></tr>
+        <tr><td>播放量 (View)</td><td>{api_call}</td><td class="desc">最核心的曝光量级评判指标</td><td>{deep_status if not is_simple else sess_status}</td></tr>
+        <tr><td>点赞数 (Like)</td><td>{api_call}</td><td class="desc">计算互动率 (Like/View) 核心参考数</td><td>{deep_status if not is_simple else sess_status}</td></tr>
+        <tr><td>投币数 (Coin)</td><td>{api_call}</td><td class="desc">体现高优硬派用户认可度的硬核指标</td><td>{b_coin_status}</td></tr>
+        <tr><td>收藏数 (Favorite)</td><td>{api_call}</td><td class="desc">沉淀为用户长尾关注的囤积量转化</td><td>{deep_status if not is_simple else sess_status}</td></tr>
+        <tr><td>分享数 (Share)</td><td>{api_call}</td><td class="desc">衡量跨平台破圈能力的传播量标识</td><td>{b_coin_status}</td></tr>
+        <tr><td>评论者 UID</td><td><code>video.Video().get_comments()</code></td><td class="desc">用以溯源画像的长尾横向指标来源</td><td>{cmt_status}</td></tr>
+        <tr><td>评论内容纯文本</td><td><code>video.Video().get_comments()</code></td><td class="desc">用于 NLP 情感计算极性(正向/负向)</td><td>{cmt_status}</td></tr>
+        <tr><td>被点赞数 (Like)</td><td><code>video.Video().get_comments()</code></td><td class="desc">作为该条神评在玩家群中影响力的权重</td><td>{cmt_status}</td></tr>
+        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">反向暴露这名核心玩家它游心智偏好</td><td>{fav_status}</td></tr>
+        <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">挖掘订阅重合度及竞品官方追随意向</td><td>{follow_status}</td></tr>"""
     elif platform == "youtube":
         comp_title = "底层开源代理组件: <a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-dlp (155k⭐)</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>scrapetube (500⭐)</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-cmt-dl (1.2k⭐)</a>"
         iframe_height = 600

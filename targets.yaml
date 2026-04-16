@@ -2,65 +2,29 @@ targets:
   bilibili_channels:
   - name: 阿志-三国志战略版
     uid: '454802537'
-  - name: 网易无尽的拉格朗日
-    uid: '1705813027'
   - name: 三国：谋定天下
     uid: '3493265273785301'
-  - name: 万国觉醒官方
-    uid: '438322680'
   youtube_channels:
   - name: SLG策略分析室 (示范站)
     channel_id: UCxxx
   taptap_games:
-  - name: 三国志·战略版
-    app_id: '139546'
-  - name: 无尽的拉格朗日
-    app_id: '190417'
-  - name: 万国觉醒
-    app_id: '82921'
-  - name: 重返帝国
-    app_id: '214691'
-  - name: 世界启元
-    app_id: '531539'
-  - name: 三国：谋定天下
-    app_id: '231537'
-  - name: 三国：天下归心
-    app_id: '759941'
-  - name: 无尽冬日
-    app_id: '521534'
-  - name: 少女前线2：追放
-    app_id: '190930'
-  - name: 亿万光年
-    app_id: '220456'
-  - name: 异世界的城主大人
-    app_id: '755439'
-  - name: 王国纪元
-    app_id: '60187'
-  - name: 星际猎人
-    app_id: '214603'
-  - name: 战火勋章
-    app_id: '211067'
-  - name: 铃兰之剑：为这和平的世界
-    app_id: '209866'
-  - name: 帝国的崛起
-    app_id: '384273'
-  - name: 模拟帝国
-    app_id: '159727'
-  - name: 王于兴师
-    app_id: '746451'
-  - name: 帝国军团罗马
-    app_id: '168643'
-  - name: 三国：冰河时代
-    app_id: '748248'
-  - name: 万龙觉醒
-    app_id: '238517'
-  - name: 三国志：王道天下
-    app_id: '824115'
-  - name: 钢岚
-    app_id: '233558'
-  - name: 钢铁命令
-    app_id: '201538'
-  - name: 野兽领主：新世界
-    app_id: '532667'
-  - name: 策略军团
-    app_id: '15971'
+  - app_id: '139546'
+    name: 三国志·战略版
+  - app_id: '4682'
+    name: 率土之滨
+  - app_id: '231537'
+    name: 三国：谋定天下
+  - app_id: '531539'
+    name: 世界启元
+  - app_id: '192689'
+    name: 鸿图之下
+  - app_id: '195143'
+    name: 荣耀新三国
+  - app_id: '65333'
+    name: 汉末霸业
+  - app_id: '84683'
+    name: 九州劫
+  - app_id: '36488'
+    name: 策马三国志
+  - app_id: '259166'
+    name: 秦皇汉武
