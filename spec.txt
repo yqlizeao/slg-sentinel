@@ -1,0 +1,819 @@
+SLG Sentinel 工程规格书 v2
+双模架构 + GitHub Actions · SLG游戏营销舆情监控系统
+文档版本：v2.0  |  编制人：泽奥  |  日期：2026-04-15
+文档性质：技术实施规格书（可直接交付 AI Coding Agent 执行）
+
+
+目 录
+	•	项目总览与架构哲学
+	•	依赖策略——确定版
+	•	数据模型定义（models.py）
+	•	CSV 存储引擎（csv_store.py）
+	•	各平台 Adapter 详细实现规格
+	•	5.1 BilibiliAdapter
+	•	5.2 YouTubeAdapter
+	•	5.3 TapTapAdapter
+	•	5.4 MediaCrawlerBridge（仅本地运行）
+	•	GitHub Actions 工作流设计
+	•	GitHub Actions 关键约束与设计决策
+	•	关键词配置文件（keywords.yaml）
+	•	CLI 入口设计（cli.py）
+	•	实施路线图（Phase by Phase）
+	•	注意事项与工程纪律
+1. 项目总览与架构哲学
+slg-sentinel 是一套面向 SLG（策略类）手游的营销舆情监控系统。系统自动从多个内容平台（B站、YouTube、TapTap、抖音、快手、小红书）采集视频/评论/评测数据，执行情感分析与用户画像推断，并生成周度分析报告。
+1.1 三条铁律
+以下三条原则具有最高优先级，贯穿所有设计决策。任何实现方案若违反铁律则自动否决。
+
+铁律 ①：零侵入
+所有第三方仓库通过 pip 包引入，不修改源码，随时可 pip upgrade。如需定制行为，仅通过子类化、配置注入或子进程桥接实现。
+
+
+铁律 ②：双模运行
+免登录平台（B站搜索/评论、YouTube、TapTap）通过 GitHub Actions 定时执行；需登录平台（抖音、快手、小红书、B站深度功能）仅在本地/服务器执行。两种模式共享同一套代码，通过 --mode actions|local 开关区分。
+
+
+铁律 ③：CSV 即数据库
+全部数据存储使用 CSV 文件，通过 git push 提交到独立的 data 分支。不引入任何数据库依赖。CSV 编码统一为 UTF-8 with BOM（兼容 Excel 直接打开中文）。
+
+1.2 核心架构——项目目录结构
+以下为完整的项目目录树，实施时必须严格遵循此结构：
+slg-sentinel/
+├── .github/workflows/              # GitHub Actions 工作流
+│   ├── crawl-bilibili.yml          # B站采集（每日，免登录）
+│   ├── crawl-youtube.yml           # YouTube采集（每日，免登录）
+│   ├── crawl-taptap.yml            # TapTap采集（每日，免登录）
+│   └── weekly-analysis.yml         # 周度分析报告生成
+├── src/
+│   ├── core/                       # 核心框架
+│   │   ├── models.py               # 数据模型（dataclass）
+│   │   ├── csv_store.py            # CSV 读写引擎
+│   │   ├── keyword_expander.py     # AI 搜索词扩展
+│   │   └── config.py               # 全局配置
+│   ├── adapters/                   # 平台适配器（唯一需要编写的代码）
+│   │   ├── base.py                 # 适配器抽象基类
+│   │   ├── bilibili.py             # B站适配器
+│   │   ├── youtube.py              # YouTube适配器
+│   │   ├── taptap.py               # TapTap适配器
+│   │   └── mediacrawler_bridge.py  # MediaCrawler桥接（仅本地）
+│   ├── analysis/                   # 分析层
+│   │   ├── sentiment.py            # 情感分析
+│   │   ├── user_profiler.py        # 用户画像推断
+│   │   └── weekly_report.py        # 周报生成
+│   └── cli.py                      # 命令行入口
+├── data/                           # CSV 数据存储（git 管理，data 分支）
+│   ├── bilibili/
+│   │   ├── videos/                 # {YYYY-MM-DD}_videos.csv
+│   │   └── comments/              # {YYYY-MM-DD}_{bvid}_comments.csv
+│   ├── youtube/
+│   │   ├── videos/
+│   │   └── comments/
+│   ├── taptap/
+│   │   ├── reviews/
+│   │   └── user_games/
+│   └── snapshots/                  # 每日指标快照（用于计算增量）
+├── keywords.yaml                   # 跟踪关键词配置
+├── targets.yaml                    # 跟踪目标（频道/UP主/游戏ID）
+├── pyproject.toml
+└── README.md
+2. 依赖策略——确定版
+下表列出所有外部依赖的最终选型。此表为确定版，实施过程中不得擅自增减依赖。
+
+平台
+底层工具
+Stars
+引入方式
+登录需求
+运行环境
+B站（视频/搜索/评论）
+bilibili-api-python
+3.8k
+pip install bilibili-api-python
+免登录（Wbi签名自动处理）
+GitHub Actions ✅
+B站（用户收藏夹/关注列表）
+bilibili-api-python
+3.8k
+pip install
+需Cookie（小号SESSDATA）
+本地/服务器
+YouTube（搜索/元数据/评论）
+yt-dlp
+155k
+pip install yt-dlp
+完全免登录
+GitHub Actions ✅
+YouTube（频道视频列表浏览）
+scrapetube
+501
+pip install scrapetube
+完全免登录
+GitHub Actions ✅
+YouTube（大量评论专项采集）
+youtube-comment-downloader
+1.2k
+pip install youtube-comment-downloader
+完全免登录
+GitHub Actions ✅
+TapTap
+自建（requests + BeautifulSoup）
+N/A
+项目自有代码
+完全免登录
+GitHub Actions ✅
+抖音/快手/小红书
+MediaCrawler
+47.7k
+git submodule
+需扫码登录
+⚠️ 仅本地
+
+2.1 为什么 YouTube 用三个工具
+	•	yt-dlp（主力工具）：ytsearch:关键词 搜索 + extract_info(download=False) 元数据提取 + --write-comments 评论导出。155k ⭐，是最稳定的 YouTube 数据提取工具。
+	•	scrapetube（频道浏览补充）：scrapetube.get_channel(channel_id, sort_by='popular') 可以按播放量排序获取频道所有视频。yt-dlp 做此操作需要先获取频道页面再逐个解析，不如 scrapetube 直接。501 ⭐，5年历史，491个项目使用，是成熟的中型项目。
+	•	youtube-comment-downloader（专项评论采集）：当需要大量采集某视频评论时，比 yt-dlp 的 --write-comments 更高效（yt-dlp 主要是下载器，评论只是附带功能）。1.2k ⭐。
+2.2 关于 tubescrape 的 InnerTube API 思路
+tubescrape（4 ⭐，2026年3月新项目）使用 YouTube 的 InnerTube API（POST https://www.youtube.com/youtubei/v1/search），核心只依赖 httpx，无需 API Key。虽然不应作为依赖引入（Stars 过低、项目过新），但其方案值得作为技术储备。
+
+技术储备：InnerTube API 调用模式
+如果未来 yt-dlp 的搜索功能被 YouTube 限制，可参考 tubescrape 的 InnerTube 调用模式，在我们自己的代码中实现一个轻量级搜索模块：
+•  Endpoint：POST https://www.youtube.com/youtubei/v1/search
+•  请求体：需要包含 context.client（clientName: "WEB", clientVersion: "2.xxx"）和 query 字段
+•  认证：无需认证，只需要正确的 client context header
+
+3. 数据模型定义（models.py）
+所有数据模型使用 Python dataclass 定义，字段与 CSV 列一一对应。以下为四个核心数据模型的完整定义。
+3.1 VideoSnapshot——视频指标快照
+每日采集一次，用于计算周增量。
+@dataclass
+class VideoSnapshot:
+    """视频指标快照——每日采集一次，用于计算周增量"""
+    platform: str          # bilibili / youtube / douyin / kuaishou / xiaohongshu
+    video_id: str          # BV号 / YouTube video ID / 其他平台ID
+    title: str
+    author: str
+    author_id: str
+    snapshot_date: str     # YYYY-MM-DD
+    view_count: int
+    like_count: int
+    comment_count: int
+    share_count: int       # B站=分享, YouTube=N/A
+    favorite_count: int    # B站=收藏, YouTube=N/A
+    coin_count: int        # B站=投币, 其他平台=0
+    danmaku_count: int     # B站=弹幕, 其他平台=0
+    publish_date: str      # 视频发布日期
+    tags: str              # 逗号分隔的标签
+    url: str               # 原始链接
+3.2 Comment——评论数据
+@dataclass
+class Comment:
+    """评论数据"""
+    platform: str
+    video_id: str
+    comment_id: str
+    author: str
+    author_id: str
+    content: str
+    like_count: int
+    reply_count: int
+    publish_time: str
+    ip_location: str       # B站有IP属地
+    sentiment: str         # positive / negative / neutral（分析后填充）
+    mentioned_games: str   # 评论中提到的游戏名（分析后填充）
+3.3 TapTapReview——TapTap 游戏评论
+@dataclass
+class TapTapReview:
+    """TapTap游戏评论"""
+    game_id: str
+    game_name: str
+    review_id: str
+    author: str
+    author_id: str
+    score: int              # 1-5星评分
+    content: str
+    device: str             # 设备型号
+    spent: str              # 游玩时长
+    ups: int                # 支持数
+    downs: int              # 反对数
+    publish_time: str
+    sentiment: str
+    mentioned_games: str
+3.4 UserProfile——推断式用户画像
+@dataclass
+class UserProfile:
+    """推断式用户画像"""
+    platform: str
+    user_id: str
+    username: str
+    source_video_id: str    # 从哪个视频的评论中发现的
+    public_favorites: str   # B站公开收藏夹中的SLG相关内容
+    followed_channels: str  # 关注的SLG相关UP主/频道
+    taptap_games: str       # TapTap玩过的游戏列表
+    comment_mentions: str   # 评论中提到的竞品
+    inferred_tags: str      # 推断标签，如"率土+三战双游玩家"
+4. CSV 存储引擎（csv_store.py）
+CSVStore 是全系统唯一的数据持久层。设计约束如下：
+4.1 核心方法
+
+方法签名
+功能说明
+save(dataclass_list, platform, data_type)
+自动按日期保存到 data/{platform}/{data_type}/{YYYY-MM-DD}.csv
+load(platform, data_type, date_range)
+读取指定日期范围的 CSV，返回 dataclass 列表
+get_weekly_delta(platform, video_id)
+计算本周 − 上周的指标增量（view_count、like_count 等）
+
+4.2 技术要求
+	•	使用 Python 标准库 csv 模块，不引入 pandas 依赖（减少 Actions 安装时间）
+	•	CSV 编码统一 UTF-8 with BOM（\ufeff 前缀），兼容 Excel 直接打开中文
+	•	save() 写入时自动添加 CSV 表头（从 dataclass 字段名生成）
+	•	load() 读取时自动跳过 BOM 标记
+	•	文件路径中的日期格式统一为 YYYY-MM-DD
+	•	评论文件的命名格式为 {YYYY-MM-DD}_{video_id}_comments.csv
+4.3 文件路径规则
+# 视频快照
+data/bilibili/videos/2026-04-15_videos.csv
+data/youtube/videos/2026-04-15_videos.csv
+
+# 评论
+data/bilibili/comments/2026-04-15_BV1xxxxxxxxxx_comments.csv
+data/youtube/comments/2026-04-15_dQw4w9WgXcQ_comments.csv
+
+# TapTap评论
+data/taptap/reviews/2026-04-15_reviews.csv
+
+# 每日快照（用于增量计算）
+data/snapshots/2026-04-15_snapshots.csv
+5. 各平台 Adapter 详细实现规格
+所有 Adapter 继承自 BaseAdapter 抽象基类（src/adapters/base.py）。基类定义以下抽象方法：
+from abc import ABC, abstractmethod
+
+class BaseAdapter(ABC):
+    @abstractmethod
+    def search_videos(self, keyword: str, **kwargs) -> list:
+        """搜索视频，返回 VideoSnapshot 列表"""
+        ...
+
+    @abstractmethod
+    def get_video_info(self, video_id: str) -> "VideoSnapshot":
+        """获取单个视频元数据"""
+        ...
+
+    @abstractmethod
+    def get_comments(self, video_id: str, **kwargs) -> list:
+        """获取评论，返回 Comment 列表"""
+        ...
+5.1 BilibiliAdapter
+免登录能力（GitHub Actions 可用）
+from bilibili_api import video, search, hot
+
+class BilibiliAdapter(BaseAdapter):
+    async def search_videos(self, keyword: str, page: int = 1) -> list[VideoSnapshot]:
+        """搜索视频——免登录，Wbi签名自动处理"""
+        result = await search.search_by_type(
+            keyword=keyword,
+            search_type=search.SearchObjectType.VIDEO,
+            page=page
+        )
+        # 解析 result['result'] 列表，映射到 VideoSnapshot
+
+    async def get_video_info(self, bvid: str) -> VideoSnapshot:
+        """获取视频详情——免登录"""
+        v = video.Video(bvid=bvid)
+        info = await v.get_info()
+        stat = info['stat']
+        # stat 包含: view, like, coin, favorite, share, danmaku, reply
+
+    async def get_comments(self, bvid: str, max_pages: int = 10) -> list[Comment]:
+        """获取评论——免登录（但深度翻页建议用Cookie）"""
+        # 使用 comment.get_comments(bvid, ...) 分页获取
+        # 每条评论包含: content, mid(用户ID), uname, like, rcount, location(IP属地)
+
+    async def get_hot_videos(self, category: str = "game") -> list[VideoSnapshot]:
+        """获取热门视频——免登录"""
+        # 使用 hot 模块获取
+需 Cookie 能力（仅本地运行）
+async def get_user_favorites(self, uid: int, credential: Credential) -> list:
+        """获取用户公开收藏夹——需要登录态"""
+        from bilibili_api import favorite_list
+        # favorite_list.get_video_favorite_list(uid, credential=credential)
+
+    async def get_user_followings(self, uid: int, credential: Credential) -> list:
+        """获取用户关注列表——需要登录态"""
+        # API: /x/relation/followings?vmid=uid
+
+实现要点
+•  bilibili-api-python 内部自动处理 Wbi 签名，无需手动计算
+•  异步调用使用 asyncio.run() 在 CLI 层统一调度
+•  评论翻页免登录时建议限制在 10 页以内，深度翻页需 Cookie
+
+5.2 YouTubeAdapter
+全部免登录，GitHub Actions 完全可用。
+import yt_dlp
+import scrapetube
+from youtube_comment_downloader import YoutubeCommentDownloader
+
+class YouTubeAdapter(BaseAdapter):
+    def search_videos(self, keyword: str, max_results: int = 20) -> list[VideoSnapshot]:
+        """搜索视频——yt-dlp ytsearch"""
+        ydl_opts = {
+            'quiet': True,
+            'extract_flat': False,   # 需要完整info
+            'skip_download': True,   # 不下载视频
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            result = ydl.extract_info(
+                f"ytsearch{max_results}:{keyword}", download=False
+            )
+            # result['entries'] 包含每个视频的完整元数据
+            # 每个 entry 有: title, view_count, like_count, comment_count,
+            #               upload_date, tags, channel, channel_id, description 等
+
+    def get_video_info(self, video_id: str) -> VideoSnapshot:
+        """获取单个视频元数据——yt-dlp"""
+        with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True}) as ydl:
+            info = ydl.extract_info(
+                f"https://www.youtube.com/watch?v={video_id}", download=False
+            )
+            # 映射到 VideoSnapshot
+
+    def get_channel_videos(self, channel_id: str,
+                           sort_by: str = 'popular',
+                           limit: int = 50) -> list:
+        """获取频道视频列表——scrapetube"""
+        videos = scrapetube.get_channel(
+            channel_id, sort_by=sort_by, limit=limit
+        )
+        # 返回 generator，每个 video 包含 videoId, title 等基础信息
+        # 如需完整 stat，再用 get_video_info 逐个补充
+
+    def get_comments(self, video_url: str, sort_by: int = 0) -> list[Comment]:
+        """获取评论——youtube-comment-downloader"""
+        downloader = YoutubeCommentDownloader()
+        comments = downloader.get_comments_from_url(
+            video_url, sort_by=sort_by
+        )
+        # sort_by: 0=热度, 1=时间
+        # 每条 comment 有: text, time, author, channel, votes, heart, reply
+5.3 TapTapAdapter
+完全自建，免登录。使用 requests 直接调用 TapTap 移动端 API。
+import requests
+import time
+
+class TapTapAdapter(BaseAdapter):
+    BASE_URL = 'https://api.taptapdada.com'
+    HEADERS = {
+        'User-Agent': 'okhttp/3.10.0',
+    }
+    X_UA = 'V=1&PN=TapTap&VN_CODE=593&LOC=CN&LANG=zh_CN&CH=default'
+
+    def get_reviews(self, app_id: str, sort: str = 'new',
+                    max_pages: int = 50) -> list[TapTapReview]:
+        """获取游戏评论——免登录"""
+        reviews = []
+        for page in range(max_pages):
+            params = {
+                'app_id': app_id,
+                'sort': sort,        # 'new' 或 'hot'
+                'from': page * 10,
+                'X-UA': self.X_UA,
+            }
+            resp = requests.get(
+                f'{self.BASE_URL}/review/v1/by-app',
+                params=params, headers=self.HEADERS
+            )
+            data = resp.json()
+            if not data.get('data', {}).get('list'):
+                break
+            for item in data['data']['list']:
+                review = TapTapReview(
+                    game_id=app_id,
+                    game_name='',          # 需从外部传入或单独查询
+                    review_id=str(item['id']),
+                    author=item['author']['name'],
+                    author_id=str(item['author']['id']),
+                    score=item['score'],
+                    content=item['contents']['text'],
+                    device=item.get('device', ''),
+                    spent=item.get('spent', ''),
+                    ups=item.get('ups', 0),
+                    downs=item.get('downs', 0),
+                    publish_time=item['updated_time'],
+                    sentiment='',
+                    mentioned_games='',
+                )
+                reviews.append(review)
+            time.sleep(1)  # 礼貌延迟
+        return reviews
+
+    def get_user_games(self, user_id: str) -> list[str]:
+        """获取用户玩过的游戏列表——免登录，公开数据"""
+        # TapTap用户主页的"玩过的游戏"是公开的
+        # 具体API端点需要实际测试确认
+5.4 MediaCrawlerBridge（仅本地运行）
+
+⚠️ 重要警告
+MediaCrawler 在 GitHub Actions 中不可用（需要扫码登录）。此适配器仅在本地/服务器环境使用。CLI 调用时必须指定 --mode local。
+
+关键设计：不修改 MediaCrawler 源码，通过子进程桥接。
+import subprocess
+from pathlib import Path
+
+class MediaCrawlerBridge:
+    """桥接MediaCrawler，仅在本地环境使用"""
+
+    PLATFORM_MAP = {
+        'douyin': 'dy',
+        'kuaishou': 'ks',
+        'xiaohongshu': 'xhs',
+    }
+
+    def run(self, platform: str, keywords: list[str]):
+        """通过subprocess执行MediaCrawler"""
+        # 1. 生成临时runner脚本（注入配置，不修改源文件）
+        runner_script = self._generate_runner(platform, keywords)
+        tmp_path = Path(f'/tmp/mc_runner_{platform}.py')
+        tmp_path.write_text(runner_script)
+
+        # 2. 在MediaCrawler目录下执行
+        mc_dir = (Path(__file__).parent.parent.parent
+                  / 'third_party' / 'MediaCrawler')
+        result = subprocess.run(
+            ['python', str(tmp_path)],
+            cwd=str(mc_dir),
+            capture_output=True, text=True, timeout=3600
+        )
+
+        # 3. 读取MediaCrawler输出的CSV/JSON
+        # 4. 转换为我们的 VideoSnapshot/Comment 数据模型
+        # 5. 删除临时脚本
+
+    def _generate_runner(self, platform, keywords):
+        """生成临时运行脚本——通过sys.path和config注入，不修改源文件"""
+        return f'''
+import sys
+sys.path.insert(0, '.')
+from config import base_config
+base_config.PLATFORM = "{self.PLATFORM_MAP[platform]}"
+base_config.KEYWORDS = {keywords}
+base_config.SAVE_DATA_OPTION = "csv"
+# ... 其他配置覆盖
+from main import main
+import asyncio
+asyncio.run(main())
+'''
+6. GitHub Actions 工作流设计
+每个平台对应一个独立的工作流文件，通过 cron 定时触发并错开执行时间以避免 git push 冲突。
+6.1 crawl-bilibili.yml
+name: B站数据采集
+on:
+  schedule:
+    - cron: '0 16 * * *'   # UTC 16:00 = 北京时间次日 0:00
+  workflow_dispatch:        # 允许手动触发
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: data            # checkout data 分支
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-bilibili-${{ hashFiles('pyproject.toml') }}
+      - name: Install dependencies
+        run: pip install bilibili-api-python
+      - name: Run crawler
+        run: python -m src.cli crawl --platform bilibili --mode actions
+        env:
+          KEYWORDS_FILE: keywords.yaml
+      - name: Commit data
+        run: |
+          git config user.name "slg-sentinel-bot"
+          git config user.email "bot@slg-sentinel"
+          git add data/
+          git diff --staged --quiet || git commit -m "📊 bilibili snapshot $(date +%Y-%m-%d)"
+          git push
+6.2 crawl-youtube.yml
+name: YouTube数据采集
+on:
+  schedule:
+    - cron: '30 16 * * *'  # 错开30分钟，避免并发
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install yt-dlp scrapetube youtube-comment-downloader
+      - name: Run crawler
+        run: python -m src.cli crawl --platform youtube --mode actions
+      - name: Commit data
+        run: |
+          git config user.name "slg-sentinel-bot"
+          git config user.email "bot@slg-sentinel"
+          git add data/
+          git diff --staged --quiet || git commit -m "📊 youtube snapshot $(date +%Y-%m-%d)"
+          git push
+6.3 crawl-taptap.yml
+结构与上述两个工作流相同，关键差异：
+
+配置项
+值
+cron
+'0 17 * * *'（UTC 17:00 = 北京时间次日 1:00）
+依赖安装
+pip install requests beautifulsoup4
+运行命令
+python -m src.cli crawl --platform taptap --mode actions
+commit message
+📊 taptap snapshot $(date +%Y-%m-%d)
+
+6.4 weekly-analysis.yml
+name: 周度分析报告
+on:
+  schedule:
+    - cron: '0 2 * * 1'    # 每周一 UTC 02:00 = 北京时间 10:00
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install bilibili-api-python yt-dlp scrapetube \
+                      youtube-comment-downloader requests beautifulsoup4
+      - name: Generate weekly report
+        run: python -m src.cli analyze --type weekly
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      - name: Commit report
+        run: |
+          git config user.name "slg-sentinel-bot"
+          git config user.email "bot@slg-sentinel"
+          git add data/ reports/
+          git diff --staged --quiet || git commit -m "📈 weekly report $(date +%Y-%m-%d)"
+          git push
+7. GitHub Actions 关键约束与设计决策
+
+序号
+约束/决策
+说明
+1
+公开仓库免费无限分钟
+推荐使用公开仓库。注意不要把 Cookie 等敏感信息提交到代码中。
+2
+私有仓库 2000 分钟/月
+标准 runner，足够每日 3 个平台各 30 分钟（日均 90 分钟 × 30 天 = 2700 分钟，需留意用量）。
+3
+单 job 最长运行 6 小时
+我们的各采集 job 设置 timeout-minutes: 30，远低于此限制。
+4
+数据存储在 data 分支
+与代码分支（main）分离。main 分支：源代码、配置文件、工作流定义。data 分支：CSV 数据文件、周报。避免代码 PR 触发数据采集冲突。
+5
+Secrets 管理
+DEEPSEEK_API_KEY：AI 分析用（周报生成）。BILI_SESSDATA（可选）：B站深度用户画像时用。不要在 Actions 中存储 MediaCrawler 需要的 Cookie——这些平台需要扫码登录，必须在本地执行。
+6
+错开各平台的 cron 时间
+B站 UTC 16:00 → YouTube UTC 16:30 → TapTap UTC 17:00。避免多个 job 同时 git push 造成冲突。
+7
+workflow_dispatch
+所有工作流都支持手动触发（workflow_dispatch），方便调试和紧急数据采集。
+
+8. 关键词配置文件（keywords.yaml）
+# ===========================
+# SLG Sentinel 关键词配置文件
+# ===========================
+
+# 种子关键词——AI会自动扩展
+seed_keywords:
+  games:
+    - 率土之滨
+    - 三国志战略版
+    - 万国觉醒
+    - 文明与征服
+    - 鸿图之下
+    - 寰宇之战
+  categories:
+    - SLG手游
+    - 策略战争游戏
+
+# 跟踪目标
+targets:
+  bilibili_channels:
+    - name: "率土之滨官方"
+      uid: "xxx"          # 替换为实际UID
+    # ... 按需添加
+  youtube_channels:
+    - name: "SLG游戏评测频道"
+      channel_id: "UCxxx"  # 替换为实际频道ID
+    # ... 按需添加
+  taptap_games:
+    - name: "率土之滨"
+      app_id: "xxx"        # 替换为实际App ID
+    # ... 按需添加
+
+# 扩展配置
+expansion:
+  enabled: true
+  llm_provider: deepseek   # 或 openai / qwen
+  max_expanded_keywords: 50
+
+配置说明
+keywords.yaml 和 targets.yaml 可以在公开仓库中存放，不含敏感信息。所有 Cookie / API Key 只通过 GitHub Secrets 或本地环境变量注入。
+
+9. CLI 入口设计（cli.py）
+CLI 是系统唯一的用户入口，使用 argparse 实现。以下为完整的命令体系：
+9.1 采集命令
+# GitHub Actions 模式（免登录，仅采集基础数据）
+python -m src.cli crawl --platform bilibili --mode actions
+python -m src.cli crawl --platform youtube --mode actions
+python -m src.cli crawl --platform taptap --mode actions
+
+# 本地模式（完整功能）
+python -m src.cli crawl --platform bilibili --mode local
+python -m src.cli crawl --platform douyin --mode local      # 需要 MediaCrawler
+python -m src.cli crawl --platform kuaishou --mode local     # 需要 MediaCrawler
+python -m src.cli crawl --platform xiaohongshu --mode local  # 需要 MediaCrawler
+9.2 用户画像命令
+# 需Cookie，仅本地
+python -m src.cli profile --platform bilibili --video-id BVxxx
+9.3 分析命令
+# 周度分析报告
+python -m src.cli analyze --type weekly
+
+# 单日情感分析
+python -m src.cli analyze --type sentiment --platform bilibili --date 2026-04-14
+9.4 关键词扩展命令
+# 使用 DeepSeek 扩展关键词
+python -m src.cli expand-keywords --provider deepseek
+9.5 argparse 结构要求
+CLI 使用 argparse.add_subparsers() 实现子命令分发：
+
+子命令
+必需参数
+可选参数
+crawl
+--platform, --mode
+--date（默认今天）, --keywords-file（默认 keywords.yaml）
+profile
+--platform, --video-id
+--max-users（默认 100）
+analyze
+--type
+--platform, --date, --output-dir（默认 reports/）
+expand-keywords
+无
+--provider（默认 deepseek）, --max-keywords（默认 50）
+
+10. 实施路线图（Phase by Phase）
+以下为分阶段实施计划。每个 Phase 结束时必须有明确的验证标准。
+
+Phase 0：骨架搭建（Day 1–2）
+
+
+任务
+产出物
+创建完整项目目录结构
+所有目录和 __init__.py 文件
+实现 models.py（所有 dataclass）
+src/core/models.py
+实现 csv_store.py
+src/core/csv_store.py
+实现 config.py + keywords.yaml + targets.yaml
+配置加载模块和配置文件模板
+实现 cli.py 骨架（argparse）
+src/cli.py
+初始化 git，创建 main 和 data 两个分支
+Git 仓库
+
+验证命令：python -m src.cli --help 输出所有子命令说明。
+
+Phase 1：B站适配器（Day 3–5）
+
+
+任务
+产出物
+实现 BilibiliAdapter（免登录部分）
+src/adapters/bilibili.py
+搜索 → VideoSnapshot → CSV
+data/bilibili/videos/ 下的 CSV 文件
+评论 → Comment → CSV
+data/bilibili/comments/ 下的 CSV 文件
+每日快照 → snapshots/ → CSV
+data/snapshots/ 下的 CSV 文件
+编写 crawl-bilibili.yml
+.github/workflows/crawl-bilibili.yml
+
+验证命令：python -m src.cli crawl --platform bilibili --mode actions 产出 CSV 文件。
+
+Phase 2：YouTube 适配器（Day 6–8）
+
+
+任务
+产出物
+实现 YouTubeAdapter（yt-dlp 搜索 + 元数据，scrapetube 频道，youtube-comment-downloader 评论）
+src/adapters/youtube.py
+编写 crawl-youtube.yml
+.github/workflows/crawl-youtube.yml
+
+验证命令：python -m src.cli crawl --platform youtube --mode actions 产出 CSV 文件。
+
+Phase 3：TapTap 适配器（Day 9–10）
+
+
+任务
+产出物
+实现 TapTapAdapter（requests 直接调 API）
+src/adapters/taptap.py
+编写 crawl-taptap.yml
+.github/workflows/crawl-taptap.yml
+
+验证命令：python -m src.cli crawl --platform taptap --mode actions 产出 CSV 文件。
+
+Phase 4：分析层（Day 11–15）
+
+
+任务
+产出物
+AI 关键词扩展
+src/core/keyword_expander.py
+情感分析——先用简单规则+关键词，后续可接 LLM
+src/analysis/sentiment.py
+周度增量计算
+csv_store.get_weekly_delta() 完整实现
+周报生成 → Markdown 格式
+src/analysis/weekly_report.py + reports/ 目录
+编写 weekly-analysis.yml
+.github/workflows/weekly-analysis.yml
+
+验证命令：python -m src.cli analyze --type weekly 产出 Markdown 周报。
+
+Phase 5：进阶功能（Day 16–20）
+
+
+任务
+产出物
+MediaCrawlerBridge（仅本地）
+src/adapters/mediacrawler_bridge.py
+B站用户画像推断（需 Cookie）
+src/analysis/user_profiler.py
+TapTap 用户玩过的游戏交叉分析
+集成进 user_profiler.py
+评论中竞品提及提取
+集成进 sentiment.py 或独立模块
+
+验证命令：python -m src.cli profile --platform bilibili --video-id BVxxx 产出用户画像 CSV。
+11. 注意事项与工程纪律
+
+序号
+规则
+详细说明
+1
+礼貌爬取
+所有 Adapter 统一限制请求频率。B站和 TapTap 每请求间隔 ≥ 1 秒。YouTube 工具自行管理频率，无需额外限制。
+2
+错误处理
+网络超时、API 限流、数据格式变更都要有 try-except 和日志记录。使用 Python 标准库 logging 模块，日志格式：[%(asctime)s] %(levelname)s %(name)s: %(message)s。
+3
+幂等性
+同一天重复运行不会产生重复数据。通过「日期 + video_id」去重：写入前检查当天 CSV 是否已存在相同 video_id 的记录。
+4
+Git 冲突预防
+每个平台的 Actions 工作流错开至少 30 分钟。git push 前先 git pull --rebase。
+5
+CSV 大文件
+如果单个 CSV 超过 50MB，按月份分片（{YYYY-MM}_videos.csv）。必要时在 .gitattributes 中配置 Git LFS。
+6
+安全
+keywords.yaml 和 targets.yaml 可以在公开仓库中，不含敏感信息。Cookie / API Key 只通过 GitHub Secrets 或本地环境变量注入。绝不在代码中硬编码任何凭证。
+
+
+给实施者的提醒
+本规格书包含了所有必需的架构决策、数据模型、API 调用示例和工作流配置。实施时应按 Phase 0 → Phase 5 的顺序逐阶段推进，每个 Phase 结束后通过验证命令确认产出物正确，再进入下一阶段。如遇到第三方 API 变更，优先在 Adapter 层适配，不要修改 core 层和数据模型。
+
+— SLG Sentinel 工程规格书 v2 · 完 —

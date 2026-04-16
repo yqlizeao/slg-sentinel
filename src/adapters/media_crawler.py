@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import csv
 import logging
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -25,10 +26,44 @@ logger = logging.getLogger(__name__)
 
 
 class MediaCrawlerBridge:
-    def __init__(self, media_crawler_dir: str):
-        self.mc_dir = Path(media_crawler_dir)
-        if not self.mc_dir.exists():
-            raise FileNotFoundError(f"找不到 MediaCrawler 数据目录: {self.mc_dir}")
+    def __init__(self, media_crawler_root_dir: str):
+        self.mc_root = Path(media_crawler_root_dir)
+        self.mc_data_dir = self.mc_root / "data"
+        if not self.mc_root.exists():
+            raise FileNotFoundError(f"找不到 MediaCrawler 根目录(沙盒挂载点): {self.mc_root}")
+
+    def run_spider(self, platform: str, keywords: List[str]) -> bool:
+        """
+        通过 subprocess 调度 MediaCrawler 本地实例，绕过反爬机制
+        """
+        MC_CLI_MAP = {
+            "xiaohongshu": "xhs",
+            "douyin": "douyin",
+            "kuaishou": "kuaishou",
+        }
+        mc_platform = MC_CLI_MAP.get(platform, platform)
+        kw_str = ",".join(keywords)
+        
+        # 组装命令，强制使用扫码（最稳），扫搜模式
+        cmd = [
+            "python", "main.py",
+            "--platform", mc_platform,
+            "--lt", "qrcode",
+            "--type", "search",
+            "--keywords", kw_str
+        ]
+        
+        logger.info(f"即将挂载底层隔离沙盒引擎: {' '.join(cmd)}")
+        try:
+            # 标准输入输出不做 PIPE 拦截，由于 MediaCrawler 强行依赖前端扫码与状态打点
+            result = subprocess.run(cmd, cwd=self.mc_root, check=True)
+            return result.returncode == 0
+        except subprocess.CalledProcessError as e:
+            logger.error(f"MediaCrawler 爬虫由于防风控崩溃或主动阻断退出: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"MediaCrawler 引擎挂载崩溃异常: {e}")
+            return False
 
     def import_platform_data(self, platform: str) -> tuple[List[VideoSnapshot], List[Comment]]:
         """
@@ -46,9 +81,9 @@ class MediaCrawlerBridge:
             "kuaishou": "kuaishou",
         }
         mc_platform = MC_DIR_MAP.get(platform, platform)
-        platform_dir = self.mc_dir / mc_platform
+        platform_dir = self.mc_data_dir / mc_platform
         if not platform_dir.exists():
-            logger.warning(f"MediaCrawler 目录下未找到 {platform} 数据: {platform_dir}")
+            logger.warning(f"底层沙盒 {self.mc_data_dir} 未下发 {platform} 的数据快照产出...")
             return [], []
 
         snapshots = []

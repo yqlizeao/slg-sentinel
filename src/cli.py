@@ -281,18 +281,38 @@ def _crawl_media_crawler(args: argparse.Namespace) -> None:
     import os
     from src.adapters.media_crawler import MediaCrawlerBridge
     from src.core.csv_store import CSVStore
+    from src.core.config import load_config
 
-    mc_dir = os.environ.get("MEDIA_CRAWLER_DIR", "MediaCrawler/data")
-    try:
-        bridge = MediaCrawlerBridge(mc_dir)
-        snaps, comments = bridge.import_platform_data(args.platform)
-    except FileNotFoundError:
-        logger.error(f"未找到 MediaCrawler 数据目录: {mc_dir}")
-        print("💡 提示: 请先运行 MediaCrawler 采集数据，并通过设置 MEDIA_CRAWLER_DIR 注入其 data 目录路径。")
+    if args.mode != "local":
+        print(f"❌ 平台 {args.platform} 受极度严苛的风控保护，必须使用 --mode local (确保具有本地执行沙盒环境)。")
         return
 
+    mc_root = os.environ.get("MEDIA_CRAWLER_ROOT", "MediaCrawler")
+    try:
+        bridge = MediaCrawlerBridge(mc_root)
+    except FileNotFoundError:
+        logger.error(f"未找到 MediaCrawler 隔离沙盒: {mc_root}")
+        print("💡 提示: 请确保已执行 `git submodule update --init` 并完成了小本本/抖音的节点拉取。")
+        return
+
+    config = load_config(keywords_file=args.keywords_file)
+    keywords = config.keywords.all_keywords()
+
+    if keywords:
+        print(f"🚀 [沙盒桥接] 正在向底层引擎投递参数，即将挂载爬虫进程...")
+        print(f"👉 【注意】请观察终端随时可能弹出的【扫码请求】，务必使用对应的手机 App 配合打通鉴权！")
+        # 避免一次性检索过长引发限流，取前几个高优关键词
+        kw_slice = keywords[:3] 
+        success = bridge.run_spider(args.platform, kw_slice)
+        if not success:
+            print("⚠️ [安全警报] 进程中断。可能需要重试扫码或目标平台的 API 结构已变更。")
+            return
+            
+    print("📥 [收网作业] 扫描并迁移沙盒独立产生的 CSV 孤岛快照...")
+    snaps, comments = bridge.import_platform_data(args.platform)
+
     if not snaps and not comments:
-        logger.warning(f"在 {mc_dir}/{args.platform} 中未解析到数据。")
+        logger.warning(f"由于风控流控或未发生有效产出，在 {bridge.mc_data_dir}/{args.platform} 中无新增数据。")
         return
 
     store = CSVStore()
