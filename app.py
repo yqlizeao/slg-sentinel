@@ -46,8 +46,9 @@ section[data-testid="stSidebar"] {
     max-width: 180px !important;
 }
 
-/* 主内容区域去除左侧多余空白 */
+/* 主内容区域去除左侧和顶部多余空白 */
 .block-container {
+    padding-top: 2rem !important;
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     max-width: 100% !important;
