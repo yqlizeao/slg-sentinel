@@ -46,9 +46,14 @@ section[data-testid="stSidebar"] {
     max-width: 180px !important;
 }
 
+/* 彻底吃掉顶部 Header (Deploy 栏位)，拔除滚动锚点干扰 */
+header[data-testid="stHeader"] {
+    display: none !important;
+}
+
 /* 主内容区域去除左侧和顶部多余空白 */
 .block-container {
-    padding-top: 2rem !important;
+    padding-top: 3rem !important;
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     max-width: 100% !important;
