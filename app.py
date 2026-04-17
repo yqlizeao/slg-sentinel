@@ -392,7 +392,7 @@ with st.sidebar:
 
     page = st.radio(
         "应用导航",
-        ["总览", "采集", "画像", "周报", "设置"],
+        ["总览", "采集", "画像", "智能报表", "设置"],
         label_visibility="collapsed",
     )
 
@@ -1045,24 +1045,31 @@ elif page == "画像":
         )
 
 
-elif page == "周报":
+elif page == "智能报表":
     import os
-    st.markdown("<h1>我的周报</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>根据给定时序处理全矩阵存储池并输出语义聚类文档。</p>", unsafe_allow_html=True)
+    st.markdown("<h1>智能舆情报表引擎</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>根据给定时序处理全矩阵存储池并输出语义聚类研判文档。</p>", unsafe_allow_html=True)
     
-    custom_date = st.date_input("时序截断点 (默认采用系统当下日)", value=datetime.now())
-    
-    # 接入 Antigravity 本地脑集群取代 Deepseek
-    st.markdown("<p style='color: #16a34a; font-size: 13px; font-weight: 500;'>⚡ 系统已接入 Antigravity 神经计算引擎 (本地离线集群)，随时待命启动全域语义分析。</p>", unsafe_allow_html=True)
-    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        report_span = st.selectbox("分析跨度层级", ["周度汇总研判 (Weekly)", "每日动向快报 (Daily - WIP)", "月度战略大盘 (Monthly - WIP)"])
+    with col2:
+        custom_date = st.date_input("时序截断锚点 (默认系统当下日)", value=datetime.now())
+        
     date_str = custom_date.strftime("%Y-%m-%d")
     
-    if st.button("激活生成管道", type="primary"):
-        with st.spinner("Antigravity 神经网络正在提取核心流失玩家心理印记，并生成宏观研判..."):
-            stdout, stderr, code = run_cli(["analyze", "--type", "weekly", "--date", date_str])
-        if code == 0:
-            st.success("🎉 生成完毕！周报结果已写入 reports 目录。")
-            st.rerun()
+    # 移除被要求摒弃的中二化名词
+    st.markdown("<p style='color: #16a34a; font-size: 13px; font-weight: 500;'>⚡ LLM 语义聚类探针已就位，当前可独立静默执行。</p>", unsafe_allow_html=True)
+    
+    if st.button("激活生产管道", type="primary"):
+        if "WIP" in report_span:
+            st.warning("🚧 该维度正在重构闭环中... 当前底部算力仅能够执行 '周度汇总研判 (Weekly)' 的生成。")
+        else:
+            with st.spinner("NLP 引擎正在提取玩家情感浓度，并过滤高赞负面长文..."):
+                stdout, stderr, code = run_cli(["analyze", "--type", "weekly", "--date", date_str])
+            if code == 0:
+                st.success("🎉 生成完毕！跨域聚类报告已写入 reports 目录。")
+                st.rerun()
         else:
             st.error("执行链由于未捕获异常而停止。")
             with st.expander("调试层输出"):
