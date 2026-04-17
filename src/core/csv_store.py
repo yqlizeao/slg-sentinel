@@ -68,15 +68,14 @@ class CSVStore:
             # 统一 comments 名称，即便是 reviews 传入也落盘为 comments
             effective_dir_type = "comments" if data_type in ("comments", "reviews") else data_type
             
+            _suffix_part = f"_{filename_suffix}" if filename_suffix else ""
             if data_type in ("comments", "reviews") and video_id:
                 dir_path = self.data_dir / category / platform / effective_dir_type
-                # TapTap等评论在本地依然叫 _comments.csv 以保持后缀一致性，也可以叫 reviews，这里使用有效的目录名映射
-                filename = f"{date_str}_{video_id}_{effective_dir_type}{filename_suffix}.csv"
+                filename = f"{date_str}_{video_id}_{effective_dir_type}{_suffix_part}.csv"
             else:
                 dir_path = self.data_dir / category / platform / effective_dir_type
-                # 如果传入 reviews 且没有 video_id (如全量 taptap 评论), 使用 comments 后缀
                 actual_suffix = "comments" if data_type == "reviews" else data_type
-                filename = f"{date_str}_{actual_suffix}{filename_suffix}.csv"
+                filename = f"{date_str}_{actual_suffix}{_suffix_part}.csv"
 
         dir_path.mkdir(parents=True, exist_ok=True)
         return dir_path / filename
