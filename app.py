@@ -627,7 +627,7 @@ if page == "总览":
             with cx2:
                 st.markdown(f"<div style='font-size:12px; color:#64748b; padding-top:10px;'>{f_size:.1f} KB</div>", unsafe_allow_html=True)
             with cx3:
-                if st.button("抹除", key=f"del_{file_path}"):
+                if st.button("删除", key=f"del_{file_path}"):
                     try:
                         os.remove(file_path)
                         st.rerun()
