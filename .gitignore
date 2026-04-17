@@ -58,3 +58,6 @@ third_party/MediaCrawler/
 
 # Local Configuration (Do not commit to git)
 secrets.yaml
+
+# AI Agent Context Directory
+.gemini/
