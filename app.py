@@ -603,7 +603,19 @@ if page == "总览":
             f_size = file_path.stat().st_size / 1024
             cx1, cx2, cx3 = st.columns([6, 3, 2])
             with cx1:
-                st.markdown(f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px;'><b>{file_path.parent.name}</b> / {file_path.name}</div>", unsafe_allow_html=True)
+                rel_parts = file_path.relative_to(data_base_dir).parts
+                if len(rel_parts) >= 4 and rel_parts[0] in ["video_platforms", "community_platforms"]:
+                    plat_name = rel_parts[1].capitalize()
+                    data_type = rel_parts[2].capitalize()
+                    badge_color = "#3b82f6" if "video" in data_type.lower() else "#8b5cf6" if "comment" in data_type.lower() else "#10b981"
+                    plat_tag = f"<span style='background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; margin-right:6px;'>{plat_name}</span>"
+                    type_tag = f"<span style='background:{badge_color}20; color:{badge_color}; padding:2px 6px; border-radius:4px; margin-right:8px;'>{data_type}</span>"
+                    display_html = f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px; white-space:nowrap;'>{plat_tag}{type_tag} <b>{file_path.name}</b></div>"
+                elif len(rel_parts) == 3 and rel_parts[0] == "summary":
+                    display_html = f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px; white-space:nowrap;'><span style='background:#fef3c7; color:#d97706; padding:2px 6px; border-radius:4px; margin-right:6px;'>Summary</span><span style='background:#e0e7ff; color:#4338ca; padding:2px 6px; border-radius:4px; margin-right:8px;'>{rel_parts[1].capitalize()}</span> <b>{file_path.name}</b></div>"
+                else:
+                    display_html = f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px;'><b>{'/'.join(rel_parts[:-1])}</b> / {file_path.name}</div>"
+                st.markdown(display_html, unsafe_allow_html=True)
             with cx2:
                 st.markdown(f"<div style='font-size:12px; color:#64748b; padding-top:10px;'>{f_size:.1f} KB</div>", unsafe_allow_html=True)
             with cx3:
