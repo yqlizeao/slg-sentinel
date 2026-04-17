@@ -411,8 +411,8 @@ if page == "总览":
     <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;'>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
             <div style='font-size:12px; color:#666;'>📡 监控目标数量</div>
-            <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['targets']} <span style='font-size:12px; font-weight:400; color:#666;'>频道</span></div>
-            <div style='font-size:11px; color:#999; margin-top:4px;'>包含 {health['keywords']} 个关联业务关键词</div>
+            <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['targets']}<span style='font-size:12px; font-weight:400; color:#666; margin:0 4px;'>频道，</span>{health['keywords']}<span style='font-size:12px; font-weight:400; color:#666; margin-left:4px;'>关键词</span></div>
+            <div style='font-size:11px; color:#999; margin-top:4px;'>包含跨平台核心检索靶点</div>
         </div>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
             <div style='font-size:12px; color:#666;'>📦 本地总数据量</div>
