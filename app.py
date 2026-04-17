@@ -421,7 +421,7 @@ if page == "总览":
         </div>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
             <div style='font-size:12px; color:#666;'>🧠 舆情分析组件 (LLM)</div>
-            <div style='font-size:24px; font-weight:700; color:{"#16a34a" if health['api_health'] else "#dc2626"}; margin-top:8px;'>{"连接正常" if health['api_health'] else "未接通 OFFLINE"}</div>
+            <div style='font-size:24px; font-weight:700; color:{"#16a34a" if health['api_health'] else "#dc2626"}; margin-top:8px;'>{"连接正常" if health['api_health'] else "未配置"}</div>
             <div style='font-size:11px; color:#999; margin-top:4px;'>用于支撑深度的语义总结与报告生成</div>
         </div>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
