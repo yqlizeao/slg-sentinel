@@ -53,11 +53,13 @@ header[data-testid="stHeader"] {
 
 /* 主内容区域去除左侧和顶部多余空白 */
 .block-container {
-    padding-top: 3rem !important;
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     max-width: 100% !important;
+    margin-top: -4rem !important;
+    padding-bottom: 2rem !important;
 }
+
 .stSidebar [data-testid="stMarkdownContainer"] p {
     color: #666666 !important;
     font-size: 13px !important;
