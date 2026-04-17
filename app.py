@@ -659,7 +659,7 @@ elif page == "采集":
         <div style='font-size:15px; font-weight:600; color:#111; margin-top:2px;'>注入爬取配额限定 (视频/结果上限)</div>
     </div>
     """, unsafe_allow_html=True)
-    limit_options = {20: "20 条 (安全试探，极速)", 50: "50 条 (常规快照)", 100: "100 条 (数据深耕)", 200: "200 条 (重度数据采集)", 500: "500 条 (需挂机等待)"}
+    limit_options = {10: "10 条 (安全试探，极速)", 20: "20 条", 30: "30 条", 40: "40 条", 50: "50 条 (常规快照)"}
     limit_val = st.selectbox("最大获取限额", list(limit_options.keys()), format_func=lambda x: limit_options[x], label_visibility="collapsed")
     
     st.markdown("<br>", unsafe_allow_html=True)
