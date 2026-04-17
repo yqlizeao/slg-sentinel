@@ -42,13 +42,37 @@ slg-sentinel/
 │       ├── profiler.py         # (🚧 待攻坚核心) 跨越隐私墙的用户画像拼图合成器
 │       ├── sentiment.py        # 本地离线自然语言情感分析 / 竞品 NER 实体识别
 │       └── weekly_report.py    # 基于增量的 Markdown 周报生成器
-├── data/                       # 核心时序数据库 (仅在专门的分支上维护庞大体积)
-│   └── {platform} / {videos|comments} / {YYYY-MM-DD}_xxx.csv
+├── data/                       # 核心时序数据库 (唯一落盘点，采用按日期的纯 CSV 切片)
+│   ├── snapshots/              # 【核心计算快照层】混合了全平台的视频概览。算法每天仅存一次快照，专供于 `weekly_report.py` 利用减法（今天数据减去7天前数据）来计算播放量/点赞量的“周真实热度增量”。
+│   ├── bilibili/               
+│   │   ├── videos/             # 每日 B 站关键词搜索 / 热门列表的视频元数据 (标题、BV号、UP主、四大维指标)。
+│   │   └── comments/           # 针对头部视频深度下钻抓取的长文本评论池，包含用户的 IP 属地，是情感分析与舆情发酵的主要素材源。
+│   ├── youtube/                
+│   │   ├── videos/             # YouTube 竞品频道的爬取元数据。
+│   │   └── comments/           # 穿越梯子扒取的管子评论（无配额 API 扒取技术结果），用于考察海外/繁体圈层玩家心态。
+│   ├── taptap/                 
+│   │   ├── videos/             # 存放 TapTap 对应 SLG 游戏的本身属性和长期元数据。
+│   │   └── reviews/            # TapTap 特有的属性：游戏长评。具有极高价值的 Score（评分）及设备属性与“游玩时长”，是单机游戏风向的试金石。
+│   ├── douyin/                 # (含快手 kuaishou/、小红书 xiaohongshu/ 等)
+│   │   ├── videos/             # 独立从底部的 MediaCrawler 子进程沙盒中孤岛搬运过来的最新微短视频切片元数据。
+│   │   └── comments/           # 微短剧式的浅层下沉市场社群评论反应。
+│   └── profiles/               
+│       └── user_games/         # 【核心输出目标】`profiler.py` 提炼的终极用户结晶。将散落在各处的评论者 ID 缝合后推断出的标签库（例如某位 B 站 UP 到底是一毛不拔的风景党，还是极度硬核的三战老保）。
 ├── cloudflare_pages/           # 云端流媒体反代静态入口 (index.html, 处理 CF iFrame 部署)
 ├── keywords.yaml               # 核心赛道黑话、同义词扩展池
 ├── targets.yaml                # 定向刺探的极高价值竞品 Up/频道
 └── Gemini.md                   # 也就是本文件，所有 AI 接手之前的共识核心
 ```
+
+---
+
+## 3. 核心数据对象映射 (CSV as Database)
+
+为了配合上述文件结构，系统中存在以下不可或缺的数据类模型设定（所有的 CSV Header 表头由以下对象直接生成）：
+1. **`VideoSnapshot`**: 所有外层 `videos/` 列表获取的最重基石，包含了 播放、投币、弹幕等多维矩阵字段。
+2. **`Comment`**: 用于 B站/油管/抖快，主打文本自然语言挖掘与点赞排位。
+3. **`TapTapReview`**: `reviews/` 包含长测游玩时间与评级星级打分。
+4. **`UserProfile`**: 最终的产物，具有年龄推断、消费类型（free/dolphin/whale 指代白嫖、微氪、神豪）等终极用户画像标签。
 
 ---
 
