@@ -46,11 +46,12 @@ section[data-testid="stSidebar"] {
     max-width: 180px !important;
 }
 
-/* 只隐藏 Header 里的 Deploy 菜单，保留侧边栏展开按钮 */
+/* 只隐藏 Header 里的 Deploy 和主菜单，保留侧边栏展开按钮 */
 header[data-testid="stHeader"] {
     background: transparent !important;
 }
-header[data-testid="stHeader"] [data-testid="stToolbar"] {
+[data-testid="stAppDeployButton"],
+[data-testid="stMainMenuButton"] {
     display: none !important;
 }
 
