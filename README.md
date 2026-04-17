@@ -63,8 +63,8 @@ streamlit run app.py
 用于放置服务器后台或 GitHub Actions 自动 CRON 节点，每日静如处子，动如脱兔：
 
 ```bash
-# 执行 B 站免登级云端快速快照
-python -m src.cli crawl --platform bilibili --mode actions
+# 执行 B 站免登级云端批量快照 (指定单次采集深网限额 100 条)
+python -m src.cli crawl --platform bilibili --mode actions --limit 100
 
 # 执行 YouTube 本地域深网评论挖掘
 python -m src.cli crawl --platform youtube --mode local

@@ -55,15 +55,14 @@ class BilibiliAdapter(BaseAdapter):
     # ─── 公开接口（实现 BaseAdapter 抽象方法）────────────────────────
 
     def search_videos(
-        self, keyword: str, page: int = 1, page_size: int = 20, **kwargs
+        self, keyword: str, limit: int = 20, **kwargs
     ) -> List[VideoSnapshot]:
         """
         搜索视频——免登录，Wbi 签名自动处理。
 
         Args:
             keyword: 搜索关键词
-            page: 页码（从 1 开始）
-            page_size: 每页数量
+            limit: 最大获取数量 (默认 20)
             kwargs:
                 order: 排序方式 (totalrank, click, pubdate, stow)
 
@@ -71,7 +70,7 @@ class BilibiliAdapter(BaseAdapter):
             VideoSnapshot 列表
         """
         order = kwargs.get("order", "totalrank")
-        return _run(self._async_search_videos(keyword, page, page_size, order))
+        return _run(self._async_search_videos(keyword, limit, order))
 
     def get_video_info(self, video_id: str) -> VideoSnapshot:
         """
@@ -115,7 +114,7 @@ class BilibiliAdapter(BaseAdapter):
     # ─── 异步实现（免登录）────────────────────────────────────────────
 
     async def _async_search_videos(
-        self, keyword: str, page: int, page_size: int, order: str = "totalrank"
+        self, keyword: str, limit: int = 20, order: str = "totalrank"
     ) -> List[VideoSnapshot]:
         try:
             from bilibili_api import search
@@ -126,19 +125,24 @@ class BilibiliAdapter(BaseAdapter):
                 "click": search.OrderVideo.CLICK,
                 "pubdate": search.OrderVideo.PUBDATE,
                 "stow": search.OrderVideo.STOW,
-                "danmaku": search.OrderVideo.DANMAKU,
             }
-            bili_order = order_mapping.get(order, search.OrderVideo.TOTALRANK)
+            bili_order = order_mapping.get(order, getattr(search.OrderVideo, 'TOTALRANK', getattr(search.OrderVideo, 'DEFAULT', None)))
 
-            result = await search.search_by_type(
-                keyword=keyword,
-                search_type=search.SearchObjectType.VIDEO,
-                order_type=bili_order,
-                page=page,
-            )
-            snapshots = []
-            today = datetime.now().strftime("%Y-%m-%d")
-            for item in result.get("result", []):
+            all_snapshots = []
+            page = 1
+            while len(all_snapshots) < limit:
+                result = await search.search_by_type(
+                    keyword=keyword,
+                    search_type=search.SearchObjectType.VIDEO,
+                    order_type=bili_order,
+                    page=page,
+                )
+                items = result.get("result", [])
+                if not items:
+                    break
+                    
+                today = datetime.now().strftime("%Y-%m-%d")
+                for item in items:
                 try:
                     snap = VideoSnapshot(
                         platform="bilibili",

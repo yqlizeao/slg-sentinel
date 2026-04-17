@@ -16,10 +16,11 @@ from src.core.models import Comment, UserProfile, VideoSnapshot
 
 logger = logging.getLogger(__name__)
 
-# 策略玩家特征词（通过特征词初步判定标签）
-TAG_HARDCORE = {"配将", "开荒", "赛季", "充", "氪", "霸业", "T0", "满红", "满抽"}
-TAG_CASUAL = {"风景", "好看", "退坑", "随便玩", "养老", "抽卡"}
-TAG_COMPETITOR = {"不如", "辣鸡", "没三战好", "抄袭", "跟率土一样"}
+# 面向 PC 单机 SLG 的核心玩家派系特征词
+TAG_PC_TARGET = {"全战", "单机", "文明", "光荣", "买断", "三国志14", "三14", "三国志11", "单机版"}
+TAG_MOBILE_REFUGEE = {"退坑", "弃坑", "氪", "充", "累", "打卡", "上班", "卖号", "韭菜", "648", "毁三观", "毫无体验", "当头棒喝"}
+TAG_HARDCORE = {"大地图", "内政", "机制", "沙盘", "数值碾压", "配将", "开荒", "战术", "纵深"}
+TAG_CASUAL = {"种地", "风景", "养老", "抽卡", "随便玩", "立绘", "好看"}
 
 
 class UserProfiler:
@@ -89,23 +90,21 @@ class UserProfiler:
                 else:
                     payer_type = "dolphin"
 
-            # 3. 标签推断
+            # 3. 标签推断 (面向单机视角的立体成分)
             tags_set = set()
+            for w in TAG_PC_TARGET:
+                if w in combined_text: tags_set.add("端游遗老")
+            for w in TAG_MOBILE_REFUGEE:
+                if w in combined_text: tags_set.add("重氪难民")
             for w in TAG_HARDCORE:
-                if w in combined_text:
-                    tags_set.add("硬核玩家")
-                    break
+                if w in combined_text: tags_set.add("硬核考究党")
             for w in TAG_CASUAL:
-                if w in combined_text:
-                    tags_set.add("休闲/风景党")
-                    break
-            for w in TAG_COMPETITOR:
-                if w in combined_text:
-                    tags_set.add("竞品对比者")
-                    break
+                if w in combined_text: tags_set.add("休闲风景党")
 
             if context_tags and "slg" in context_tags.lower():
                 tags_set.add("SLG受众")
+            elif not tags_set:
+                tags_set.add("散人玩家")
 
             last_active = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -126,18 +125,14 @@ class UserProfiler:
         return profiles
 
     def save_profiles(self, profiles: List[UserProfile], platform: str) -> None:
-        """保存用户画像到独立存储（由于涉及跨越日常的聚合，存储在独立 profile 目录）"""
+        """保存用户画像到独立存储（统一汇集在 data/profiles/）"""
         if not profiles:
             return
         
-        # 将用户画像单独存储而不是挂在日期目录下
-        profile_dir = self.store.data_dir / "profiles"
-        profile_dir.mkdir(parents=True, exist_ok=True)
-        file_path = profile_dir / f"{platform}_profiles_DB.csv"
-        
-        # 因为要求去重与更新，简易处理采用追加
         try:
-            self.store.save(profiles, platform="profiles", data_type="user_games")
-            # Hack: 使用内置存储复用逻辑
-        except Exception:
-            pass
+            # 使用 platform = "profiles" 强制 csv_store 路由到 data/profiles/user_games
+            # 把源平台名称作为 date_str 传入，生成例如 bilibili_user_games.csv
+            self.store.save(profiles, platform="profiles", data_type="user_games", date_str=platform)
+            logger.info(f"成功沉淀 {len(profiles)} 海量画像记录至 DB")
+        except Exception as e:
+            logger.error(f"保存画像失败: {e}")

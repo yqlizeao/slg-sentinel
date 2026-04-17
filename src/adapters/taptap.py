@@ -68,12 +68,12 @@ class TapTapAdapter(BaseAdapter):
 
     # ─── BaseAdapter 抽象方法实现 ──────────────────────────────────
 
-    def search_videos(self, keyword: str, **kwargs) -> List[VideoSnapshot]:
+    def search_videos(self, keyword: str, limit: int = 10, **kwargs) -> List[VideoSnapshot]:
         """
         搜索游戏（复用 search_games，将结果映射为 VideoSnapshot 格式）。
         TapTap 无视频概念，此方法返回游戏数据作为近似替代。
         """
-        games = self.search_games(keyword)
+        games = self.search_games(keyword, limit=limit)
         today = datetime.now().strftime("%Y-%m-%d")
         snapshots = []
         for g in games:

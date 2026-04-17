@@ -52,13 +52,15 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
 
     # 1. 关键词搜索
     keywords = config.keywords.all_keywords()
+    limit = getattr(args, "limit", 20)
+    
     if not keywords:
         logger.warning("未找到关键词配置，请检查 keywords.yaml")
     else:
-        logger.info(f"开始关键词搜索，共 {len(keywords)} 个关键词")
+        logger.info(f"开始关键词搜索，共 {len(keywords)} 个关键词，每词限额 {limit} 条")
         for kw in keywords:
             try:
-                snaps = adapter.search_videos(keyword=kw, page=1, order=args.order)
+                snaps = adapter.search_videos(keyword=kw, limit=limit, order=args.order)
                 all_snapshots.extend(snaps)
                 logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 个视频")
             except Exception as e:
@@ -133,15 +135,17 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
 
     all_snapshots = []
 
-    # 1. 关键词搜索（每个关键词取前 20 条）
+    # 1. 关键词搜索
     keywords = config.keywords.all_keywords()
+    limit = getattr(args, "limit", 20)
+    
     if not keywords:
         logger.warning("未找到关键词配置，请检查 keywords.yaml")
     else:
-        logger.info(f"YouTube 关键词搜索，共 {len(keywords)} 个关键词")
+        logger.info(f"YouTube 关键词搜索，共 {len(keywords)} 个关键词，限额 {limit} 条")
         for kw in keywords:
             try:
-                snaps = adapter.search_videos(keyword=kw, max_results=20, order=args.order)
+                snaps = adapter.search_videos(keyword=kw, limit=limit, order=args.order)
                 all_snapshots.extend(snaps)
                 logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 条视频")
             except Exception as e:
@@ -247,10 +251,11 @@ def _crawl_taptap(args: argparse.Namespace) -> None:
     else:
         # 没有指定游戏时，通过关键词搜索
         keywords = config.keywords.all_keywords()
-        logger.info(f"targets.yaml 未配置 TapTap 游戏，改用关键词搜索（{len(keywords)} 个关键词）")
+        limit = getattr(args, "limit", 20)
+        logger.info(f"targets.yaml 未配置 TapTap 游戏，改用关键词搜索（限额: {limit}）")
         for kw in keywords[:3]:  # 关键词搜索限制3个，避免过度采集
             try:
-                snaps = adapter.search_videos(kw, order=args.order)
+                snaps = adapter.search_videos(kw, limit=limit, order=args.order)
                 all_snapshots.extend(snaps)
                 logger.info(f"TapTap 搜索 '{kw}' 找到 {len(snaps)} 个游戏")
             except Exception as e:
@@ -461,6 +466,17 @@ def build_parser() -> argparse.ArgumentParser:
         default="totalrank",
         choices=["totalrank", "click", "pubdate", "stow", "danmaku"],
         help="高级搜索排序，供特定平台使用 (如 Bilibili)",
+    )
+    crawl_parser.add_argument(
+        "--keywords-file",
+        default="keywords.yaml",
+        help="关键词配置文件路径（默认: keywords.yaml）",
+    )
+    crawl_parser.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="最大截断限额，各平台采集阈值",
     )
     crawl_parser.set_defaults(func=cmd_crawl)
 
