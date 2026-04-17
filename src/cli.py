@@ -16,6 +16,19 @@ from src.core.config import setup_logging
 
 logger = logging.getLogger(__name__)
 
+def _build_suffix(args: argparse.Namespace, num_keywords: int) -> str:
+    plat_map = {
+        "bilibili": "哔哩哔哩", "youtube": "YouTube", "taptap": "TapTap",
+        "douyin": "抖音", "kuaishou": "快手", "xiaohongshu": "小红书"
+    }
+    p_name = plat_map.get(args.platform, args.platform)
+    m_name = "免登陆" if getattr(args, "mode", "actions") == "actions" else "鉴权"
+    d_name = "基础" if getattr(args, "depth", "shallow") == "shallow" else "深度"
+    order_val = getattr(args, "order", "totalrank")
+    o_name = "TotalRank" if order_val == "totalrank" else order_val.title()
+    limit = getattr(args, "limit", 50)
+    
+    return f"{p_name}_{m_name}_{d_name}_{o_name}_{limit}结果_{num_keywords}关键词"
 
 def cmd_crawl(args: argparse.Namespace) -> None:
     """执行数据采集"""
