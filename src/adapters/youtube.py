@@ -45,7 +45,7 @@ class YouTubeAdapter(BaseAdapter):
     # ─── BaseAdapter 抽象方法实现 ──────────────────────────────────
 
     def search_videos(
-        self, keyword: str, max_results: int = 20, **kwargs
+        self, keyword: str, limit: int = 50, **kwargs
     ) -> List[VideoSnapshot]:
         """
         搜索视频——yt-dlp ytsearch。
@@ -65,7 +65,7 @@ class YouTubeAdapter(BaseAdapter):
             ydl_opts = {
                 "quiet": True,
                 "no_warnings": True,
-                "extract_flat": False,
+                "extract_flat": "in_playlist",
                 "skip_download": True,
                 "ignoreerrors": True,
             }
@@ -75,7 +75,7 @@ class YouTubeAdapter(BaseAdapter):
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 result = ydl.extract_info(
-                    f"{search_prefix}{max_results}:{keyword}", download=False
+                    f"{search_prefix}{limit}:{keyword}", download=False
                 )
 
             if not result or "entries" not in result:
