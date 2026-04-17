@@ -46,11 +46,12 @@ section[data-testid="stSidebar"] {
     max-width: 180px !important;
 }
 
-/* 将 Header 放逐到视野外（不用 display:none 以保留锚点计算） */
+/* 只隐藏 Header 里的 Deploy 菜单，保留侧边栏展开按钮 */
 header[data-testid="stHeader"] {
-    position: absolute !important;
-    top: -100px !important;
-    height: 0 !important;
+    background: transparent !important;
+}
+header[data-testid="stHeader"] [data-testid="stToolbar"] {
+    display: none !important;
 }
 
 /* 主内容区域去除左侧和顶部多余空白 */
