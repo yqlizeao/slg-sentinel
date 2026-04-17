@@ -600,9 +600,9 @@ if page == "总览":
             if c2.button("取消", use_container_width=True):
                 st.rerun()
                 
-        dm_col1, dm_col2 = st.columns([8, 3])
+        dm_col1, dm_col2 = st.columns([9, 2])
         with dm_col2:
-            if st.button("🗑️ 全部清除", type="primary", use_container_width=True):
+            if st.button("🗑️ 全部删除", type="primary", use_container_width=True):
                 confirm_clear_all()
                 
         st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
