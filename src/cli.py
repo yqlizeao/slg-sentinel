@@ -91,10 +91,10 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
     else:
         print("⚠️  未采集到任何数据，请检查关键词配置和网络连接")
 
-    # 5. 保存到 snapshots（用于周增量计算）
+    # 5. 保存到 summary（用于周增量计算）
     if all_snapshots:
         store.save(
-            all_snapshots, platform="bilibili", data_type="snapshots", date_str=date_str
+            all_snapshots, platform="bilibili", data_type="summary", date_str=date_str
         )
 
     # 6. 局部评论采集：对浏览量 Top 3 视频采集评论
@@ -178,10 +178,10 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
     else:
         print("⚠️  YouTube 未采集到任何数据，请检查关键词配置和网络连接")
 
-    # 5. 保存到 snapshots（用于周增量计算）
+    # 5. 保存到 summary（用于周增量计算）
     if all_snapshots:
         store.save(
-            all_snapshots, platform="youtube", data_type="snapshots", date_str=date_str
+            all_snapshots, platform="youtube", data_type="summary", date_str=date_str
         )
 
     # 6. 评论采集：Top 3 视频
@@ -263,7 +263,7 @@ def _crawl_taptap(args: argparse.Namespace) -> None:
         )
         print(f"✅  已保存 {len(all_snapshots)} 条 TapTap 游戏快照 → {snap_path}")
         store.save(
-            all_snapshots, platform="taptap", data_type="snapshots", date_str=date_str
+            all_snapshots, platform="taptap", data_type="summary", date_str=date_str
         )
 
     # 3. 保存评论
@@ -320,7 +320,7 @@ def _crawl_media_crawler(args: argparse.Namespace) -> None:
 
     if snaps:
         store.save(snaps, platform=args.platform, data_type="videos", date_str=date_str)
-        store.save(snaps, platform=args.platform, data_type="snapshots", date_str=date_str)
+        store.save(snaps, platform=args.platform, data_type="summary", date_str=date_str)
     
     if comments:
         store.save(comments, platform=args.platform, data_type="comments", date_str=date_str)

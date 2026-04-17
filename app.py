@@ -258,11 +258,23 @@ def count_csv_rows(path: Path) -> int:
 
 def get_platform_stats(platform: str) -> dict:
     today = datetime.now().strftime("%Y-%m-%d")
-    v_dir, c_dir, r_dir = DATA_DIR/platform/"videos", DATA_DIR/platform/"comments", DATA_DIR/platform/"reviews"
+    
+    # 解析平台大类
+    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+    if platform in VIDEO_PLATFORMS:
+        cat = "video_platforms"
+    elif platform in COMMUNITY_PLATFORMS:
+        cat = "community_platforms"
+    else:
+        cat = "misc_platforms"
+        
+    v_dir = DATA_DIR / cat / platform / "videos"
+    c_dir = DATA_DIR / cat / platform / "comments"
+    
     v_total = sum(count_csv_rows(f) for f in v_dir.glob("*.csv")) if v_dir.exists() else 0
-    c_total = sum(count_csv_rows(f) for f in c_dir.glob("*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob("*.csv")) if r_dir.exists() else 0
+    c_total = sum(count_csv_rows(f) for f in c_dir.glob("*.csv")) if c_dir.exists() else 0
     v_today = sum(count_csv_rows(f) for f in v_dir.glob(f"{today}_*.csv")) if v_dir.exists() else 0
-    c_today = sum(count_csv_rows(f) for f in c_dir.glob(f"{today}_*.csv")) if c_dir.exists() else sum(count_csv_rows(f) for f in r_dir.glob(f"{today}_*.csv")) if r_dir.exists() else 0
+    c_today = sum(count_csv_rows(f) for f in c_dir.glob(f"{today}_*.csv")) if c_dir.exists() else 0
     return {"videos_total": v_total, "comments_total": c_total, "videos_today": v_today, "comments_today": c_today}
 
 def get_system_health() -> dict:
@@ -317,8 +329,12 @@ def _is_slg_relevant(row: dict) -> bool:
 
 def get_trending_videos(top_k=3) -> list[dict]:
     all_videos = []
+    
+    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+
     for platform in ["bilibili", "youtube"]:
-        v_dir = DATA_DIR / platform / "videos"
+        cat = "video_platforms" if platform in VIDEO_PLATFORMS else "community_platforms"
+        v_dir = DATA_DIR / cat / platform / "videos"
         if not v_dir.exists(): continue
         for f in v_dir.glob("*.csv"):
             try:

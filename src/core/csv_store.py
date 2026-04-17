@@ -27,6 +27,8 @@ DEFAULT_DATA_DIR = Path(__file__).parent.parent.parent / "data"
 # UTF-8 BOM 前缀
 BOM = "\ufeff"
 
+VIDEO_PLATFORMS = {"bilibili", "youtube", "douyin", "kuaishou", "xiaohongshu"}
+COMMUNITY_PLATFORMS = {"taptap", "xiaoheihe"}
 
 class CSVStore:
     """CSV 读写引擎"""
@@ -44,25 +46,36 @@ class CSVStore:
     ) -> Path:
         """
         生成 CSV 文件路径。
-
-        文件路径规则：
-        - 视频快照: data/{platform}/videos/{YYYY-MM-DD}_videos.csv
-        - 评论: data/{platform}/comments/{YYYY-MM-DD}_{video_id}_comments.csv
-        - TapTap评论: data/taptap/reviews/{YYYY-MM-DD}_reviews.csv
-        - 每日快照: data/snapshots/{YYYY-MM-DD}_snapshots.csv
         """
-        if data_type == "snapshots":
-            dir_path = self.data_dir / "snapshots"
-            filename = f"{date_str}_snapshots.csv"
-        elif data_type == "comments" and video_id:
-            dir_path = self.data_dir / platform / "comments"
-            filename = f"{date_str}_{video_id}_comments.csv"
-        elif data_type == "reviews":
-            dir_path = self.data_dir / platform / "reviews"
-            filename = f"{date_str}_reviews.csv"
+        # 1. 周期汇总存储
+        if data_type == "snapshots" or data_type == "summary":
+            # 向后兼容，把原先的 snapshots 存入 summary/daily
+            dir_path = self.data_dir / "summary" / "daily"
+            filename = f"{date_str}_summary.csv"
+        elif platform == "profiles":
+            dir_path = self.data_dir / "profiles" / "user_games"
+            filename = f"{date_str}_user_games.csv"
         else:
-            dir_path = self.data_dir / platform / data_type
-            filename = f"{date_str}_{data_type}.csv"
+            # 2. 分类平台存储
+            if platform in VIDEO_PLATFORMS:
+                category = "video_platforms"
+            elif platform in COMMUNITY_PLATFORMS:
+                category = "community_platforms"
+            else:
+                category = "misc_platforms"
+                
+            # 统一 comments 名称，即便是 reviews 传入也落盘为 comments
+            effective_dir_type = "comments" if data_type in ("comments", "reviews") else data_type
+            
+            if data_type in ("comments", "reviews") and video_id:
+                dir_path = self.data_dir / category / platform / effective_dir_type
+                # TapTap等评论在本地依然叫 _comments.csv 以保持后缀一致性，也可以叫 reviews，这里使用有效的目录名映射
+                filename = f"{date_str}_{video_id}_{effective_dir_type}.csv"
+            else:
+                dir_path = self.data_dir / category / platform / effective_dir_type
+                # 如果传入 reviews 且没有 video_id (如全量 taptap 评论), 使用 comments 后缀
+                actual_suffix = "comments" if data_type == "reviews" else data_type
+                filename = f"{date_str}_{actual_suffix}.csv"
 
         dir_path.mkdir(parents=True, exist_ok=True)
         return dir_path / filename
@@ -186,10 +199,20 @@ class CSVStore:
                 current += timedelta(days=1)
         else:
             # 加载目录下所有文件
-            if data_type == "snapshots":
-                dir_path = self.data_dir / "snapshots"
+            if data_type == "snapshots" or data_type == "summary":
+                dir_path = self.data_dir / "summary" / "daily"
+            elif platform == "profiles":
+                dir_path = self.data_dir / "profiles" / "user_games"
             else:
-                dir_path = self.data_dir / platform / data_type
+                if platform in VIDEO_PLATFORMS:
+                    category = "video_platforms"
+                elif platform in COMMUNITY_PLATFORMS:
+                    category = "community_platforms"
+                else:
+                    category = "misc_platforms"
+                effective_dir = "comments" if data_type in ("comments", "reviews") else data_type
+                dir_path = self.data_dir / category / platform / effective_dir
+                
             if dir_path.exists():
                 for csv_file in sorted(dir_path.glob("*.csv")):
                     results.extend(self._load_single_file(dataclass_type, csv_file))
@@ -223,10 +246,10 @@ class CSVStore:
 
         # 获取本周和上周的快照
         current_snapshots = self.load(
-            VideoSnapshot, platform, "snapshots", date_str=reference_date
+            VideoSnapshot, platform, "summary", date_str=reference_date
         )
         previous_snapshots = self.load(
-            VideoSnapshot, platform, "snapshots", date_str=week_ago
+            VideoSnapshot, platform, "summary", date_str=week_ago
         )
 
         current = None
@@ -303,6 +326,7 @@ class CSVStore:
             "comments": "comment_id",
             "reviews": "review_id",
             "snapshots": "video_id",
+            "summary": "video_id",
             "user_games": "user_id",
         }
         return id_map.get(data_type)

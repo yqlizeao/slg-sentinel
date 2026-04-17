@@ -194,7 +194,14 @@ class WeeklyReportGenerator:
                 else:
                     # 遍历目录下所有当天评论
                     comments = []
-                    dir_path = self.store.data_dir / platform / "comments"
+                    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+                    if platform in VIDEO_PLATFORMS:
+                        cat = "video_platforms"
+                    elif platform in COMMUNITY_PLATFORMS:
+                        cat = "community_platforms"
+                    else:
+                        cat = "misc_platforms"
+                    dir_path = self.store.data_dir / cat / platform / "comments"
                     if dir_path.exists():
                         for f in dir_path.glob(f"{date_str}_*_comments.csv"):
                             comments.extend(self.store._load_single_file(Comment, f))

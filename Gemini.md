@@ -35,29 +35,29 @@ slg-sentinel/
 │   │   └── config.py           # 配置与靶点目标装载中心
 │   ├── adapters/               # 各大平台采集桥接器
 │   │   ├── bilibili.py         # 依赖 bilibili-api-python
-│   │   ├── youtube.py          # 混编使用 yt-dlp + scrapetube + comment-downloader
-│   │   ├── taptap.py           # 手搓原生 requests WebAPI 嗅探
-│   │   └── media_crawler.py    # Submodule 沙盒通信层 (处理抖/快/红)
 │   └── analysis/               
 │       ├── profiler.py         # (🚧 待攻坚核心) 跨越隐私墙的用户画像拼图合成器
 │       ├── sentiment.py        # 本地离线自然语言情感分析 / 竞品 NER 实体识别
 │       └── weekly_report.py    # 基于增量的 Markdown 周报生成器
-├── data/                       # 核心时序数据库 (唯一落盘点，采用按日期的纯 CSV 切片)
-│   ├── snapshots/              # 【核心计算快照层】混合了全平台的视频概览。算法每天仅存一次快照，专供于 `weekly_report.py` 利用减法（今天数据减去7天前数据）来计算播放量/点赞量的“周真实热度增量”。
-│   ├── bilibili/               
-│   │   ├── videos/             # 每日 B 站关键词搜索 / 热门列表的视频元数据 (标题、BV号、UP主、四大维指标)。
-│   │   └── comments/           # 针对头部视频深度下钻抓取的长文本评论池，包含用户的 IP 属地，是情感分析与舆情发酵的主要素材源。
-│   ├── youtube/                
-│   │   ├── videos/             # YouTube 竞品频道的爬取元数据。
-│   │   └── comments/           # 穿越梯子扒取的管子评论（无配额 API 扒取技术结果），用于考察海外/繁体圈层玩家心态。
-│   ├── taptap/                 
-│   │   ├── videos/             # 存放 TapTap 对应 SLG 游戏的本身属性和长期元数据。
-│   │   └── reviews/            # TapTap 特有的属性：游戏长评。具有极高价值的 Score（评分）及设备属性与“游玩时长”，是单机游戏风向的试金石。
-│   ├── douyin/                 # (含快手 kuaishou/、小红书 xiaohongshu/ 等)
-│   │   ├── videos/             # 独立从底部的 MediaCrawler 子进程沙盒中孤岛搬运过来的最新微短视频切片元数据。
-│   │   └── comments/           # 微短剧式的浅层下沉市场社群评论反应。
-│   └── profiles/               
-│       └── user_games/         # 【核心输出目标】`profiler.py` 提炼的终极用户结晶。将散落在各处的评论者 ID 缝合后推断出的标签库（例如某位 B 站 UP 到底是一毛不拔的风景党，还是极度硬核的三战老保）。
+├── data/                       # 核心时序数据库 (唯一落盘点，立体分类体系)
+│   ├── summary/                # 【周期汇总层】
+│   │   ├── daily/              # 顶层每日全网快照大盘，专供 `weekly_report.py` 利用减法进行“周真实热度增量”差值追踪。
+│   │   ├── weekly/             # 预留周表结果
+│   │   └── monthly/            
+│   ├── video_platforms/        # 【流媒体/中短视频阵地】
+│   │   ├── bilibili/               
+│   │   │   ├── videos/         # 每日搜集/热门列表视频元数据
+│   │   │   └── comments/       # 深网纯文字评论池 (含IP属性)
+│   │   ├── youtube/                
+│   │   │   ├── videos/         
+│   │   │   └── comments/       # 管子原生态评论防封穿刺取回区
+│   │   ├── douyin/             # (含有 kuaishou/, xiaohongshu/ 等，依靠沙盒爬去，但统一落库在此)
+│   │   │   ├── videos/         
+│   │   │   └── comments/       
+│   └── community_platforms/    # 【硬核图文/游戏专属社区】
+│       ├── taptap/                 
+│       │   ├── videos/         # 实体化为对应 SLG 游戏本体 (Game)
+│       │   └── comments/       # 为与主框架结构强制对齐，TapTap 极具价值的长测评 (Reviews) 全部落库在 comments/ 目录下。
 ├── cloudflare_pages/           # 云端流媒体反代静态入口 (index.html, 处理 CF iFrame 部署)
 ├── keywords.yaml               # 核心赛道黑话、同义词扩展池
 ├── targets.yaml                # 定向刺探的极高价值竞品 Up/频道
