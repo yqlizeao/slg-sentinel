@@ -665,7 +665,7 @@ elif page == "采集":
         mode = st.radio("授权执行模式", ["MediaCrawler 受限沙盒模式 (强制要求本地环境)"], label_visibility="collapsed")
         st.markdown("<p style='font-size:13px; color:#dc2626; margin-top:4px;'>⚠️ 平台风控极高，必须采用本地扫码沙盒获取临时 Token。</p>", unsafe_allow_html=True)
     else:
-        mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "受限凭证模式 (需要载入本地会话环境)"], label_visibility="collapsed")
+        mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "鉴权模式 (需要载入本地会话环境)"], label_visibility="collapsed")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""

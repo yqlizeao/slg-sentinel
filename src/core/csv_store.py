@@ -43,6 +43,7 @@ class CSVStore:
         data_type: str,
         date_str: str,
         video_id: str | None = None,
+        filename_suffix: str = "",
     ) -> Path:
         """
         生成 CSV 文件路径。
@@ -70,12 +71,12 @@ class CSVStore:
             if data_type in ("comments", "reviews") and video_id:
                 dir_path = self.data_dir / category / platform / effective_dir_type
                 # TapTap等评论在本地依然叫 _comments.csv 以保持后缀一致性，也可以叫 reviews，这里使用有效的目录名映射
-                filename = f"{date_str}_{video_id}_{effective_dir_type}.csv"
+                filename = f"{date_str}_{video_id}_{effective_dir_type}{filename_suffix}.csv"
             else:
                 dir_path = self.data_dir / category / platform / effective_dir_type
                 # 如果传入 reviews 且没有 video_id (如全量 taptap 评论), 使用 comments 后缀
                 actual_suffix = "comments" if data_type == "reviews" else data_type
-                filename = f"{date_str}_{actual_suffix}.csv"
+                filename = f"{date_str}_{actual_suffix}{filename_suffix}.csv"
 
         dir_path.mkdir(parents=True, exist_ok=True)
         return dir_path / filename
@@ -87,6 +88,7 @@ class CSVStore:
         data_type: str,
         date_str: str | None = None,
         video_id: str | None = None,
+        filename_suffix: str = "",
     ) -> Path | None:
         """
         自动按日期保存到 data/{platform}/{data_type}/{YYYY-MM-DD}.csv
@@ -108,7 +110,7 @@ class CSVStore:
         if date_str is None:
             date_str = datetime.now().strftime("%Y-%m-%d")
 
-        file_path = self._get_file_path(platform, data_type, date_str, video_id)
+        file_path = self._get_file_path(platform, data_type, date_str, video_id, filename_suffix)
 
         # 获取字段名（从 dataclass 定义）
         field_names = [f.name for f in fields(dataclass_list[0])]

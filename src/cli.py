@@ -87,7 +87,7 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
     # 4. 保存到 CSV
     if all_snapshots:
         file_path = store.save(
-            all_snapshots, platform="bilibili", data_type="videos", date_str=date_str
+            all_snapshots, platform="bilibili", data_type="videos", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
         )
         print(f"✅  已保存 {len(all_snapshots)} 条视频快照 → {file_path}")
     else:
@@ -96,7 +96,7 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
     # 5. 保存到 summary（用于周增量计算）
     if all_snapshots:
         store.save(
-            all_snapshots, platform="bilibili", data_type="summary", date_str=date_str
+            all_snapshots, platform="bilibili", data_type="summary", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
         )
 
     # 6. 局部评论采集：对浏览量 Top 3 视频采集评论
@@ -113,7 +113,7 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
                         platform="bilibili",
                         data_type="comments",
                         date_str=date_str,
-                        video_id=snap.video_id,
+                        video_id=snap.video_id, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
                     )
                     logger.info(
                         f"已保存 {len(comments)} 条评论: {snap.video_id}"
@@ -176,7 +176,7 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
     # 4. 保存到 CSV
     if all_snapshots:
         file_path = store.save(
-            all_snapshots, platform="youtube", data_type="videos", date_str=date_str
+            all_snapshots, platform="youtube", data_type="videos", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
         )
         print(f"✅  已保存 {len(all_snapshots)} 条 YouTube 视频快照 → {file_path}")
     else:
@@ -185,7 +185,7 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
     # 5. 保存到 summary（用于周增量计算）
     if all_snapshots:
         store.save(
-            all_snapshots, platform="youtube", data_type="summary", date_str=date_str
+            all_snapshots, platform="youtube", data_type="summary", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
         )
 
     # 6. 评论采集：Top 3 视频
@@ -202,7 +202,7 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
                         platform="youtube",
                         data_type="comments",
                         date_str=date_str,
-                        video_id=snap.video_id,
+                        video_id=snap.video_id, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
                     )
                     logger.info(f"已保存 {len(comments)} 条 YouTube 评论: {snap.video_id}")
             except Exception as e:
@@ -264,17 +264,17 @@ def _crawl_taptap(args: argparse.Namespace) -> None:
     # 2. 保存游戏 snapshots
     if all_snapshots:
         snap_path = store.save(
-            all_snapshots, platform="taptap", data_type="videos", date_str=date_str
+            all_snapshots, platform="taptap", data_type="videos", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
         )
         print(f"✅  已保存 {len(all_snapshots)} 条 TapTap 游戏快照 → {snap_path}")
         store.save(
-            all_snapshots, platform="taptap", data_type="summary", date_str=date_str
+            all_snapshots, platform="taptap", data_type="summary", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
         )
 
     # 3. 保存评论
     if all_reviews:
         review_path = store.save(
-            all_reviews, platform="taptap", data_type="reviews", date_str=date_str
+            all_reviews, platform="taptap", data_type="reviews", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0)
         )
         print(f"✅  已保存 {len(all_reviews)} 条 TapTap 评论 → {review_path}")
     elif not all_snapshots:
@@ -324,11 +324,11 @@ def _crawl_media_crawler(args: argparse.Namespace) -> None:
     date_str = args.date
 
     if snaps:
-        store.save(snaps, platform=args.platform, data_type="videos", date_str=date_str)
-        store.save(snaps, platform=args.platform, data_type="summary", date_str=date_str)
+        store.save(snaps, platform=args.platform, data_type="videos", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0))
+        store.save(snaps, platform=args.platform, data_type="summary", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0))
     
     if comments:
-        store.save(comments, platform=args.platform, data_type="comments", date_str=date_str)
+        store.save(comments, platform=args.platform, data_type="comments", date_str=date_str, filename_suffix=_build_suffix(args, len(config.keywords.all_keywords()) if "config" in locals() else 0))
         
     print(f"✅  已从 MediaCrawler 导入 {args.platform} 数据: {len(snaps)} 视频, {len(comments)} 评论")
 

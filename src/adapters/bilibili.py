@@ -143,35 +143,41 @@ class BilibiliAdapter(BaseAdapter):
                     
                 today = datetime.now().strftime("%Y-%m-%d")
                 for item in items:
-                try:
-                    snap = VideoSnapshot(
-                        platform="bilibili",
-                        video_id=item.get("bvid", ""),
-                        title=item.get("title", "").replace("<em class=\"keyword\">", "").replace("</em>", ""),
-                        author=item.get("author", ""),
-                        author_id=str(item.get("mid", "")),
-                        snapshot_date=today,
-                        view_count=int(item.get("play", 0) or 0),
-                        like_count=int(item.get("like", 0) or 0),
-                        comment_count=int(item.get("review", 0) or 0),
-                        share_count=0,
-                        favorite_count=int(item.get("favorites", 0) or 0),
-                        coin_count=-1,          # 搜索接口不返回投币数，标记为 -1
-                        danmaku_count=int(item.get("danmaku", 0) or 0),
-                        publish_date=datetime.fromtimestamp(
-                            int(item.get("pubdate", 0) or 0)
-                        ).strftime("%Y-%m-%d")
-                        if item.get("pubdate")
-                        else "",
-                        tags=item.get("tag", ""),
-                        url=f"https://www.bilibili.com/video/{item.get('bvid', '')}",
-                    )
-                    snapshots.append(snap)
-                except Exception as e:
-                    logger.warning(f"解析搜索结果失败: {e}, item={item}")
-            logger.info(f"B站搜索 '{keyword}' 第{page}页，获取 {len(snapshots)} 条视频")
-            await asyncio.sleep(REQUEST_INTERVAL)
-            return snapshots
+                    try:
+                        snap = VideoSnapshot(
+                            platform="bilibili",
+                            video_id=item.get("bvid", ""),
+                            title=item.get("title", "").replace("<em class=\"keyword\">", "").replace("</em>", ""),
+                            author=item.get("author", ""),
+                            author_id=str(item.get("mid", "")),
+                            snapshot_date=today,
+                            view_count=int(item.get("play", 0) or 0),
+                            like_count=int(item.get("like", 0) or 0),
+                            comment_count=int(item.get("review", 0) or 0),
+                            share_count=0,
+                            favorite_count=int(item.get("favorites", 0) or 0),
+                            coin_count=-1,
+                            danmaku_count=int(item.get("danmaku", 0) or 0),
+                            publish_date=datetime.fromtimestamp(
+                                int(item.get("pubdate", 0) or 0)
+                            ).strftime("%Y-%m-%d")
+                            if item.get("pubdate")
+                            else "",
+                            tags=item.get("tag", ""),
+                            url=f"https://www.bilibili.com/video/{item.get('bvid', '')}",
+                        )
+                        all_snapshots.append(snap)
+                        if len(all_snapshots) >= limit:
+                            break
+                    except Exception as e:
+                        logger.warning(f"解析搜索结果失败: {e}, item={item}")
+                        
+                logger.info(f"B站搜索 '{keyword}' 第{page}页，已累计获取 {len(all_snapshots)} 条视频")
+                if len(all_snapshots) >= limit or len(items) == 0:
+                    break
+                page += 1
+                await asyncio.sleep(REQUEST_INTERVAL)
+            return all_snapshots
         except Exception as e:
             logger.error(f"B站搜索失败: {e}")
             return []

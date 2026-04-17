@@ -3,13 +3,24 @@ seed_keywords:
   - 三国志战略版
   - 率土之滨
   - 三国谋定天下
+  - 世界启元
+  - 鸿图之下
+  - 荣耀新三国
+  - 汉末霸业
+  - 三国群英传
+  - 同人圣三国蜀汉传
+  - 策马三国志
+  - 九州劫
+  - 秦皇汉武
   - 全战三国
   - 三国志
   categories:
   - 三国SLG
   - 沙盘战略
+  - 同盟国战
+  - 历史模拟
   - 率土like
-  - 赛季制
+  - 开荒打地
 expansion:
   enabled: true
   llm_provider: deepseek
