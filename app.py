@@ -588,14 +588,22 @@ if page == "总览":
     if not all_csv_files:
         st.markdown("<p style='color:#999; font-size:13px;'>目前本地 CSV 时序数据库位空，等待探针回传...</p>", unsafe_allow_html=True)
     else:
-        dm_col1, dm_col2 = st.columns([8, 3])
-        with dm_col2:
-            if st.button("🗑️ 格式化清空全域底层数据", type="primary", use_container_width=True):
+        @st.dialog("危险操作确认")
+        def confirm_clear_all():
+            st.warning("确定要彻底清空所有收集到的历史数据吗？此操作不可逆！")
+            c1, c2 = st.columns(2)
+            if c1.button("✅ 确认清空", type="primary", use_container_width=True):
                 for f in all_csv_files:
                     try: os.remove(f)
                     except: pass
-                st.success("✅ 全域数据库已彻底抹除！")
                 st.rerun()
+            if c2.button("取消", use_container_width=True):
+                st.rerun()
+                
+        dm_col1, dm_col2 = st.columns([8, 3])
+        with dm_col2:
+            if st.button("🗑️ 全部清除", type="primary", use_container_width=True):
+                confirm_clear_all()
                 
         st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
         # 采用简洁布局罗列
