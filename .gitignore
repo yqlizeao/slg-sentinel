@@ -46,8 +46,8 @@ scratch.py
 spider_slg_full.py
 
 # ── 数据目录（由 data 分支管理，不跟踪到 main） ─────────────
-data/
-reports/
+# data/
+# reports/
 
 # ── 外部文档残留（不纳入版本管理） ───────────────────────────
 copilot.txt
