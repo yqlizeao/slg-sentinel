@@ -64,11 +64,14 @@ class BilibiliAdapter(BaseAdapter):
             keyword: 搜索关键词
             page: 页码（从 1 开始）
             page_size: 每页数量
+            kwargs:
+                order: 排序方式 (totalrank, click, pubdate, stow)
 
         Returns:
             VideoSnapshot 列表
         """
-        return _run(self._async_search_videos(keyword, page, page_size))
+        order = kwargs.get("order", "totalrank")
+        return _run(self._async_search_videos(keyword, page, page_size, order))
 
     def get_video_info(self, video_id: str) -> VideoSnapshot:
         """
@@ -112,14 +115,25 @@ class BilibiliAdapter(BaseAdapter):
     # ─── 异步实现（免登录）────────────────────────────────────────────
 
     async def _async_search_videos(
-        self, keyword: str, page: int, page_size: int
+        self, keyword: str, page: int, page_size: int, order: str = "totalrank"
     ) -> List[VideoSnapshot]:
         try:
             from bilibili_api import search
+            
+            # 映射排序枚举
+            order_mapping = {
+                "totalrank": search.OrderVideo.TOTALRANK,
+                "click": search.OrderVideo.CLICK,
+                "pubdate": search.OrderVideo.PUBDATE,
+                "stow": search.OrderVideo.STOW,
+                "danmaku": search.OrderVideo.DANMAKU,
+            }
+            bili_order = order_mapping.get(order, search.OrderVideo.TOTALRANK)
 
             result = await search.search_by_type(
                 keyword=keyword,
                 search_type=search.SearchObjectType.VIDEO,
+                order_type=bili_order,
                 page=page,
             )
             snapshots = []

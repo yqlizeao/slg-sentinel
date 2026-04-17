@@ -616,6 +616,21 @@ elif page == "采集":
         else:
             depth = st.radio("采集深度", ["简易采集 (仅广域搜索，极速过滤)", "详细采集 (包含单视频详情节点下钻)"], label_visibility="collapsed")
 
+    # 针对研发深度分析的高级排序面板
+    order_val = "totalrank"
+    if platform == "bilibili":
+        st.markdown("<div style='margin-top:1rem; padding:12px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px;'>", unsafe_allow_html=True)
+        st.markdown("<p style='font-weight:600; font-size:13px; color:#1e293b; margin-bottom:8px;'>🔥 研发雷达：高级检索排序策略</p>", unsafe_allow_html=True)
+        order_map = {
+            "【默认/总合】包含海量日常及手游商业推广 (totalrank)": "totalrank",
+            "【时间线脉搏 / Pulse】仅取最新发布，监测公关危情 (pubdate)": "pubdate",
+            "【神级传世名场面】挖掘历史曝光率最高巨额流量池 (click)": "click",
+            "【极度硬核 / Deep Dive】单机玩家最爱收藏的深度拆解与评测 (stow)": "stow"
+        }
+        order_label = st.selectbox("排序策略", list(order_map.keys()), index=0, label_visibility="collapsed")
+        order_val = order_map[order_label]
+        st.markdown("</div>", unsafe_allow_html=True)
+
     # ── 动态构造 HTML 探针穿透能力矩阵表 ─────────────────────────────────────
     matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
@@ -728,7 +743,10 @@ elif page == "采集":
     if st.button(f"启动 {platform.capitalize()} 采集链路", type="primary"):
         m_val = "actions" if "基础免登录" in mode else "local"
         with st.spinner(f"探测器正在后台接入 {platform.capitalize()} 信息流，通常耗时一至两分钟，请勿刷新页面..."):
-            stdout, stderr, code = run_cli(["crawl", "--platform", platform, "--mode", m_val])
+            cmd_args = ["crawl", "--platform", platform, "--mode", m_val, "--order", order_val]
+            if platform not in ["xiaohongshu", "douyin", "kuaishou"] and "简易" in depth:
+                cmd_args.extend(["--depth", "shallow"])
+            stdout, stderr, code = run_cli(cmd_args)
         if code == 0:
             st.success(f"✅ 【{platform.capitalize()}】指令流已成功回归至正常终态，全部捕获已落盘。")
         else:

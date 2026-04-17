@@ -53,6 +53,8 @@ class YouTubeAdapter(BaseAdapter):
         Args:
             keyword: 搜索关键词
             max_results: 最大结果数（默认 20）
+            kwargs:
+                order: 排序方式 (totalrank or pubdate)
 
         Returns:
             VideoSnapshot 列表
@@ -68,9 +70,12 @@ class YouTubeAdapter(BaseAdapter):
                 "ignoreerrors": True,
             }
 
+            order = kwargs.get("order", "totalrank")
+            search_prefix = "ytsearchdate" if order == "pubdate" else "ytsearch"
+
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 result = ydl.extract_info(
-                    f"ytsearch{max_results}:{keyword}", download=False
+                    f"{search_prefix}{max_results}:{keyword}", download=False
                 )
 
             if not result or "entries" not in result:

@@ -58,7 +58,7 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
         logger.info(f"开始关键词搜索，共 {len(keywords)} 个关键词")
         for kw in keywords:
             try:
-                snaps = adapter.search_videos(keyword=kw, page=1)
+                snaps = adapter.search_videos(keyword=kw, page=1, order=args.order)
                 all_snapshots.extend(snaps)
                 logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 个视频")
             except Exception as e:
@@ -141,7 +141,7 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
         logger.info(f"YouTube 关键词搜索，共 {len(keywords)} 个关键词")
         for kw in keywords:
             try:
-                snaps = adapter.search_videos(keyword=kw, max_results=20)
+                snaps = adapter.search_videos(keyword=kw, max_results=20, order=args.order)
                 all_snapshots.extend(snaps)
                 logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 条视频")
             except Exception as e:
@@ -250,7 +250,7 @@ def _crawl_taptap(args: argparse.Namespace) -> None:
         logger.info(f"targets.yaml 未配置 TapTap 游戏，改用关键词搜索（{len(keywords)} 个关键词）")
         for kw in keywords[:3]:  # 关键词搜索限制3个，避免过度采集
             try:
-                snaps = adapter.search_videos(kw)
+                snaps = adapter.search_videos(kw, order=args.order)
                 all_snapshots.extend(snaps)
                 logger.info(f"TapTap 搜索 '{kw}' 找到 {len(snaps)} 个游戏")
             except Exception as e:
@@ -450,9 +450,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="采集日期，格式 YYYY-MM-DD（默认: 今天）",
     )
     crawl_parser.add_argument(
-        "--keywords-file",
-        default="keywords.yaml",
-        help="关键词配置文件路径（默认: keywords.yaml）",
+        "--depth",
+        choices=["shallow", "deep"],
+        default="deep",
+        help="采集深度（shallow=仅元数据，deep=含完整评论体和附加信息）",
+    )
+    crawl_parser.add_argument(
+        "--order",
+        type=str,
+        default="totalrank",
+        choices=["totalrank", "click", "pubdate", "stow", "danmaku"],
+        help="高级搜索排序，供特定平台使用 (如 Bilibili)",
     )
     crawl_parser.set_defaults(func=cmd_crawl)
 
@@ -473,6 +481,7 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="视频 ID（如 BV 号）",
     )
+
     profile_parser.add_argument(
         "--max-users",
         type=int,
