@@ -25,6 +25,9 @@ NEGATIVE_WORDS = {
     "答辩", "策划死", "不推荐", "黑心", "失望", "差评", "太累", "坐牢"
 }
 
+# 否定词前缀（用于反转情感极性）
+NEGATION_WORDS = {"不", "没", "无", "未", "别", "非", "不是", "没有", "并非"}
+
 # 竞品实体监控词典（将俗称映射为全称）
 GAMES_DICTIONARY = {
     "率土之滨": ["率土之滨", "率土"],
@@ -65,9 +68,26 @@ class SentimentAnalyzer:
 
         text_lower = text.lower()
 
-        # 1. 简易情感极性判断（词频相减法）
-        pos_count = sum(1 for word in POSITIVE_WORDS if word in text_lower)
-        neg_count = sum(1 for word in NEGATIVE_WORDS if word in text_lower)
+        # 1. 情感极性判断（支持否定词前缀反转）
+        pos_count = 0
+        neg_count = 0
+        for word in POSITIVE_WORDS:
+            if word in text_lower:
+                # 检查否定前缀：如 "不好玩", "没有亮点"
+                idx = text_lower.find(word)
+                prefix = text_lower[max(0, idx-2):idx]
+                if any(neg in prefix for neg in NEGATION_WORDS):
+                    neg_count += 1  # 否定+正面 → 计为负面
+                else:
+                    pos_count += 1
+        for word in NEGATIVE_WORDS:
+            if word in text_lower:
+                idx = text_lower.find(word)
+                prefix = text_lower[max(0, idx-2):idx]
+                if any(neg in prefix for neg in NEGATION_WORDS):
+                    pos_count += 1  # 否定+负面 → 计为正面
+                else:
+                    neg_count += 1
 
         if pos_count > neg_count:
             sentiment = "positive"

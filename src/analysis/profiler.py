@@ -16,11 +16,13 @@ from src.core.models import Comment, UserProfile, VideoSnapshot
 
 logger = logging.getLogger(__name__)
 
-# 面向 PC 单机 SLG 的核心玩家派系特征词
-TAG_PC_TARGET = {"全战", "单机", "文明", "光荣", "买断", "三国志14", "三14", "三国志11", "单机版"}
-TAG_MOBILE_REFUGEE = {"退坑", "弃坑", "氪", "充", "累", "打卡", "上班", "卖号", "韭菜", "648", "毁三观", "毫无体验", "当头棒喝"}
-TAG_HARDCORE = {"大地图", "内政", "机制", "沙盘", "数值碾压", "配将", "开荒", "战术", "纵深"}
-TAG_CASUAL = {"种地", "风景", "养老", "抽卡", "随便玩", "立绘", "好看"}
+# 面向 PC 单机 SLG 的核心玩家派系特征词 → 标签映射规则
+TAG_RULES = [
+    ({"全战", "单机", "文明", "光荣", "买断", "三国志14", "三14", "三国志11", "单机版"}, "端游遗老"),
+    ({"退坑", "弃坑", "氪", "充", "累", "打卡", "上班", "卖号", "韭菜", "648", "毁三观", "毫无体验", "当头棒喝"}, "重氪难民"),
+    ({"大地图", "内政", "机制", "沙盘", "数值碾压", "配将", "开荒", "战术", "纵深"}, "硬核考究党"),
+    ({"种地", "风景", "养老", "抽卡", "随便玩", "立绘", "好看"}, "休闲风景党"),
+]
 
 
 class UserProfiler:
@@ -92,14 +94,9 @@ class UserProfiler:
 
             # 3. 标签推断 (面向单机视角的立体成分)
             tags_set = set()
-            for w in TAG_PC_TARGET:
-                if w in combined_text: tags_set.add("端游遗老")
-            for w in TAG_MOBILE_REFUGEE:
-                if w in combined_text: tags_set.add("重氪难民")
-            for w in TAG_HARDCORE:
-                if w in combined_text: tags_set.add("硬核考究党")
-            for w in TAG_CASUAL:
-                if w in combined_text: tags_set.add("休闲风景党")
+            for keyword_set, label in TAG_RULES:
+                if any(w in combined_text for w in keyword_set):
+                    tags_set.add(label)
 
             if context_tags and "slg" in context_tags.lower():
                 tags_set.add("SLG受众")

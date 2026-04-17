@@ -1,115 +1,153 @@
-# SLG Sentinel – 面向 AI 编程助手的工程指南 (v3)
+# SLG Sentinel — AI 编程助手工程指南
 
-> **AI Assistant 请注意**：你在接手本项目之前，这是你**必须完整阅读**的第一份文件。我们已经完成了基础爬虫与企业级控制台搭建。如果你是新开的 session，请严格根据此文档迅速对齐项目上下文！
-
----
-
-## 1. 当前项目形态与终极目标
-
-**核心愿景**：我们正在研发一款 **三国题材、上线 Steam 平台、暂仅支持 Windows 的单机 SLG 游戏**。
-在这个背景下，**SLG Sentinel** 是一套专为「我们自己的独立单机游戏研发」提供市场风向、玩家心智雷达、核心受众痛点发掘的多平台竞品舆情智能监控中台。它不是为了传统手游买量，而是为了**找到中国 PC 端 hardcore 战略玩家真正需要什么样的三国单机游戏**。
-
-**三条架构铁律 (违反即视为失败)：**
-1. **零侵入 (Zero-Intrusion)** 
-   所有第三方采集库通过 `pip` 引入，绝对禁止修改任何第三方包的本地源码。对于防风控变态的平台（抖音/小红书），我们采用 Git Submodule 外挂的形式隔离引擎，利用 `subprocess` 沙盒调用。
-2. **双模架构 (Dual-Mode Architecture)** 
-   系统被严格切分为：
-   - `--mode actions`：部署在 GitHub Actions 的免登云模式，定期高频捕获浅层大盘数据（防风控、无凭证）。
-   - `--mode local`：部署在本地/原生服务器的全功能模式，具有深网探针（携带 Cookie）甚至唤起手机扫码的 GUI 环境。
-3. **CSV 即数据库 (CSV as Database)** 
-   系统严禁引入 MySQL/Postgres 等笨重 DBMS。全量业务数据采用 `UTF-8-SIG` 格式（带 BOM 头，完美适配 Excel），利用独立 `data/` 目录结构作为时序数据库。
+> **AI 助手注意**：这是你接手本项目之前必须完整阅读的第一份文件。请严格根据此文档对齐项目上下文，再开始任何代码操作。
 
 ---
 
-## 2. 系统核心模块分布图
+## 1. 项目定位
 
-```text
+**SLG Sentinel** 是一套多平台竞品舆情监控系统，服务于一款**三国题材、面向 Steam 平台、仅支持 Windows 的付费买断制 PC 单机 SLG 游戏**的研发决策。
+
+系统的核心价值：从 B 站、YouTube、TapTap、抖音、快手、小红书等平台持续采集 SLG 品类的玩家评论与视频数据，通过情感分析和用户画像推断，帮助研发团队找到**中国 PC 端硬核策略玩家真正需要什么样的三国单机游戏**。
+
+---
+
+## 2. 三条架构铁律
+
+违反以下任何一条即视为架构失败：
+
+1. **零侵入 (Zero-Intrusion)**  
+   所有第三方采集库通过 `pip` 引入，禁止修改任何第三方包的本地源码。高风控平台（抖音/小红书/快手）采用 Git Submodule 隔离，通过 `subprocess` 沙盒调用。
+
+2. **双模架构 (Dual-Mode)**  
+   - `--mode actions`：部署在 GitHub Actions，免登录，定期采集浅层大盘数据。
+   - `--mode local`：部署在本地，携带 Cookie 执行深度采集（评论、画像等）。
+
+3. **CSV 即数据库 (CSV as Database)**  
+   禁止引入 MySQL / PostgreSQL 等 DBMS。全量数据以 `UTF-8-SIG`（带 BOM）格式 CSV 存储在 `data/` 目录，Excel 可直接打开。
+
+---
+
+## 3. 目录结构
+
+```
 slg-sentinel/
-├── app.py                      # (🔥 GUI核心) Streamlit 线性美学企业级大中台
-├── src/                        # 后端引擎层
-│   ├── cli.py                  # 指令分发网关
+├── app.py                          # Streamlit 企业级控制台（GUI 入口）
+├── src/
+│   ├── cli.py                      # CLI 指令分发网关（argparse）
 │   ├── core/
-│   │   ├── models.py           # 数据的元基石 (VideoSnapshot, Comment, TapTapReview, UserProfile)
-│   │   ├── csv_store.py        # 去重、BOM 修复与周增量差值计算的持久化模块
-│   │   ├── keyword_expander.py # (AI 模块) 调用 LLM 根据游戏简介自动逆向提纯搜索词
-│   │   └── config.py           # 配置与靶点目标装载中心
-│   ├── adapters/               # 各大平台采集桥接器
-│   │   ├── bilibili.py         # 依赖 bilibili-api-python
-│   └── analysis/               
-│       ├── profiler.py         # (🚧 待攻坚核心) 跨越隐私墙的用户画像拼图合成器
-│       ├── sentiment.py        # 本地离线自然语言情感分析 / 竞品 NER 实体识别
-│       └── weekly_report.py    # 基于增量的 Markdown 周报生成器
-├── data/                       # 核心时序数据库 (唯一落盘点，立体分类体系)
-│   ├── summary/                # 【周期汇总层】
-│   │   ├── daily/              # 顶层每日全网快照大盘，专供 `weekly_report.py` 利用减法进行“周真实热度增量”差值追踪。
-│   │   ├── weekly/             # 预留周表结果
-│   │   └── monthly/            
-│   ├── video_platforms/        # 【流媒体/中短视频阵地】
-│   │   ├── bilibili/               
-│   │   │   ├── videos/         # 每日搜集/热门列表视频元数据
-│   │   │   └── comments/       # 深网纯文字评论池 (含IP属性)
-│   │   ├── youtube/                
-│   │   │   ├── videos/         
-│   │   │   └── comments/       # 管子原生态评论防封穿刺取回区
-│   │   ├── douyin/             # (含有 kuaishou/, xiaohongshu/ 等，依靠沙盒爬去，但统一落库在此)
-│   │   │   ├── videos/         
-│   │   │   └── comments/       
-│   └── community_platforms/    # 【硬核图文/游戏专属社区】
-│       ├── taptap/                 
-│       │   ├── videos/         # 实体化为对应 SLG 游戏本体 (Game)
-│       │   └── comments/       # 为与主框架结构强制对齐，TapTap 极具价值的长测评 (Reviews) 全部落库在 comments/ 目录下。
-├── cloudflare_pages/           # 云端流媒体反代静态入口 (index.html, 处理 CF iFrame 部署)
-├── keywords.yaml               # 核心赛道黑话、同义词扩展池
-├── targets.yaml                # 定向刺探的极高价值竞品 Up/频道
-└── Gemini.md                   # 也就是本文件，所有 AI 接手之前的共识核心
+│   │   ├── models.py               # 数据模型（VideoSnapshot, Comment, TapTapReview, UserProfile）
+│   │   ├── csv_store.py            # CSV 持久层（去重、BOM 修复、路径路由）
+│   │   ├── config.py               # 配置中心（YAML 加载、环境变量、密钥管理）
+│   │   ├── keyword_expander.py     # LLM 驱动的搜索关键词自动扩展
+│   │   └── retry.py                # 网络请求重试装饰器（指数退避）
+│   ├── adapters/
+│   │   ├── base.py                 # 适配器抽象基类
+│   │   ├── bilibili.py             # B 站适配器（bilibili-api-python）
+│   │   ├── youtube.py              # YouTube 适配器（yt-dlp + scrapetube + youtube-comment-downloader）
+│   │   ├── taptap.py               # TapTap 适配器（逆向移动端 API）
+│   │   └── media_crawler.py        # 抖音/快手/小红书桥接器（MediaCrawler 子进程）
+│   └── analysis/
+│       ├── sentiment.py            # 离线情感分析（词典 + 否定词反转）与竞品实体识别
+│       ├── profiler.py             # 用户画像推断（年龄/付费/玩家标签）
+│       └── weekly_report.py        # 周报生成器（Markdown + JSON 统计）
+├── tests/
+│   └── test_core.py                # 基础测试套件（20 条，覆盖 models/csv_store/sentiment/config）
+├── data/                           # 时序数据目录（由 data 分支管理，main 分支 gitignore）
+│   ├── summary/daily/              # 每日全网快照汇总
+│   ├── video_platforms/             # B 站 / YouTube / 抖音 / 快手 / 小红书
+│   │   └── {platform}/videos/      # 视频元数据
+│   │   └── {platform}/comments/    # 评论文本
+│   └── community_platforms/         # TapTap
+│       └── taptap/comments/        # TapTap 长评（统一存放在 comments/ 下）
+├── .github/workflows/
+│   ├── crawl-bilibili.yml          # 每日 UTC 16:00 自动采集
+│   ├── crawl-youtube.yml           # 每日 UTC 16:30 自动采集
+│   ├── crawl-taptap.yml            # 每日 UTC 17:00 自动采集
+│   └── weekly-analysis.yml         # 每周一自动生成周报
+├── cloudflare_pages/               # Cloudflare Pages iframe 入口
+├── MediaCrawler/                   # Git Submodule（抖音/快手/小红书采集引擎）
+├── keywords.yaml                   # 搜索关键词配置
+├── targets.yaml                    # 监控目标频道/游戏配置
+├── pyproject.toml                  # 项目元信息与依赖声明
+└── Gemini.md                       # 本文件
 ```
 
 ---
 
-## 3. 核心数据对象映射 (CSV as Database)
+## 4. 核心数据模型
 
-为了配合上述文件结构，系统中存在以下不可或缺的数据类模型设定（所有的 CSV Header 表头由以下对象直接生成）：
-1. **`VideoSnapshot`**: 所有外层 `videos/` 列表获取的最重基石，包含了 播放、投币、弹幕等多维矩阵字段。
-2. **`Comment`**: 用于 B站/油管/抖快，主打文本自然语言挖掘与点赞排位。
-3. **`TapTapReview`**: `reviews/` 包含长测游玩时间与评级星级打分。
-4. **`UserProfile`**: 最终的产物，具有年龄推断、消费类型（free/dolphin/whale 指代白嫖、微氪、神豪）等终极用户画像标签。
+CSV 的 Header 表头由以下 dataclass 直接生成：
 
----
+| 模型 | 存储位置 | 用途 |
+|------|---------|------|
+| `VideoSnapshot` | `videos/*.csv` | 视频/游戏的多维指标快照（播放、点赞、弹幕等） |
+| `Comment` | `comments/*.csv` | 评论文本、点赞数、IP 属地，用于情感分析 |
+| `TapTapReview` | `comments/*.csv` | TapTap 长评（含星级评分、游玩时长），统一存放在 comments 目录 |
+| `UserProfile` | `profiles/*.csv` | 用户画像推断结果（年龄段、付费类型、玩家标签） |
 
-## 3. UI 界面哲学与公网部署 (Cloudflare)
-
-### 界面设计 (app.py)
-Streamlit 的默认外观非常丑陋。我们使用了超过 200 行注入的 CSS 强制将其转化为 **极其现代化、具备极客感与高管视角的控制台**。
-- 采用 `Light Mode Only` 工业白板底色，配合无衬线字体（Inter）。
-- 绝不使用自带的粗糙 UI 组件，利用内联 HTML 大量渲染圆角头像、视频封面与状态 Badge。
-- **状态矩阵约束**：前台展示了不同平台因为风控级别而动态激活的抓取能力（例如免登状态下无法抓取投币与分享），这在 `app.py` 中被定义为严苛的 UI 开关互斥机制。
-
-### 命名与 UX 写作文风 (UX Writing)
-严禁在界面与输出中使用任何过度带有科幻、游戏感、中二感的词汇（如：**探针、神经干线、潮汐、底座、阵列、汪洋、大盘**等）。
-所有的 UI 命名必须采用标准、清爽、专业的 B2B 商业数据监控产品术语（如：**监控目标、采集时间、系统节点、图表、分析组件**等），确保面板呈现绝对的专业性与冷静感。
-此外，表单配置和长链路执行必须采用 **严格的 Pipeline 流水线（如 STEP 01 到 STEP 05）**，绝不堆砌横向拥挤的选项区块。
-
-### 部署架构与网络穿透（极其重要）
-经过惨痛教训，普通的 Worker 代理会因为 Streamlit 原生 React Router 检测 Host 不符而触发崩溃报错 404。
-因此，**公网面板目前采用 Cloudflare Pages (iFrame 挂载) + CF VPN 访问模式。**
-前端部署路径：
-1. 本地生成包含 `<meta charset="utf-8">` 与 iframe 指向独立 Streamlit Cloud App URL 的 `cloudflare_pages/index.html`。
-2. 拖拽至 Cloudflare Pages，通过该原生态沙盒越过路由封锁进行定制化域名呈现。
+所有模型均实现了 `__eq__` 和 `__hash__`，基于各自的 ID 字段去重。
 
 ---
 
-## 4. 下一步行动纲领：目前的 TODO 列表
+## 5. 配置文件
 
-如果你是新唤醒的 AI，请优先检查用户是不是要求解决以下核心遗留问题：
+| 文件 | 作用 |
+|------|------|
+| `keywords.yaml` | 种子关键词（游戏名 + 品类词）+ LLM 扩词配置 |
+| `targets.yaml` | 定向监控目标（B 站 UP 主 UID、YouTube 频道 ID、TapTap 游戏 ID） |
+| `secrets.yaml` | 本地敏感凭证（已 gitignore），格式见 `config.py` |
 
-- [ ] **TODO 1: 大战 User Profiler（画像推测引擎）落地**
-  此任务已被积压并进入攻坚期！系统现在的骨架已经完成，目前 `src/analysis/profiler.py` 虽然已有基础代码，但它目前输出的仅是模拟和占位逻辑。
-  **目标**：结合目前 `data/` 里巨量的 TapTap 长评论库、B 站历史评论者 UID，开发逻辑让它自动提取核心评论区里的人群特征。识别出其中的“硬核肝帝”、“休闲风景党”、“退坑回流”以及他们在跨平台最喜欢对比什么竞品（例如“某群体在《世界启元》下面特别喜欢喷《三战》”），并且把这部分画像数据对接回 `app.py` 的面板上做极其赛博朋克风的图表展示。
-  
-- [ ] **TODO 2: Streamlit 面板的深度舆情报表可视化**
-  目前 GUI 控制面板有「周报」这个模块，但我们需要将 `weekly_report.py` 落地的底层数据提取出来。不仅是让后端吐 Markdown，而是要在前端大展身手：将情感正负面转化率、竞品黑话声量占比直接映射成饼图或折线图。
+环境变量优先级高于 `secrets.yaml`，支持：`DEEPSEEK_API_KEY` / `OPENAI_API_KEY` / `QWEN_API_KEY` / `BILI_SESSDATA`。
 
-- [ ] **TODO 3: MediaCrawler 子模块全域联调验证 (本地测试)**
-  检查目前的 local 模式下，桥接外部隔离的 MediaCrawler（针对跨越抖音、小红书的风控体系）能否在实际环境里无缝唤起扫码沙盒，并将生成的 CSV 顺利倒灌回我们的 `data/` 仓内。
+---
 
-**提示结束**：阅读完毕上述内容后，你已具备本轮对话必须拥有的满级上下文。向用户致意并直接开始工作即可。
+## 6. GUI 界面约束
+
+`app.py` 是基于 Streamlit 构建的企业级控制台，注入了 200+ 行自定义 CSS，定义如下：
+
+- **Light Mode Only**，白底工业风（Inter 字体），黑灰主色调。
+- 禁止使用 Streamlit 自带的粗糙 UI 组件，大量使用内联 HTML 渲染数据表格、视频播放器、标签。
+- 表单配置采用严格的 **Pipeline 流水线**（STEP 01 → STEP 05），禁止横向堆砌选项。
+
+### UX 文案规范
+
+禁止在界面中使用过度中二、科幻感的词汇。以下词汇**禁止出现**：
+> 探针、神经干线、潮汐、底座、阵列、汪洋、大盘、穿刺、渗透
+
+使用标准的 B2B 商业数据产品术语：
+> 监控目标、采集时间、系统节点、图表、分析组件、数据源
+
+### 公网部署
+
+采用 **Cloudflare Pages (iframe) + VPN** 模式。`cloudflare_pages/index.html` 包含指向 Streamlit Cloud 实例的 iframe，绕过 Streamlit 原生路由检测的域名锁定。
+
+---
+
+## 7. 开发规范
+
+### 网络请求
+- 所有适配器强制执行 `time.sleep(1.0+)` 礼貌间隔。
+- 使用 `src/core/retry.py` 提供的 `@retry_on_failure` 装饰器处理网络波动。
+
+### 数据持久化
+- 通过 `CSVStore.save()` 写入，自动处理去重（基于 ID 字段）和 BOM 头。
+- 新建文件写入 UTF-8 BOM，追加模式不重复写入 BOM。
+
+### 测试
+- 测试位于 `tests/test_core.py`，使用 pytest 执行。
+- 运行命令：`python -m pytest tests/ -v`
+
+---
+
+## 8. 待办事项
+
+如果你是新唤醒的 AI，请优先检查用户是否要求解决以下核心遗留问题：
+
+- [ ] **User Profiler 画像推测引擎落地**：当前 `profiler.py` 基于关键词启发式规则，精度有限。计划接入轻量级 LLM 提升画像质量，并将结果对接回 `app.py` 面板做图表展示。
+- [ ] **周报 LLM 深度语义分析**：`weekly_report.py` 的第 4 节（深度语义洞察）目前为 TODO 占位。需接入 DeepSeek/GPT-4o 对本周高赞评论进行自动聚类摘要。
+- [ ] **MediaCrawler 全域联调验证**：验证 local 模式下桥接 MediaCrawler 的扫码沙盒流程，确保 CSV 正确导入 `data/` 目录。
+
+---
+
+*文档最后更新：2026-04-18*

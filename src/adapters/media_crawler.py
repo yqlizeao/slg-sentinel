@@ -26,6 +26,22 @@ logger = logging.getLogger(__name__)
 
 
 class MediaCrawlerBridge:
+
+    @staticmethod
+    def _safe_int(val: str | None, support_wan: bool = False) -> int:
+        """安全地将字符串转换为整数，支持 'w'/'万' 后缀"""
+        if not val:
+            return 0
+        val = str(val).strip()
+        if val.isdigit():
+            return int(val)
+        if support_wan and "w" in val.lower():
+            try:
+                return int(float(val.lower().replace("w", "")) * 10000)
+            except ValueError:
+                return 0
+        return 0
+
     def __init__(self, media_crawler_root_dir: str):
         self.mc_root = Path(media_crawler_root_dir)
         self.mc_data_dir = self.mc_root / "data"
@@ -105,6 +121,7 @@ class MediaCrawlerBridge:
 
     def _parse_videos(self, csv_file: Path, platform: str, today: str) -> List[VideoSnapshot]:
         snapshots = []
+        si = self._safe_int  # 局部别名，减少属性查找
         with open(csv_file, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -114,17 +131,6 @@ class MediaCrawlerBridge:
                     continue
 
                 title = row.get("title") or row.get("desc") or ""
-                
-                # 数字安全转换
-                def _safe_int(key: str) -> int:
-                    val = row.get(key, "0")
-                    if not val:
-                        return 0
-                    if val.isdigit():
-                        return int(val)
-                    if "w" in val.lower():
-                        return int(float(val.lower().replace("w", "")) * 10000)
-                    return 0
 
                 snap = VideoSnapshot(
                     platform=platform,
@@ -133,11 +139,11 @@ class MediaCrawlerBridge:
                     author=str(row.get("nickname", row.get("author_name", ""))),
                     author_id=str(row.get("user_id", row.get("author_id", ""))),
                     snapshot_date=today,
-                    view_count=_safe_int("play_count"),   # 小红书可能无 play_count
-                    like_count=_safe_int("liked_count") or _safe_int("like_count"),
-                    comment_count=_safe_int("comment_count") or _safe_int("comments_count"),
-                    share_count=_safe_int("share_count"),
-                    favorite_count=_safe_int("collected_count") or _safe_int("collect_count"),
+                    view_count=si(row.get("play_count"), support_wan=True),
+                    like_count=si(row.get("liked_count"), support_wan=True) or si(row.get("like_count"), support_wan=True),
+                    comment_count=si(row.get("comment_count")) or si(row.get("comments_count")),
+                    share_count=si(row.get("share_count")),
+                    favorite_count=si(row.get("collected_count")) or si(row.get("collect_count")),
                     coin_count=0,
                     danmaku_count=0,
                     publish_date=str(row.get("create_time", row.get("add_ts", ""))[:10]),
@@ -149,6 +155,7 @@ class MediaCrawlerBridge:
 
     def _parse_comments(self, csv_file: Path, platform: str) -> List[Comment]:
         comments = []
+        si = self._safe_int
         with open(csv_file, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -156,11 +163,6 @@ class MediaCrawlerBridge:
                 comment_id = row.get("comment_id")
                 if not video_id or not comment_id:
                     continue
-                
-                # 数字安全转换
-                def _safe_int(key: str) -> int:
-                    val = row.get(key, "0")
-                    return int(val) if val and val.isdigit() else 0
 
                 c = Comment(
                     platform=platform,
@@ -169,8 +171,8 @@ class MediaCrawlerBridge:
                     author=str(row.get("nickname", "")),
                     author_id=str(row.get("user_id", "")),
                     content=str(row.get("content", row.get("text", ""))),
-                    like_count=_safe_int("like_count"),
-                    reply_count=_safe_int("sub_comment_count"),
+                    like_count=si(row.get("like_count")),
+                    reply_count=si(row.get("sub_comment_count")),
                     publish_time=str(row.get("create_time", "")),
                     ip_location=str(row.get("ip_location", "")),
                     sentiment="",

@@ -133,7 +133,6 @@ class KeywordExpander:
             "Authorization": f"Bearer {api_key}",
         }
 
-        
         # 兼容 OpenAI API 格式的 payload
         payload = {
             "model": provider_cfg["model"],
@@ -141,10 +140,13 @@ class KeywordExpander:
                 {"role": "system", "content": "You are a helpful assistant that outputs only raw JSON arrays."},
                 {"role": "user", "content": prompt}
             ],
-            "response_format": {"type": "json_object"} if provider != 'deepseek' else None, # deepseek json mode 有时只需 prompt 引导
             "temperature": 0.7,
         }
+        # deepseek json mode 只需 prompt 引导，不传 response_format
+        if provider != "deepseek":
+            payload["response_format"] = {"type": "json_object"}
 
+        content = ""  # 预声明，防止 except 分支引用未定义变量
         try:
             logger.info(f"正在使用 {provider} 请求关键词扩展...")
             resp = requests.post(provider_cfg["url"], headers=headers, json=payload, timeout=60)

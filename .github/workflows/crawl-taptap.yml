@@ -2,8 +2,8 @@ name: TapTap数据采集
 
 on:
   schedule:
-    - cron: '0 17 * * *'   # UTC 17:00 = 北京时间次日 1:00（错开B站/YouTube各30分钟）
-  workflow_dispatch:
+    - cron: '0 17 * * *'   # UTC 17:00 = 北京时间次日 1:00（与B站/YouTube错开）
+  workflow_dispatch:        # 允许手动触发
 
 jobs:
   crawl:

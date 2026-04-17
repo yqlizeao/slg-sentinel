@@ -291,16 +291,21 @@ class CSVStore:
         try:
             rows = self._read_csv_raw(file_path)
             dc_fields = {f.name: f for f in fields(dataclass_type)}
+            
+            # 预构建类型映射表：字段名 → 是否为整数类型
+            int_fields = set()
+            for name, f in dc_fields.items():
+                ft = f.type
+                if ft == "int" or ft is int or (isinstance(ft, str) and ft.strip() == "int"):
+                    int_fields.add(name)
 
             for row in rows:
-                # 类型转换
                 converted = {}
                 for key, value in row.items():
                     if key not in dc_fields:
                         continue
-                    field_type = dc_fields[key].type
                     try:
-                        if field_type == "int" or field_type is int:
+                        if key in int_fields:
                             converted[key] = int(value) if value else 0
                         else:
                             converted[key] = value or ""

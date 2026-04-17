@@ -28,6 +28,12 @@ class VideoSnapshot:
     tags: str               # 逗号分隔的标签
     url: str                # 原始链接
 
+    def __eq__(self, other):
+        return isinstance(other, VideoSnapshot) and self.video_id == other.video_id
+
+    def __hash__(self):
+        return hash(self.video_id)
+
 
 @dataclass
 class Comment:
@@ -45,6 +51,12 @@ class Comment:
     ip_location: str        # B站有IP属地
     sentiment: str          # positive / negative / neutral（分析后填充）
     mentioned_games: str    # 评论中提到的游戏名（分析后填充）
+
+    def __eq__(self, other):
+        return isinstance(other, Comment) and self.comment_id == other.comment_id
+
+    def __hash__(self):
+        return hash(self.comment_id)
 
 
 @dataclass
@@ -66,6 +78,12 @@ class TapTapReview:
     sentiment: str
     mentioned_games: str
 
+    def __eq__(self, other):
+        return isinstance(other, TapTapReview) and self.review_id == other.review_id
+
+    def __hash__(self):
+        return hash(self.review_id)
+
 
 @dataclass
 class UserProfile:
@@ -79,3 +97,9 @@ class UserProfile:
     tags: str               # 逗号分隔的推断标签
     location: str           # IP属地
     last_active_time: str   # 最后活跃时间（最近一条评论的时间或者当前时间）
+
+    def __eq__(self, other):
+        return isinstance(other, UserProfile) and self.user_id == other.user_id
+
+    def __hash__(self):
+        return hash(self.user_id)

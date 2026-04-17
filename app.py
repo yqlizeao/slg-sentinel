@@ -291,6 +291,7 @@ def get_platform_stats(platform: str) -> dict:
     c_today = sum(count_csv_rows(f) for f in c_dir.glob(f"{today}_*.csv")) if c_dir.exists() else 0
     return {"videos_total": v_total, "comments_total": c_total, "videos_today": v_today, "comments_today": c_today}
 
+@st.cache_data(ttl=300)
 def get_system_health() -> dict:
     import os
     total_v, total_c, last_sync = 0, 0, 0
@@ -299,11 +300,16 @@ def get_system_health() -> dict:
         total_v += stt["videos_total"]
         total_c += stt["comments_total"]
     
+    # 只扫描各平台一级目录中最新的 CSV，避免全量 rglob
     if DATA_DIR.exists():
-        for f in DATA_DIR.rglob("*.csv"):
-            if f.is_file():
-                mtime = f.stat().st_mtime
-                if mtime > last_sync: last_sync = mtime
+        for subdir in ["video_platforms", "community_platforms", "summary"]:
+            target = DATA_DIR / subdir
+            if target.exists():
+                for f in target.rglob("*.csv"):
+                    if f.is_file():
+                        mtime = f.stat().st_mtime
+                        if mtime > last_sync:
+                            last_sync = mtime
             
     t_data = load_yaml(TARGETS_FILE).get("targets", {})
     total_targets = len(t_data.get("bilibili_channels", [])) + len(t_data.get("youtube_channels", [])) + len(t_data.get("taptap_games", []))
@@ -341,6 +347,7 @@ def _is_slg_relevant(row: dict) -> bool:
     text = (row.get("title", "") + " " + row.get("tags", "")).lower()
     return any(t.lower() in text for t in _SLG_TERMS)
 
+@st.cache_data(ttl=300)
 def get_trending_videos(top_k=3) -> list[dict]:
     all_videos = []
     

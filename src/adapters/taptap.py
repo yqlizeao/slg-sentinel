@@ -66,6 +66,20 @@ class TapTapAdapter(BaseAdapter):
         self.session = session or requests.Session()
         self.session.headers.update(HEADERS)
 
+    def _request(self, url: str, params: dict | None = None, timeout: int = TIMEOUT) -> requests.Response:
+        """统一网络请求入口，内置重试与礼貌间隔"""
+        from src.core.retry import retry_on_failure
+
+        @retry_on_failure(max_retries=3, base_delay=1.5, 
+                          retryable_exceptions=(requests.RequestException,))
+        def _do_request():
+            resp = self.session.get(url, params=params, timeout=timeout)
+            resp.raise_for_status()
+            return resp
+
+        time.sleep(REQUEST_INTERVAL)
+        return _do_request()
+
     # ─── BaseAdapter 抽象方法实现 ──────────────────────────────────
 
     def search_videos(self, keyword: str, limit: int = 10, **kwargs) -> List[VideoSnapshot]:
@@ -330,7 +344,7 @@ class TapTapAdapter(BaseAdapter):
             游戏名称列表
         """
         try:
-            url = f"{BASE_URL}/user/v1/played-games"
+            url = f"{WEB_BASE}/user/v1/played-games"
             params = {"user_id": user_id, "X-UA": X_UA}
             resp = self.session.get(url, params=params, timeout=TIMEOUT)
             resp.raise_for_status()

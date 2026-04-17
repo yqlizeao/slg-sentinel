@@ -1,6 +1,6 @@
 # SLG Sentinel — 安全忽略规则
 
-# Python
+# ── Python 编译产物 ──────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -12,47 +12,54 @@ build/
 .eggs/
 *.egg
 
-# 虚拟环境
+# ── 虚拟环境 ─────────────────────────────────────────────────
 .venv/
 venv/
 env/
 ENV/
 
-# IDE
+# ── IDE / 编辑器 ─────────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
 *.swo
 .DS_Store
+Thumbs.db
 
-# 环境变量（绝不提交！）
+# ── 敏感凭证（绝不提交！） ───────────────────────────────────
 .env
 .env.*
 *.env
-
-# Cookie 文件（绝不提交！）
+secrets.yaml
 cookies.txt
 *.json.cookies
 bili_cookies.json
 
-# 日志
+# ── 日志 ─────────────────────────────────────────────────────
 *.log
 logs/
 
-# 临时文件
+# ── 临时文件与调试残留 ───────────────────────────────────────
 /tmp/
 *.tmp
+scratch.py
+spider_slg_full.py
 
+# ── 数据目录（由 data 分支管理，不跟踪到 main） ─────────────
+data/
+reports/
 
+# ── 外部文档残留（不纳入版本管理） ───────────────────────────
+copilot.txt
+copilot.*.pdf
+spec.txt
+*.docx
 
-# MediaCrawler（子模块，不追踪其内部文件变更）
-third_party/MediaCrawler/
+# ── 测试缓存 ─────────────────────────────────────────────────
+.pytest_cache/
 
-# Python 虚拟环境
-.venv/
+# ── Streamlit 缓存 ───────────────────────────────────────────
+.streamlit/
 
-# Local Configuration (Do not commit to git)
-secrets.yaml
-
-# AI Agent Context Directory
+# ── AI Agent 上下文目录 ──────────────────────────────────────
 .gemini/

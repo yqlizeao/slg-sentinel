@@ -1,87 +1,202 @@
 # SLG Sentinel
 
-> **研发驱动的 Steam 单机 SLG 多平台竞品舆情中台**
-> 专为我们的**【三国题材 PC 单机 SLG 游戏】**研发铺路。自动采集 B 站、YouTube、TapTap 及其他泛量平台的硬核策略社群动态，利用大模型提纯 PC 战略玩家心智与竞品痛点，避免闭门造车。
+> 面向 Steam 单机 SLG 研发的多平台竞品舆情监控系统
 
-[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-自动化-2088FF?logo=github-actions&logoColor=white)](https://github.com/yqlizeao/slg-sentinel/actions)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-GUI-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI-2088FF?logo=github-actions&logoColor=white)](https://github.com/yqlizeao/slg-sentinel/actions)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
-## 🧭 系统哲学与顶层设计
+## 项目简介
 
-在当今中国市场研发一款付费买断制的的三国 PC 原创 SLG 是极其凶险的，了解硬核策略玩家在长内容测验、竞品评论区（无论是端游老害还是手游回流玩家）的真实期望极其重要。本系统严格遵守 **三条不可动摇的工程铁律**：
+我们正在研发一款**三国题材的付费买断制 PC 单机 SLG 游戏**，目标平台为 Steam。
 
-1. **零侵入 (Zero-Intrusion)**：杜绝魔改第三方源码，保持生态纯洁与极简升级。高危风控平台使用 Git Submodule 隔离为独立沙盒进程。
-2. **绝对的双模架构 (Dual-Mode)**：
-   - **云端静默版 (Actions Mode)**：纯净的免登探测器，常驻云端，防溢出抓取宏观播放与点赞数据。
-   - **中台全量版 (Local Mode)**：本地携带顶级 Cookie 深入社群评论区，无视深网限制，甚至能够唤醒真机接入分析。
-3. **极简数据流 (CSV as Database)**：摒弃一切沉重的数据库（免配 MySQL/Postgres），将具有 BOM 头的 `UTF-8-SIG` CSV 作为极其透明的时序版本控制介质。
+SLG Sentinel 是为这个项目配套的市场情报工具——自动采集 B 站、YouTube、TapTap、抖音、小红书、快手等平台的 SLG 品类视频与评论数据，通过情感分析和用户画像推断，帮助研发团队理解：
+- 硬核策略玩家对现有 SLG 手游（三战、率土、万国觉醒等）的核心不满
+- 他们真正期望的 PC 单机体验是什么
+- 哪些竞品 KOL 和社区话题值得关注
 
 ---
 
-## 🛠️ 核心功能栈
+## 架构特性
 
-| 模块 | 说明 |
+| 特性 | 说明 |
 |------|------|
-| 🖥 **企业级大盘 (GUI)** | 被重构为极现代的 Vercel/Linear 高级白底工业风格的 Streamlit 控制台。一站式打通从采集参数定调到趋势周报图表的闭环。 |
-| 🛡️ **动态封控探针矩阵** | 独创底层感知网关。可依照当前平台的【授权强度】与【爬取深度】自动降级和拦截不可达参数（例如强制避裁容易触发风控的“投币/转化”抓取列）。 |
-| 📱 **全平台网罗** | B站、YouTube（三剑客无黑盒爬虫）、TapTap（原生 API 直连），更集成独立沙盒完成对抖音/小红书/快手的高度防风控强穿刺。 |
-| 🧠 **AI 大脑深度切入** | （1）连接 DeepSeek/OpenAI，基于各大 SLG 官服介绍动态扩写延伸海量搜索长尾词、黑话。<br>（2）离线本地化执行极其高效海量的玩家情感（正/负面）以及竞品提及（NER）智能识别。 |
-| 🕵️‍♂️ **核心玩家画像推测 (TODO)** | 冲破隐私限制，以受众为轴心拼图：寻找这帮在 B 站留下了对《三国志14》或《全战三国》乃至跨平台手游《三战》重度吐槽的用户，反向提纯他们真正想要的 PC 单机体验！ |
+| **双模运行** | 云端免登（GitHub Actions 定时采集）+ 本地深度（Cookie 鉴权采集评论画像） |
+| **零侵入** | 不修改任何第三方库源码，高风控平台通过 Git Submodule 隔离 |
+| **CSV 数据库** | 全量数据落盘为 UTF-8 BOM CSV，Excel 直接打开，无需任何 DBMS |
+| **6 平台覆盖** | B 站 · YouTube · TapTap · 抖音 · 快手 · 小红书 |
+| **AI 分析** | 离线情感分析 + LLM 关键词扩展 + 启发式用户画像 |
 
 ---
 
-## 🚀 极速部署指南
+## 快速开始
 
-### 1. 环境准备 (推荐 Python 3.11/3.12)
+### 1. 克隆仓库
 
 ```bash
-# 包含 MediaCrawler 防风控抓取引擎，必须使用递归克隆拉取 Submodule 子模块！
+# 包含 MediaCrawler 子模块，需要 --recursive
 git clone --recursive https://github.com/yqlizeao/slg-sentinel.git
 cd slg-sentinel
+```
 
-# 创建虚拟环境并彻底隔离污染
+### 2. 安装依赖
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 安装全平台核心抓取器与 GUI 界面框架 (Mac zsh 终端提示报错请用单引号包围包名)
+# 安装全部平台适配器 + GUI
 pip install -e ".[all,gui]"
 ```
 
-### 2. 登舰！启动企业级控制台 
+### 3. 启动控制台
 
 ```bash
 streamlit run app.py
 ```
-控制台启动后，你可以在自带界面的**设置页面**直通所有的行为参数，并动态可视化配置 `targets.yaml` 和 `keywords.yaml` 监控词云，完全摒弃了易错的手搓代码。
 
-### 3. 高端玩家：纯命令行的云端狂奔 (CLI)
+控制台提供 5 个功能页面：
+- **总览**：系统健康状态、平台数据量、全网热帖排行
+- **采集**：选择平台 → 模式 → 深度 → 配额，一键启动
+- **画像**：玩家派系标签、消费类型分布、核心追踪名单
+- **智能报表**：情感分布图表 + 竞品声量柱状图 + Markdown 周报
+- **设置**：在线编辑 targets / keywords / 密钥配置
 
-用于放置服务器后台或 GitHub Actions 自动 CRON 节点，每日静如处子，动如脱兔：
+### 4. CLI 命令行
 
 ```bash
-# 执行 B 站免登级云端批量快照 (指定单次采集深网限额 100 条)
-python -m src.cli crawl --platform bilibili --mode actions --limit 100
+# B 站免登录采集（适合 CI/CD）
+python -m src.cli crawl --platform bilibili --mode actions --limit 50
 
-# 执行 YouTube 本地域深网评论挖掘
+# YouTube 本地深度采集
 python -m src.cli crawl --platform youtube --mode local
 
-# 启动 LLM 引擎对语料发起扫描并生成上周周报
+# TapTap 评论采集
+python -m src.cli crawl --platform taptap --mode actions
+
+# 生成周报
 python -m src.cli analyze --type weekly
+
+# LLM 关键词扩展
+python -m src.cli expand --provider deepseek
 ```
 
-### 4. 关于公网与 Cloudflare 部署架构
-本工程已配置极其精简的 Cloudflare Pages `iframe` 容器逃逸沙盒。若由于 GFW 拦截或 Streamlit Community Cloud 原生安全墙（React Remix Host 一一对应防护拦截）导致你之前的 Worker 反向代理抛出 `404 Unexpected Error`，你只需将内置的 `cloudflare_pages/` 目录拖拽上传至你的 CF Pages 项目中进行挂载，并在本地保持 VPN 开启，即可直接完美化解官方的域名锁定，还原极度震撼的原生全屏沉浸体验。
+---
+
+## 目录结构
+
+```
+slg-sentinel/
+├── app.py                      # Streamlit 控制台
+├── src/
+│   ├── cli.py                  # CLI 入口
+│   ├── core/                   # 配置、模型、存储、重试
+│   ├── adapters/               # 6 平台采集适配器
+│   └── analysis/               # 情感分析、画像、周报
+├── tests/                      # pytest 测试套件
+├── data/                       # CSV 时序数据（data 分支）
+├── .github/workflows/          # 4 个自动化采集/分析 workflow
+├── cloudflare_pages/           # 公网部署入口
+├── MediaCrawler/               # Git Submodule（抖音/快手/小红书引擎）
+├── keywords.yaml               # 搜索关键词配置
+├── targets.yaml                # 监控目标配置
+└── Gemini.md                   # AI 助手工程指南
+```
 
 ---
 
-## 🤝 开发者共识 / AI Agent 上下文入口
+## 自动化采集
 
-项目附带针对 AI 编程助手的硬核心智说明书：**[Gemini.md](./Gemini.md)**。
-无论您想使用光线追踪的硅基大脑续写、拓展、或者基于此库解决某个 Bug 甚至创建一个新赛道的子探测器，请**务必在新的会话最开始，命令您的 AI 优先读取**该文件以建立对等的世界观与架构红线认同。
+项目配置了 4 个 GitHub Actions Workflow，每日自动运行：
+
+| Workflow | 时间 (UTC) | 平台 | 依赖 |
+|----------|-----------|------|------|
+| `crawl-bilibili.yml` | 16:00 | B 站 | bilibili-api-python |
+| `crawl-youtube.yml` | 16:30 | YouTube | yt-dlp + scrapetube |
+| `crawl-taptap.yml` | 17:00 | TapTap | requests + bs4 |
+| `weekly-analysis.yml` | 每周一 | 全平台 | - |
+
+采集数据自动 commit 到 `data` 分支，与代码分支隔离。
 
 ---
-*Powered by Data ＆ Code ｜ License: MIT © 2026 yqlizeao*
+
+## 配置说明
+
+### keywords.yaml
+
+定义搜索关键词（游戏名 + 品类词）和 LLM 扩词设置：
+
+```yaml
+seed_keywords:
+  games:
+    - 三国志战略版
+    - 率土之滨
+    - 万国觉醒
+  categories:
+    - SLG手游
+    - 策略游戏
+expansion:
+  enabled: true
+  llm_provider: deepseek
+  max_expanded_keywords: 50
+```
+
+### targets.yaml
+
+定义定向监控的频道和游戏：
+
+```yaml
+targets:
+  bilibili_channels:
+    - { name: "某UP主", uid: "123456" }
+  youtube_channels:
+    - { name: "SomeChannel", channel_id: "UC..." }
+  taptap_games:
+    - { name: "率土之滨", app_id: "34222" }
+```
+
+### 密钥配置
+
+本地创建 `secrets.yaml`（已 gitignore）或设置环境变量：
+
+```yaml
+llm_keys:
+  deepseek: "sk-..."
+bilibili:
+  sessdata: "your_sessdata"
+```
+
+---
+
+## 测试
+
+```bash
+python -m pytest tests/ -v
+```
+
+当前覆盖 20 条测试，验证：模型身份判等、CSV 幂等存储、情感分析准确性、配置加载容错。
+
+---
+
+## 公网部署
+
+采用 Cloudflare Pages iframe 模式：
+
+1. 将 Streamlit 应用部署到 Streamlit Cloud
+2. 将 `cloudflare_pages/` 上传到 Cloudflare Pages
+3. 通过自定义域名访问（需 VPN）
+
+此方案绕过了 Streamlit 原生路由检测的域名锁定问题。
+
+---
+
+## AI 助手入口
+
+本项目附带 **[Gemini.md](./Gemini.md)** 工程指南文件。如果你使用 AI 编程助手（Gemini / Cursor / Claude 等），请在新会话开始时让 AI 先阅读该文件以建立项目上下文。
+
+---
+
+*License: MIT © 2026 yqlizeao*
