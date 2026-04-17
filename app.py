@@ -399,7 +399,6 @@ with st.sidebar:
     )
 
     st.markdown("<br/>", unsafe_allow_html=True)
-    st.caption(f"当前系统周期\n\n{datetime.now().strftime('%Y年%m月%d日')}")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 if page == "总览":
