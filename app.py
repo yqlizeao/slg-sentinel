@@ -575,7 +575,44 @@ if page == "总览":
     else:
         st.markdown("<p style='color:#666; font-size:14px;'>当前采集库中暂未发现内容，请先执行策略采集。</p>", unsafe_allow_html=True)
 
-
+    # ── 当前已加载采集数据 (Data Manager) ──────────────────────────────────────────────────────────
+    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:2rem 0;'/>", unsafe_allow_html=True)
+    st.markdown("<h3>当前已加载采集数据 (底层源文件)</h3>", unsafe_allow_html=True)
+    
+    from pathlib import Path
+    import os
+    
+    data_base_dir = Path("data")
+    all_csv_files = list(data_base_dir.rglob("*.csv")) if data_base_dir.exists() else []
+    
+    if not all_csv_files:
+        st.markdown("<p style='color:#999; font-size:13px;'>目前本地 CSV 时序数据库位空，等待探针回传...</p>", unsafe_allow_html=True)
+    else:
+        dm_col1, dm_col2 = st.columns([8, 3])
+        with dm_col2:
+            if st.button("🗑️ 格式化清空全域底层数据", type="primary", use_container_width=True):
+                for f in all_csv_files:
+                    try: os.remove(f)
+                    except: pass
+                st.success("✅ 全域数据库已彻底抹除！")
+                st.rerun()
+                
+        st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+        # 采用简洁布局罗列
+        for file_path in sorted(all_csv_files, key=lambda x: x.name, reverse=True):
+            f_size = file_path.stat().st_size / 1024
+            cx1, cx2, cx3 = st.columns([6, 3, 2])
+            with cx1:
+                st.markdown(f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px;'><b>{file_path.parent.name}</b> / {file_path.name}</div>", unsafe_allow_html=True)
+            with cx2:
+                st.markdown(f"<div style='font-size:12px; color:#64748b; padding-top:10px;'>{f_size:.1f} KB</div>", unsafe_allow_html=True)
+            with cx3:
+                if st.button("抹除", key=f"del_{file_path}"):
+                    try:
+                        os.remove(file_path)
+                        st.rerun()
+                    except Exception as e:
+                        st.error("删除受阻")
 
 
 
