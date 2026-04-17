@@ -1070,10 +1070,10 @@ elif page == "智能报表":
             if code == 0:
                 st.success("🎉 生成完毕！跨域聚类报告已写入 reports 目录。")
                 st.rerun()
-        else:
-            st.error("执行链由于未捕获异常而停止。")
-            with st.expander("调试层输出"):
-                st.code(stderr, language="bash")
+            else:
+                st.error("执行链由于未捕获异常而停止。")
+                with st.expander("调试层输出"):
+                    st.code(stderr, language="bash")
 
     json_path = REPORTS_DIR / f"{date_str}_weekly_report.json"
     md_path = REPORTS_DIR / f"{date_str}_weekly_report.md"
