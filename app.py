@@ -669,8 +669,10 @@ elif page == "采集":
         m_val = "actions" if "基础免登录" in mode else "local"
         with st.spinner(f"探测器正在后台接入 {platform.capitalize()} 信息流，通常耗时一至两分钟，请勿刷新页面..."):
             cmd_args = ["crawl", "--platform", platform, "--mode", m_val, "--order", order_val, "--limit", str(limit_val)]
-            if platform not in ["xiaohongshu", "douyin", "kuaishou"] and "简易广域采集" in depth:
+            if platform not in ["xiaohongshu", "douyin", "kuaishou"] and "基础" in depth:
                 cmd_args.extend(["--depth", "shallow"])
+            elif platform not in ["xiaohongshu", "douyin", "kuaishou"] and "深度" in depth:
+                cmd_args.extend(["--depth", "deep"])
             stdout, stderr, code = run_cli(cmd_args)
         if code == 0:
             st.success(f"✅ 【{platform.capitalize()}】指令流已成功回归至正常终态，全部捕获已落盘。")
@@ -710,7 +712,7 @@ elif page == "采集":
         comp_title = "底层开源代理组件: <a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>bilibili-api-python (3.8k⭐)</a>"
         iframe_height = 680
         
-        is_simple = "简易" in depth
+        is_simple = "基础" in depth
         is_basic = "免登录" in mode
         
         sess_status = "<span class='g'>✅ 基于自算 Wbi 放行</span>" if is_basic else "<span class='g'>✅ SESSDATA 穿梭放行</span>"
@@ -719,7 +721,7 @@ elif page == "采集":
         api_call = "<code>search.search_by_type()</code>" if is_simple else "<code>video.Video().get_info()</code>"
         b_coin_status = "<span class='r'>❌ (简易广域搜索不返回)</span>" if is_simple else deep_status
         
-        cmt_status = "<span class='y'>⚠️ 仅可穿透最外层浅页</span>" if is_basic else "<span class='g'>✅ 全量抽取无尽长尾评论</span>"
+        cmt_status = "<span class='r'>❌ 遭到 Wbi 拦截: 零返回</span>" if is_basic else "<span class='g'>✅ SESSDATA 全量抽取</span>"
         fav_status = "<span class='r'>❌ 拦截: 无凭证不予下发</span>" if is_basic else "<span class='g'>✅ 若用户公开即完全采集</span>"
         follow_status = "<span class='r'>❌ 拦截: 需 SESSDATA</span>" if is_basic else "<span class='g'>✅ 解除屏蔽获得高阶权限</span>"
 
