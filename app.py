@@ -17,6 +17,7 @@ import streamlit as st
 # ─── 页面配置 ──────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="SLG Sentinel | 监控看板",
+    page_icon="cloudflare_pages/favicon.svg",
     layout="wide",
     initial_sidebar_state="expanded",
 )
