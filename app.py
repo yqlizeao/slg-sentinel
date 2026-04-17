@@ -46,20 +46,20 @@ section[data-testid="stSidebar"] {
     max-width: 180px !important;
 }
 
-/* 彻底吃掉顶部 Header (Deploy 栏位)，拔除滚动锚点干扰 */
+/* 将 Header 放逐到视野外（不用 display:none 以保留锚点计算） */
 header[data-testid="stHeader"] {
-    display: none !important;
+    position: absolute !important;
+    top: -100px !important;
+    height: 0 !important;
 }
 
 /* 主内容区域去除左侧和顶部多余空白 */
 .block-container {
+    padding-top: 2rem !important;
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     max-width: 100% !important;
-    margin-top: -4rem !important;
-    padding-bottom: 2rem !important;
 }
-
 .stSidebar [data-testid="stMarkdownContainer"] p {
     color: #666666 !important;
     font-size: 13px !important;
