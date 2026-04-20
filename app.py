@@ -59,7 +59,7 @@ header[data-testid="stHeader"] {
 
 /* 主内容区域去除左侧和顶部多余空白 */
 .block-container {
-    padding-top: 2rem !important;
+    padding-top: 1rem !important;
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
     max-width: 100% !important;
@@ -446,7 +446,7 @@ def get_system_health() -> dict:
     
     return {
         "capacity": total_v + total_c,
-        "last_sync": datetime.fromtimestamp(last_sync).strftime("%m-%d %H:%M") if last_sync else "静默状态",
+        "last_sync": datetime.fromtimestamp(last_sync).strftime("%m-%d %H:%M") if last_sync else "暂无记录",
         "targets": total_targets,
         "keywords": total_kws,
         "api_health": bool(os.environ.get("DEEPSEEK_API_KEY"))
@@ -947,31 +947,28 @@ with st.sidebar:
 
 # ═══════════════════════════════════════════════════════════════════════════════
 if page == "总览":
-    st.markdown("<h1>总览</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>查看近期的系统运行状态、数据容量及核心平台更新概貌。</p>", unsafe_allow_html=True)
-
-    # ── 系统运行中枢 (Pulse Bar) ─────────────────────────────────────────────
+    # ── 系统运行概况 ────────────────────────────────────────────────────────
     st.markdown("<h3>系统运行概况</h3>", unsafe_allow_html=True)
     health = get_system_health()
     st.markdown(f"""
     <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;'>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-            <div style='font-size:12px; color:#666;'>📡 监控目标数量</div>
+            <div style='font-size:12px; color:#666;'>监控目标数量</div>
             <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['targets']}<span style='font-size:12px; font-weight:400; color:#666; margin:0 4px;'>频道，</span>{health['keywords']}<span style='font-size:12px; font-weight:400; color:#666; margin-left:4px;'>关键词</span></div>
-            <div style='font-size:11px; color:#999; margin-top:4px;'>包含跨平台核心检索靶点</div>
+            <div style='font-size:11px; color:#999; margin-top:4px;'>覆盖当前已配置的重点监测对象</div>
         </div>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-            <div style='font-size:12px; color:#666;'>📦 本地总数据量</div>
+            <div style='font-size:12px; color:#666;'>本地总数据量</div>
             <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['capacity']} <span style='font-size:12px; font-weight:400; color:#666;'>组</span></div>
             <div style='font-size:11px; color:#999; margin-top:4px;'>包含全平台的视频与评论快照</div>
         </div>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-            <div style='font-size:12px; color:#666;'>🧠 舆情分析组件 (LLM)</div>
+            <div style='font-size:12px; color:#666;'>舆情分析组件 (LLM)</div>
             <div style='font-size:24px; font-weight:700; color:{"#16a34a" if health['api_health'] else "#dc2626"}; margin-top:8px;'>{"连接正常" if health['api_health'] else "未配置"}</div>
             <div style='font-size:11px; color:#999; margin-top:4px;'>用于支撑深度的语义总结与报告生成</div>
         </div>
         <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-            <div style='font-size:12px; color:#666;'>🕑 最近一次采集</div>
+            <div style='font-size:12px; color:#666;'>最近一次采集</div>
             <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['last_sync']}</div>
             <div style='font-size:11px; color:#999; margin-top:4px;'>系统最后一次成功抓取并落库的时间</div>
         </div>
@@ -980,7 +977,7 @@ if page == "总览":
 
     # ── 平台增量指标 ──────────────────────────────────────────────────────────
     st.markdown("<br/>", unsafe_allow_html=True)
-    st.markdown("<h3>平台活水存量一览</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>平台数据概览</h3>", unsafe_allow_html=True)
 
     p_data = [
         ("bilibili", "哔哩哔哩"), ("youtube", "YouTube"), ("taptap", "TapTap"),
@@ -999,10 +996,10 @@ if page == "总览":
 
     # ── 内容热度增量（周度）表格视图 ─────────────────────────────────────────
     st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
-    st.markdown("<h3>🚨 全网热帖及流量异动记录</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>热点内容追踪</h3>", unsafe_allow_html=True)
     c_desc, c_ctrl = st.columns([8, 2])
     with c_desc:
-        st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>拉取跨周期全网流量异动的头部内容，供危机公关或传播热点发掘使用。</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#666; font-size:13px; margin-bottom:1rem;'>展示近期跨平台表现突出的内容，便于跟踪热点话题和高关注素材。</p>", unsafe_allow_html=True)
     with c_ctrl:
         view_limit = st.selectbox("单屏显示限额", [10, 20, 50, 100, 300, 500], index=0, label_visibility="collapsed")
 
@@ -1132,13 +1129,13 @@ if page == "总览":
     all_csv_files = list(data_base_dir.rglob("*.csv")) if data_base_dir.exists() else []
     
     if not all_csv_files:
-        st.markdown("<p style='color:#999; font-size:13px;'>目前本地 CSV 时序数据库位空，等待探针回传...</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#999; font-size:13px;'>当前还没有已加载的数据文件，请先执行采集。</p>", unsafe_allow_html=True)
     else:
         @st.dialog("危险操作确认")
         def confirm_clear_all():
             st.warning("确定要彻底清空所有收集到的历史数据吗？此操作不可逆！")
             c1, c2 = st.columns(2)
-            if c1.button("✅ 确认清空", type="primary", use_container_width=True):
+            if c1.button("确认清空", type="primary", use_container_width=True):
                 for f in all_csv_files:
                     try: os.remove(f)
                     except: pass
@@ -1148,7 +1145,7 @@ if page == "总览":
                 
         dm_col1, dm_col2 = st.columns([9, 2])
         with dm_col2:
-            if st.button("🗑️ 全部删除", type="primary", use_container_width=True):
+            if st.button("删除全部", type="primary", use_container_width=True):
                 confirm_clear_all()
                 
         st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
@@ -1183,8 +1180,6 @@ if page == "总览":
 
 
 elif page == "采集":
-    st.markdown("<h1>内容采集</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 1.5rem;'>手动介入向指定媒介触发爬虫网络或更新快照状态。</p>", unsafe_allow_html=True)
     left_col, right_col = st.columns([1.7, 1.05], gap="large")
     keyword_runtime = {}
 
@@ -1270,7 +1265,7 @@ elif page == "采集":
                     depth = st.radio("采集深度", ["基础采集", "深度采集"], key="crawl_depth_general", label_visibility="collapsed")
 
                 st.markdown(
-                    "<p style='font-size:12px; color:#666; margin:2px 0 0 0;'>字段覆盖情况请参考下方能力矩阵。</p>",
+                    "<p style='font-size:12px; color:#666; margin:2px 0 0 0;'>字段覆盖情况请参考下方字段说明。</p>",
                     unsafe_allow_html=True,
                 )
 
@@ -1408,15 +1403,15 @@ elif page == "采集":
                         stderr=stderr,
                     )
                     if code == 0:
-                        st.success(f"✅ 【{platform_options[platform]}】指令流已成功回归至正常终态，全部捕获已落盘。")
+                        st.success(f"【{platform_options[platform]}】采集已完成，结果已写入本地。")
                     else:
-                        st.error(f"❌ 子线程调度失败，返回状态码: {code}")
+                        st.error(f"采集执行失败，返回状态码：{code}")
     st.markdown("<br>", unsafe_allow_html=True)
     if st.session_state.get("crawl_last_result"):
         render_crawl_result_card(st.session_state["crawl_last_result"])
         st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── 动态构造 HTML 探针穿透能力矩阵表 ─────────────────────────────────────
+    # ── 动态构造 HTML 字段说明表 ────────────────────────────────────────────
     matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -1426,8 +1421,11 @@ elif page == "采集":
         th { padding:12px 14px; font-size:12px; font-weight:600; color:#666; text-align:left; }
         td { padding:12px 14px; border-bottom:1px solid #F0F0F0; vertical-align:middle; font-size:13px; color:#333; }
         tr:hover td { background:#FAFAFA; }
+        .status { display:inline-flex; align-items:center; gap:6px; }
+        .dot { display:inline-block; width:10px; height:10px; border-radius:50%; flex:0 0 10px; }
+        .dot-g { background:#16a34a; }
+        .dot-r { background:#dc2626; }
         .g { color:#16a34a; font-weight:600; }
-        .y { color:#d97706; font-weight:600; }
         .r { color:#dc2626; font-weight:600; }
         code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:'SF Mono',monospace; font-size:11px; color:#2563eb; }
         .desc { font-size:12px; color:#666; }
@@ -1440,6 +1438,9 @@ elif page == "采集":
             <th style="width:27%">当前可见范围</th>
         </tr></thead>
         <tbody>"""
+
+    green_status = lambda text: f"<span class='status'><span class='dot dot-g'></span><span class='g'>{text}</span></span>"
+    red_status = lambda text: f"<span class='status'><span class='dot dot-r'></span><span class='r'>{text}</span></span>"
     
     if platform == "bilibili":
         comp_title = "采集引擎：<a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>bilibili-api-python</a>"
@@ -1448,15 +1449,15 @@ elif page == "采集":
         is_simple = "基础" in depth
         is_basic = "免登录" in mode
         
-        sess_status = "<span class='g'>✅ 可获取</span>" if is_basic else "<span class='g'>✅ 可获取</span>"
-        deep_status = "<span class='g'>✅ 基础模式可获取</span>" if is_basic else "<span class='g'>✅ 鉴权模式可获取</span>"
+        sess_status = green_status("可获取")
+        deep_status = green_status("基础模式可获取") if is_basic else green_status("鉴权模式可获取")
         
         api_call = "<code>search.search_by_type()</code>" if is_simple else "<code>video.Video().get_info()</code>"
-        b_coin_status = "<span class='y'>⚠️ 基础搜索不返回</span>" if is_simple else deep_status
+        b_coin_status = red_status("基础搜索不返回") if is_simple else deep_status
         
-        cmt_status = "<span class='y'>⚠️ 免登录模式下受限</span>" if is_basic else "<span class='g'>✅ 鉴权后可获取</span>"
-        fav_status = "<span class='y'>⚠️ 需鉴权且用户公开</span>" if is_basic else "<span class='g'>✅ 用户公开时可获取</span>"
-        follow_status = "<span class='y'>⚠️ 需鉴权</span>" if is_basic else "<span class='g'>✅ 可获取</span>"
+        cmt_status = red_status("当前模式不可获取") if is_basic else green_status("鉴权后可获取")
+        fav_status = red_status("需鉴权且用户公开") if is_basic else green_status("用户公开时可获取")
+        follow_status = red_status("需切换鉴权模式") if is_basic else green_status("可获取")
 
         rows = f"""
         <tr><td>BV号 (ID)</td><td><code>search.search_by_type()</code></td><td class="desc">用于唯一定位内容</td><td>{sess_status}</td></tr>
@@ -1476,59 +1477,62 @@ elif page == "采集":
     elif platform == "youtube":
         comp_title = "采集引擎：<a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-dlp</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>scrapetube</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-cmt-dl</a>"
         iframe_height = 600
-        rows = """
-        <tr><td>视频 ID (videoId)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于唯一定位内容</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>视频标题 (Title)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于识别内容主题</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>所属频道 (Channel)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于识别重点创作者</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>下辖视频列表</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于补充频道维度内容</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>基础发布日期</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于筛选分析周期</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>基础播放量</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于快速识别高热内容</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>精准真播放 (viewCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于评估真实曝光规模</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>精准点赞数 (likeCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于判断正向反馈强度</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>视频受众标签 (Tags)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于提取话题标签与语义线索</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>网民 ID 与昵称</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于追踪高价值评论用户</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>高价值点赞数</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于识别高影响评论</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>详细发送时间戳</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于判断讨论时效性</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>评论完整纯文本</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于情感与主题分析</td><td><span class="g">✅ 可获取</span></td></tr>"""
+        ok_status = green_status("可获取")
+        rows = f"""
+        <tr><td>视频 ID (videoId)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于唯一定位内容</td><td>{ok_status}</td></tr>
+        <tr><td>视频标题 (Title)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于识别内容主题</td><td>{ok_status}</td></tr>
+        <tr><td>所属频道 (Channel)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于识别重点创作者</td><td>{ok_status}</td></tr>
+        <tr><td>下辖视频列表</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于补充频道维度内容</td><td>{ok_status}</td></tr>
+        <tr><td>基础发布日期</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于筛选分析周期</td><td>{ok_status}</td></tr>
+        <tr><td>基础播放量</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于快速识别高热内容</td><td>{ok_status}</td></tr>
+        <tr><td>精准真播放 (viewCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于评估真实曝光规模</td><td>{ok_status}</td></tr>
+        <tr><td>精准点赞数 (likeCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于判断正向反馈强度</td><td>{ok_status}</td></tr>
+        <tr><td>视频受众标签 (Tags)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于提取话题标签与语义线索</td><td>{ok_status}</td></tr>
+        <tr><td>网民 ID 与昵称</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于追踪高价值评论用户</td><td>{ok_status}</td></tr>
+        <tr><td>高价值点赞数</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于识别高影响评论</td><td>{ok_status}</td></tr>
+        <tr><td>详细发送时间戳</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于判断讨论时效性</td><td>{ok_status}</td></tr>
+        <tr><td>评论完整纯文本</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于情感与主题分析</td><td>{ok_status}</td></tr>"""
     elif platform == "taptap":
         comp_title = "采集引擎：<span style='font-family:monospace; font-weight:600; color:#333; background:#e2e8f0; padding:4px 8px; border-radius:6px;'>自有协议解析引擎</span>"
         iframe_height = 420
-        rows = """
-        <tr><td>核心星评 (1-5星)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于观察口碑趋势</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>测评明文大段内容</td><td><code>API /v2/review/thread</code></td><td class="desc">用于分析深度反馈</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>社区支持度 (ups)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于判断观点共鸣度</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>社区反对数 (downs)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于识别争议反馈</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>发帖物理设备名</td><td><code>API /v2/review/thread</code></td><td class="desc">用于辅助判断设备分布</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>硬核游玩时长</td><td><code>API /v2/review/thread</code></td><td class="desc">用于区分轻度与重度玩家</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>网民专属 UID</td><td><code>API /v2/review/thread</code></td><td class="desc">用于后续用户维度分析</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>玩家曾游玩游戏库</td><td><code>API /v2/game/games</code></td><td class="desc">用于识别用户偏好结构</td><td><span class="g">✅ 可获取</span></td></tr>
-        <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">用于对比竞品体验路径</td><td><span class="g">✅ 可获取</span></td></tr>"""
+        ok_status = green_status("可获取")
+        rows = f"""
+        <tr><td>核心星评 (1-5星)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于观察口碑趋势</td><td>{ok_status}</td></tr>
+        <tr><td>测评明文大段内容</td><td><code>API /v2/review/thread</code></td><td class="desc">用于分析深度反馈</td><td>{ok_status}</td></tr>
+        <tr><td>社区支持度 (ups)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于判断观点共鸣度</td><td>{ok_status}</td></tr>
+        <tr><td>社区反对数 (downs)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于识别争议反馈</td><td>{ok_status}</td></tr>
+        <tr><td>发帖物理设备名</td><td><code>API /v2/review/thread</code></td><td class="desc">用于辅助判断设备分布</td><td>{ok_status}</td></tr>
+        <tr><td>硬核游玩时长</td><td><code>API /v2/review/thread</code></td><td class="desc">用于区分轻度与重度玩家</td><td>{ok_status}</td></tr>
+        <tr><td>网民专属 UID</td><td><code>API /v2/review/thread</code></td><td class="desc">用于后续用户维度分析</td><td>{ok_status}</td></tr>
+        <tr><td>玩家曾游玩游戏库</td><td><code>API /v2/game/games</code></td><td class="desc">用于识别用户偏好结构</td><td>{ok_status}</td></tr>
+        <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">用于对比竞品体验路径</td><td>{ok_status}</td></tr>"""
     elif platform in ["xiaohongshu", "douyin", "kuaishou"]:
         comp_title = "采集引擎：<a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>MediaCrawler</a> 本地桥接"
         iframe_height = 560
-        rows = """
-        <tr><td>帖子/视频 ID</td><td><code>MediaCrawler (aweme_id)</code></td><td class="desc">用于唯一定位内容</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>视频文案标题 (Title)</td><td><code>MediaCrawler (desc)</code></td><td class="desc">用于识别内容主题</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>创作者名称 (Author)</td><td><code>MediaCrawler (nickname)</code></td><td class="desc">用于判断内容来源</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>短片真实播放量</td><td><code>MediaCrawler (play_count)</code></td><td class="desc">用于判断内容传播规模</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>核心点赞数 (like)</td><td><code>MediaCrawler (like_count)</code></td><td class="desc">用于观察正向反馈</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>二次分享转发量</td><td><code>MediaCrawler (share_count)</code></td><td class="desc">用于判断扩散能力</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>私域背书收藏数</td><td><code>MediaCrawler (collect)</code></td><td class="desc">用于观察长期关注意愿</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>内容定向算法标签</td><td><code>MediaCrawler (tags)</code></td><td class="desc">用于提取平台标签线索</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>评论者 ID (user_id)</td><td><code>MediaCrawler (comments)</code></td><td class="desc">用于用户维度分析</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>神评文本明文</td><td><code>MediaCrawler (text)</code></td><td class="desc">用于情感与话题分析</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
-        <tr><td>网民 IP 物理归属</td><td><code>MediaCrawler (ip_location)</code></td><td class="desc">用于观察地域分布</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>"""
+        local_auth_status = green_status("本地授权后可获取")
+        rows = f"""
+        <tr><td>帖子/视频 ID</td><td><code>MediaCrawler (aweme_id)</code></td><td class="desc">用于唯一定位内容</td><td>{local_auth_status}</td></tr>
+        <tr><td>视频文案标题 (Title)</td><td><code>MediaCrawler (desc)</code></td><td class="desc">用于识别内容主题</td><td>{local_auth_status}</td></tr>
+        <tr><td>创作者名称 (Author)</td><td><code>MediaCrawler (nickname)</code></td><td class="desc">用于判断内容来源</td><td>{local_auth_status}</td></tr>
+        <tr><td>短片真实播放量</td><td><code>MediaCrawler (play_count)</code></td><td class="desc">用于判断内容传播规模</td><td>{local_auth_status}</td></tr>
+        <tr><td>核心点赞数 (like)</td><td><code>MediaCrawler (like_count)</code></td><td class="desc">用于观察正向反馈</td><td>{local_auth_status}</td></tr>
+        <tr><td>二次分享转发量</td><td><code>MediaCrawler (share_count)</code></td><td class="desc">用于判断扩散能力</td><td>{local_auth_status}</td></tr>
+        <tr><td>私域背书收藏数</td><td><code>MediaCrawler (collect)</code></td><td class="desc">用于观察长期关注意愿</td><td>{local_auth_status}</td></tr>
+        <tr><td>内容定向算法标签</td><td><code>MediaCrawler (tags)</code></td><td class="desc">用于提取平台标签线索</td><td>{local_auth_status}</td></tr>
+        <tr><td>评论者 ID (user_id)</td><td><code>MediaCrawler (comments)</code></td><td class="desc">用于用户维度分析</td><td>{local_auth_status}</td></tr>
+        <tr><td>神评文本明文</td><td><code>MediaCrawler (text)</code></td><td class="desc">用于情感与话题分析</td><td>{local_auth_status}</td></tr>
+        <tr><td>网民 IP 物理归属</td><td><code>MediaCrawler (ip_location)</code></td><td class="desc">用于观察地域分布</td><td>{local_auth_status}</td></tr>"""
 
     matrix_html = matrix_html_base + rows + "</tbody></table></body></html>"
     
-    st.markdown(f"<div style='margin-top:1.5rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end;'><div><p style='font-size:14px; color:#111; font-weight:600; margin:0;'>当前平台字段能力矩阵</p></div><div style='font-size:12px; color:#666;'>{comp_title}</div></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='margin-top:1.5rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end;'><div><p style='font-size:14px; color:#111; font-weight:600; margin:0;'>当前平台字段说明</p></div><div style='font-size:12px; color:#666;'>{comp_title}</div></div>", unsafe_allow_html=True)
     st_components.html(matrix_html, height=iframe_height, scrolling=False)
 
 
     st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
 
-    # ── 用户数据可访问性矩阵 ──────────────────────────────────────────────────
-    st.markdown("<h3>用户数据可访问性矩阵</h3>", unsafe_allow_html=True)
+    # ── 用户数据可访问性说明 ────────────────────────────────────────────────
+    st.markdown("<h3>用户数据可访问性说明</h3>", unsafe_allow_html=True)
     st.markdown("<p style='color:#666; font-size:13px; margin-bottom:0.8rem;'>各平台用户维度数据的公开程度与采集可行性总览。</p>", unsafe_allow_html=True)
     privacy_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
@@ -1609,8 +1613,8 @@ elif page == "采集":
     </body></html>"""
     st_components.html(privacy_matrix_html, height=340, scrolling=False)
 
-    # ── 视频指标可采集性矩阵 ──────────────────────────────────────────────────
-    st.markdown("<h3>视频指标可采集性矩阵</h3>", unsafe_allow_html=True)
+    # ── 视频指标可采集范围 ──────────────────────────────────────────────────
+    st.markdown("<h3>视频指标可采集范围</h3>", unsafe_allow_html=True)
     st.markdown("<p style='color:#666; font-size:13px; margin-bottom:0.8rem;'>各平台视频/内容维度指标的可用性与对应字段名。</p>", unsafe_allow_html=True)
     metrics_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
@@ -1702,9 +1706,6 @@ elif page == "采集":
     st_components.html(metrics_matrix_html, height=380, scrolling=False)
 
 elif page == "画像":
-    st.markdown("<h1>玩家画像 (User Profiler)</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 1.5rem;'>基于全网重核玩家长尾评论逆向推断的用户成分画像与诉求提纯。</p>", unsafe_allow_html=True)
-
     profiles_path = Path("data/profiles/user_games/")
     all_profiles = []
     if profiles_path.exists():
@@ -1718,28 +1719,28 @@ elif page == "画像":
                 pass
 
     if not all_profiles:
-        st.warning("暂无画像数据。请先执行深度采集，然后使用 CLI 提取画像：\n`python -m src.cli profile --platform bilibili --video-id xxx`")
+        st.warning("当前暂无画像数据。请先完成深度采集，再执行画像提取命令：\n`python -m src.cli profile --platform bilibili --video-id xxx`")
     else:
         df = pd.concat(all_profiles, ignore_index=True)
         df = df.drop_duplicates(subset=["user_id"]).copy()
         
         c1, c2, c3 = st.columns(3)
         with c1:
-            st.markdown(f"<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:15px; border-radius:8px;'><div style='font-size:12px; color:#666;'>👥 锁定高核玩家池</div><div style='font-size:28px; font-weight:700; color:#111;'>{len(df)}</div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:15px; border-radius:8px;'><div style='font-size:12px; color:#666;'>已识别玩家数</div><div style='font-size:28px; font-weight:700; color:#111;'>{len(df)}</div></div>", unsafe_allow_html=True)
             
         with c2:
             whales_dolphins = len(df[df["spend_type"].isin(["whale", "dolphin"])])
-            st.markdown(f"<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:15px; border-radius:8px;'><div style='font-size:12px; color:#666;'>💰 充值能力预估发现</div><div style='font-size:28px; font-weight:700; color:#16a34a;'>{whales_dolphins} <span style='font-size:12px; color:#666; font-weight:400'>名具付费潜力记录</span></div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:15px; border-radius:8px;'><div style='font-size:12px; color:#666;'>高付费潜力玩家</div><div style='font-size:28px; font-weight:700; color:#16a34a;'>{whales_dolphins} <span style='font-size:12px; color:#666; font-weight:400'>名</span></div></div>", unsafe_allow_html=True)
             
         with c3:
             refugees = len(df[df["tags"].str.contains("重氪难民|端游遗老", na=False)])
-            st.markdown(f"<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:15px; border-radius:8px;'><div style='font-size:12px; color:#666;'>🎯 竞品流失核心难民</div><div style='font-size:28px; font-weight:700; color:#dc2626;'>{refugees} <span style='font-size:12px; color:#666; font-weight:400'>名高转化目标</span></div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#FAFAFA; border:1px solid #EAEAEA; padding:15px; border-radius:8px;'><div style='font-size:12px; color:#666;'>重点转化关注对象</div><div style='font-size:28px; font-weight:700; color:#dc2626;'>{refugees} <span style='font-size:12px; color:#666; font-weight:400'>名</span></div></div>", unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
         col_chart1, col_chart2 = st.columns(2)
         with col_chart1:
-            st.markdown("<h5 style='margin-bottom:12px;'>玩家派系标签占比矩阵</h5>", unsafe_allow_html=True)
+            st.markdown("<h5 style='margin-bottom:12px;'>玩家标签分布</h5>", unsafe_allow_html=True)
             tag_counts = {}
             for tags_str in df["tags"].dropna():
                 for tag in tags_str.split(","):
@@ -1750,10 +1751,10 @@ elif page == "画像":
                 tag_df = pd.DataFrame(list(tag_counts.items()), columns=["Tag", "Count"]).sort_values(by="Count", ascending=True)
                 st.bar_chart(tag_df.set_index("Tag"))
             else:
-                st.info("尚未分离出特定阵营标签")
+                st.info("当前还没有可展示的标签分布。")
                 
         with col_chart2:
-            st.markdown("<h5 style='margin-bottom:12px;'>沉浮消费类型雷达 (推断)</h5>", unsafe_allow_html=True)
+            st.markdown("<h5 style='margin-bottom:12px;'>消费类型分布（推断）</h5>", unsafe_allow_html=True)
             spend_df = df["spend_type"].value_counts().reset_index()
             spend_df.columns = ["Type", "Count"]
             try:
@@ -1767,7 +1768,7 @@ elif page == "画像":
             except Exception:
                 st.bar_chart(df["spend_type"].value_counts())
 
-        st.markdown("<h5>🔍 核心靶向追踪名单</h5>", unsafe_allow_html=True)
+        st.markdown("<h5>重点玩家名单</h5>", unsafe_allow_html=True)
         st.dataframe(
             df[["platform", "username", "age_group", "spend_type", "tags", "location"]].rename(columns={
                 "platform": "来源阵地", "username": "网民昵称", "age_group": "推断龄", 
@@ -1780,8 +1781,6 @@ elif page == "画像":
 
 elif page == "智能报表":
     import os
-    st.markdown("<h1>智能舆情报表引擎</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>根据给定时序处理全矩阵存储池并输出语义聚类研判文档。</p>", unsafe_allow_html=True)
     
     col1, col2 = st.columns([1, 1])
     with col1:
@@ -1792,20 +1791,20 @@ elif page == "智能报表":
     date_str = custom_date.strftime("%Y-%m-%d")
     
     # 移除被要求摒弃的中二化名词
-    st.markdown("<p style='color: #16a34a; font-size: 13px; font-weight: 500;'>⚡ LLM 语义聚类探针已就位，当前可独立静默执行。</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #16a34a; font-size: 13px; font-weight: 500;'>当前已支持按日期生成周报，请先选择分析跨度和日期。</p>", unsafe_allow_html=True)
     
-    if st.button("激活生产管道", type="primary"):
+    if st.button("生成分析报告", type="primary"):
         if "WIP" in report_span:
-            st.warning("🚧 该维度正在重构闭环中... 当前底部算力仅能够执行 '周度汇总研判 (Weekly)' 的生成。")
+            st.warning("当前仅支持“周度汇总研判 (Weekly)”报告，其余类型暂未开放。")
         else:
-            with st.spinner("NLP 引擎正在提取玩家情感浓度，并过滤高赞负面长文..."):
+            with st.spinner("正在汇总平台数据并生成分析报告..."):
                 stdout, stderr, code = run_cli(["analyze", "--type", "weekly", "--date", date_str])
             if code == 0:
-                st.success("🎉 生成完毕！跨域聚类报告已写入 reports 目录。")
+                st.success("报告已生成，并写入 reports 目录。")
                 st.rerun()
             else:
-                st.error("执行链由于未捕获异常而停止。")
-                with st.expander("调试层输出"):
+                st.error("报告生成失败，请查看下方日志。")
+                with st.expander("详细日志"):
                     st.code(stderr, language="bash")
 
     json_path = REPORTS_DIR / f"{date_str}_weekly_report.json"
@@ -1813,14 +1812,14 @@ elif page == "智能报表":
 
     if json_path.exists() and md_path.exists():
         import json
-        st.markdown(f"<h3>📈 情感分布与竞品声量雷达 ({date_str})</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>情绪分布与竞品提及情况（{date_str}）</h3>", unsafe_allow_html=True)
         try:
             with open(json_path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
             
             c_chart1, c_chart2 = st.columns(2)
             with c_chart1:
-                st.markdown("<h5 style='margin-bottom:12px;'>全域情绪倾向甜甜圈图</h5>", unsafe_allow_html=True)
+                st.markdown("<h5 style='margin-bottom:12px;'>情绪分布</h5>", unsafe_allow_html=True)
                 sent_data = payload.get("sentiment", {})
                 if sum(sent_data.values()) > 0:
                     try:
@@ -1835,26 +1834,24 @@ elif page == "智能报表":
                     except Exception:
                         st.bar_chart(pd.Series(sent_data))
                 else:
-                    st.info("当前情绪雷达无信号波通指征。")
+                    st.info("当前没有可展示的情绪分布数据。")
             with c_chart2:
-                st.markdown("<h5 style='margin-bottom:12px;'>竞品黑话声量风暴柱状图</h5>", unsafe_allow_html=True)
+                st.markdown("<h5 style='margin-bottom:12px;'>竞品提及分布</h5>", unsafe_allow_html=True)
                 mentions_data = payload.get("mentions", {})
                 if mentions_data:
                     m_df = pd.DataFrame(list(mentions_data.items()), columns=["Game", "Mentions"]).sort_values("Mentions", ascending=False)
                     st.bar_chart(m_df.set_index("Game"), height=300)
                 else:
-                    st.info("风暴柱状图未检出明显竞品杂音。")
+                    st.info("当前没有可展示的竞品提及数据。")
 
             st.markdown("---")
-            st.markdown("<h3>📝 舆情推演原案 (Markdown 归档)</h3>", unsafe_allow_html=True)
+            st.markdown("<h3>报告正文（Markdown）</h3>", unsafe_allow_html=True)
             st.markdown(md_path.read_text(encoding="utf-8"))
         except Exception as e:
-            st.error(f"报表渲染库发生异常: {e}")
+            st.error(f"报告渲染失败：{e}")
 elif page == "设置":
     import os
-    st.markdown("<h1>系统设置</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>直接在下方编辑配置内容，点击保存后立即生效，无需修改代码。</p>", unsafe_allow_html=True)
-    st.info("关键词库已移动到「采集」页面右侧，便于边维护词库边执行采集。")
+    st.info("关键词库已经移动到「采集」页面右侧，可在采集过程中直接维护。")
 
     t1, t2 = st.tabs(["追踪目标 (targets.yaml)", "运行环境变量"])
 
@@ -1863,29 +1860,29 @@ elif page == "设置":
         if "targets" not in targets_data: targets_data["targets"] = {}
         t_data = targets_data["targets"]
 
-        st.info("追踪目标主要是用来进行特定频道的持续监控的。你可以把想重点关注的 B站/YouTube 官方账号或特定游戏专区填在这里，系统会去抓取他们新发的任何动态。")
+        st.info("在这里维护需要持续追踪的频道和游戏目标。保存后，系统会按最新配置执行后续采集。")
         st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>操作说明：在下方表格单元格双击可直接修改追踪目标。在末尾空白行输入即可新增，选中行首数字按 Delete 键可删除整行。编辑完成后请点击底部保存。</p>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
         with c1:
-            st.markdown("##### 📺 Bilibili 频道", unsafe_allow_html=True)
+            st.markdown("##### Bilibili 频道", unsafe_allow_html=True)
             bili_df = pd.DataFrame(t_data.get("bilibili_channels", []))
             if bili_df.empty: bili_df = pd.DataFrame(columns=["name", "uid"])
             edit_bili = st.data_editor(bili_df, num_rows="dynamic", use_container_width=True, key="ed_bili", hide_index=True)
             
         with c2:
-            st.markdown("##### 🟥 YouTube 频道", unsafe_allow_html=True)
+            st.markdown("##### YouTube 频道", unsafe_allow_html=True)
             yt_df = pd.DataFrame(t_data.get("youtube_channels", []))
             if yt_df.empty: yt_df = pd.DataFrame(columns=["name", "channel_id"])
             edit_yt = st.data_editor(yt_df, num_rows="dynamic", use_container_width=True, key="ed_yt", hide_index=True)
             
         with c3:
-            st.markdown("##### 🎮 TapTap 游戏", unsafe_allow_html=True)
+            st.markdown("##### TapTap 游戏", unsafe_allow_html=True)
             tap_df = pd.DataFrame(t_data.get("taptap_games", []))
             if tap_df.empty: tap_df = pd.DataFrame(columns=["name", "app_id"])
             edit_tap = st.data_editor(tap_df, num_rows="dynamic", use_container_width=True, key="ed_tap", hide_index=True)
 
-        if st.button("保存 Targets 配置", type="primary"):
+        if st.button("保存追踪目标", type="primary"):
             t_data["bilibili_channels"] = edit_bili.dropna(how="all").to_dict("records")
             t_data["youtube_channels"] = edit_yt.dropna(how="all").to_dict("records")
             t_data["taptap_games"] = edit_tap.dropna(how="all").to_dict("records")
@@ -1893,28 +1890,28 @@ elif page == "设置":
             try:
                 with open(TARGETS_FILE, "w", encoding="utf-8") as f:
                     yaml.safe_dump({"targets": t_data}, f, allow_unicode=True, sort_keys=False)
-                st.success("🎉 targets.yaml 已保存！后续采集将按新目标执行。")
+                st.success("追踪目标已保存，后续采集将按新配置执行。")
             except Exception as e:
                 st.error(f"保存失败：{e}")
 
     with t2:
         from src.core.config import DEFAULT_SECRETS_FILE, load_secrets
         
-        st.info("🔐 **凭据集中管控**：在此填写的敏感配置将直接存入本地 `secrets.yaml`，优先于系统环境变量读取，且绝不会被提交到代码仓库。")
+        st.info("在这里填写的敏感配置会保存到本地 `secrets.yaml`，优先于环境变量读取，也不会被提交到代码仓库。")
         
         sec_data = load_secrets()
         llm = sec_data.get("llm_keys", {})
         bili = sec_data.get("bilibili", {})
         mc = sec_data.get("mediacrawler", {})
         
-        st.markdown("##### 🧠 AI 大模型密钥")
+        st.markdown("##### AI 大模型密钥")
         ds_key = st.text_input("DeepSeek API Key", value=llm.get("deepseek", ""), type="password", placeholder="sk-...")
         oa_key = st.text_input("OpenAI API Key", value=llm.get("openai", ""), type="password", placeholder="sk-...")
         qw_key = st.text_input("Qwen API Key (阿里云百炼)", value=llm.get("qwen", ""), type="password", placeholder="sk-...")
         
         st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
-        st.markdown("##### 🍪 平台会话身份 (Cookies / Sessions)")
-        st.markdown("<p style='font-size:12px; color:#666;'>用于穿透防抄防风控的重度接口，一般需要通过浏览器抓包 F12 提取。</p>", unsafe_allow_html=True)
+        st.markdown("##### 平台会话身份 (Cookies / Sessions)")
+        st.markdown("<p style='font-size:12px; color:#666;'>用于访问需要登录态的平台接口，一般需要从浏览器当前会话中提取。</p>", unsafe_allow_html=True)
         
         sess_bili = st.text_input("Bilibili SESSDATA", value=bili.get("sessdata", ""), type="password", placeholder="请输入 B站 SESSDATA...")
         sess_mc = st.text_area("MediaCrawler Session/Cookie", value=mc.get("session", ""), height=100, placeholder="预留的跨平台通用长 Cookie 载体字符串...")
@@ -1936,6 +1933,6 @@ elif page == "设置":
             try:
                 with open(DEFAULT_SECRETS_FILE, "w", encoding="utf-8") as f:
                     yaml.safe_dump(new_sec, f, allow_unicode=True, sort_keys=False)
-                st.success("🎉 secrets.yaml 已加密保存至本地！运行大盘即刻生效。")
+                st.success("密钥配置已保存到本地，并立即生效。")
             except Exception as e:
                 st.error(f"保存发生异常：{e}")
