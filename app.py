@@ -2,6 +2,8 @@
 SLG Sentinel — 企业级数据分析监控台
 """
 
+import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -264,6 +266,132 @@ def run_cli(args: list[str]) -> tuple[str, str, int]:
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(ROOT))
     return result.stdout, result.stderr, result.returncode
 
+
+def run_cli_stream(args: list[str], on_line=None) -> tuple[str, str, int]:
+    cmd = [sys.executable, "-u", "-m", "src.cli"] + args
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        cwd=str(ROOT),
+        env=env,
+        bufsize=1,
+    )
+
+    output_lines = []
+    assert proc.stdout is not None
+    for raw_line in proc.stdout:
+        line = raw_line.rstrip("\n")
+        output_lines.append(line)
+        if on_line:
+            on_line(line)
+
+    return_code = proc.wait()
+    return "\n".join(output_lines), "", return_code
+
+
+def format_file_mtime(path: Path) -> str:
+    if not path.exists():
+        return "尚未保存"
+    return datetime.fromtimestamp(path.stat().st_mtime).strftime("%m-%d %H:%M:%S")
+
+
+def init_crawl_progress_state(platform: str, keyword_count: int, limit_val: int) -> dict:
+    return {
+        "platform": platform,
+        "keyword_total": max(keyword_count, 1),
+        "keyword_done": 0,
+        "comment_done": 0,
+        "progress": 0.03,
+        "stage": "准备启动",
+        "detail": f"预计检索 {keyword_count} 个关键词，每词上限 {limit_val} 条",
+        "started_at": datetime.now(),
+    }
+
+
+def update_crawl_progress_state(state: dict, line: str) -> None:
+    clean = line.strip()
+    if not clean:
+        return
+
+    state["detail"] = clean
+
+    keyword_match = re.search(r"共\s+(\d+)\s+个关键词", clean)
+    if keyword_match:
+        state["keyword_total"] = max(int(keyword_match.group(1)), 1)
+        state["stage"] = "正在检索关键词"
+        state["progress"] = max(state["progress"], 0.10)
+        return
+
+    if "关键词 '" in clean and ("搜索到" in clean or "搜索失败" in clean):
+        state["keyword_done"] += 1
+        total = max(state["keyword_total"], 1)
+        state["stage"] = f"正在检索关键词（{min(state['keyword_done'], total)}/{total}）"
+        state["progress"] = max(state["progress"], min(0.72, 0.10 + 0.62 * (state["keyword_done"] / total)))
+        return
+
+    if "TapTap 搜索 '" in clean and ("找到" in clean or "失败" in clean):
+        state["keyword_done"] += 1
+        total = max(state["keyword_total"], 1)
+        state["stage"] = f"正在检索关键词（{min(state['keyword_done'], total)}/{total}）"
+        state["progress"] = max(state["progress"], min(0.72, 0.10 + 0.62 * (state["keyword_done"] / total)))
+        return
+
+    if "游戏 '" in clean and "采集" in clean and "条评论" in clean:
+        state["keyword_done"] += 1
+        total = max(state["keyword_total"], 1)
+        state["stage"] = f"正在采集目标内容（{min(state['keyword_done'], total)}/{total}）"
+        state["progress"] = max(state["progress"], min(0.72, 0.10 + 0.62 * (state["keyword_done"] / total)))
+        return
+
+    if "采集频道:" in clean or ("频道 '" in clean and "获取" in clean and "条视频" in clean):
+        state["stage"] = "正在补充目标内容"
+        state["progress"] = max(state["progress"], 0.76)
+        return
+
+    if "获取热门视频" in clean:
+        state["stage"] = "正在补充热门内容"
+        state["progress"] = max(state["progress"], 0.80)
+        return
+
+    if "已保存" in clean and ("视频快照" in clean or "游戏快照" in clean):
+        state["stage"] = "正在写入视频结果"
+        state["progress"] = max(state["progress"], 0.88)
+        return
+
+    if "已保存" in clean and "评论" in clean:
+        state["comment_done"] += 1
+        state["stage"] = "正在写入评论结果"
+        state["progress"] = max(state["progress"], min(0.97, 0.90 + 0.025 * state["comment_done"]))
+        return
+
+    if "扫码授权" in clean or "[沙盒桥接]" in clean:
+        state["stage"] = "等待本地授权"
+        state["progress"] = max(state["progress"], 0.20)
+        return
+
+    if "[收网作业]" in clean:
+        state["stage"] = "正在导入本地结果"
+        state["progress"] = max(state["progress"], 0.78)
+        return
+
+    if "已从 MediaCrawler 导入" in clean:
+        state["stage"] = "正在写入采集结果"
+        state["progress"] = max(state["progress"], 0.96)
+        return
+
+
+def estimate_remaining_seconds(progress_state: dict) -> int | None:
+    progress = progress_state.get("progress", 0.0)
+    if progress <= 0.08:
+        return None
+    elapsed = max((datetime.now() - progress_state["started_at"]).total_seconds(), 1.0)
+    total_estimated = elapsed / progress
+    return max(int(total_estimated - elapsed), 0)
+
 def count_csv_rows(path: Path) -> int:
     if not path.exists(): return 0
     try:
@@ -394,6 +522,398 @@ def load_yaml(path: Path) -> dict:
     try:
         with open(path, encoding="utf-8") as f: return yaml.safe_load(f) or {}
     except Exception: return {}
+
+
+def render_step_overview(items: list[tuple[str, str, str]]) -> None:
+    with st.container(border=True):
+        st.markdown(
+            "<div style='font-size:12px; color:#475569; font-weight:700; letter-spacing:0.5px; margin-bottom:12px;'>采集流程</div>",
+            unsafe_allow_html=True,
+        )
+
+        layout = []
+        for idx in range(len(items) * 2 - 1):
+            layout.append(1.45 if idx % 2 == 0 else 0.22)
+        cols = st.columns(layout)
+
+        col_idx = 0
+        for item_idx, (step, title, color) in enumerate(items):
+            with cols[col_idx]:
+                st.markdown(
+                    f"""
+                    <div style='padding:10px 12px; border:1px solid {color}22; border-radius:10px; background:{color}10; min-height:76px;'>
+                        <div style='font-size:11px; color:{color}; font-weight:800; letter-spacing:0.5px;'>{step}</div>
+                        <div style='font-size:15px; color:#111; font-weight:700; margin-top:6px;'>{title}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            col_idx += 1
+            if item_idx < len(items) - 1:
+                with cols[col_idx]:
+                    st.markdown(
+                        "<div style='text-align:center; font-size:22px; color:#CBD5E1; font-weight:700; padding-top:22px;'>→</div>",
+                        unsafe_allow_html=True,
+                    )
+                col_idx += 1
+
+
+def render_step_block_header(step: str, title: str, color: str, description: str | None = None) -> None:
+    desc_html = (
+        f"<div style='font-size:12px; color:#666; margin-top:2px; line-height:1.5;'>{description}</div>"
+        if description
+        else ""
+    )
+    st.markdown(
+        f"""
+        <div style='display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;'>
+            <div style='width:38px; height:38px; border-radius:12px; background:{color}18; color:{color}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;'>
+                {step}
+            </div>
+            <div>
+                <div style='font-size:16px; font-weight:700; color:#111;'>{title}</div>
+                {desc_html}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def load_keyword_library() -> tuple[dict, list[str], dict]:
+    kw_data = load_yaml(KEYWORDS_FILE)
+    seed_keywords = kw_data.setdefault("seed_keywords", {})
+    expansion = kw_data.setdefault(
+        "expansion",
+        {"enabled": True, "llm_provider": "deepseek", "max_expanded_keywords": 50},
+    )
+
+    merged_keywords = []
+    seen = set()
+    for group_name in ("games", "categories"):
+        for raw_keyword in seed_keywords.get(group_name, []) or []:
+            keyword = str(raw_keyword).strip()
+            if keyword and keyword not in seen:
+                merged_keywords.append(keyword)
+                seen.add(keyword)
+
+    return kw_data, merged_keywords, expansion
+
+
+def normalize_keyword_rows(editor_df: pd.DataFrame, column_name: str = "关键词") -> list[str]:
+    if column_name not in editor_df.columns:
+        return []
+
+    normalized = []
+    seen = set()
+    for _, row in editor_df.dropna(how="all").iterrows():
+        keyword = str(row.get(column_name, "")).strip()
+        if keyword and keyword not in seen:
+            normalized.append(keyword)
+            seen.add(keyword)
+    return normalized
+
+
+def save_keyword_library(kw_data: dict, keywords: list[str], enabled: bool, provider: str, max_keywords: int) -> None:
+    kw_data["seed_keywords"] = {
+        "games": keywords,
+        "categories": [],
+    }
+    kw_data["expansion"] = {
+        "enabled": enabled,
+        "llm_provider": provider,
+        "max_expanded_keywords": int(max_keywords),
+    }
+
+    with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
+        yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
+
+
+def get_crawl_file_snapshot(platform: str) -> dict[str, dict]:
+    snapshot = {}
+    if not DATA_DIR.exists():
+        return snapshot
+
+    for csv_file in DATA_DIR.rglob("*.csv"):
+        try:
+            is_platform_file = platform in csv_file.parts
+            is_summary_file = "summary" in csv_file.parts and csv_file.name.endswith("_summary.csv")
+            if not (is_platform_file or is_summary_file):
+                continue
+
+            snapshot[str(csv_file)] = {
+                "rows": count_csv_rows(csv_file),
+                "mtime": csv_file.stat().st_mtime,
+            }
+        except Exception:
+            continue
+
+    return snapshot
+
+
+def summarize_crawl_result(
+    platform: str,
+    platform_label: str,
+    before_snapshot: dict[str, dict],
+    after_snapshot: dict[str, dict],
+    keyword_count: int,
+    limit_val: int,
+    started_at: datetime,
+    return_code: int,
+    stdout: str,
+    stderr: str,
+) -> dict:
+    touched_files = []
+    added_videos = 0
+    added_comments = 0
+
+    for path_str, after in after_snapshot.items():
+        before = before_snapshot.get(path_str, {"rows": 0, "mtime": 0.0})
+        row_delta = after["rows"] - before["rows"]
+        touched = before["mtime"] == 0.0 or row_delta != 0 or after["mtime"] > before["mtime"]
+        if not touched:
+            continue
+
+        path_obj = Path(path_str)
+        try:
+            rel_path = str(path_obj.relative_to(ROOT))
+        except Exception:
+            rel_path = path_str
+
+        touched_files.append({"path": rel_path, "row_delta": row_delta})
+
+        if platform in path_obj.parts and "videos" in path_obj.parts:
+            added_videos += max(row_delta, 0)
+        if platform in path_obj.parts and "comments" in path_obj.parts:
+            added_comments += max(row_delta, 0)
+
+    touched_files.sort(key=lambda item: item["path"])
+
+    return {
+        "platform": platform,
+        "platform_label": platform_label,
+        "status": "success" if return_code == 0 else "error",
+        "duration_seconds": max((datetime.now() - started_at).total_seconds(), 0.1),
+        "estimated_results": keyword_count * limit_val,
+        "keyword_count": keyword_count,
+        "limit_val": limit_val,
+        "added_videos": added_videos,
+        "added_comments": added_comments,
+        "touched_files": touched_files,
+        "stdout": stdout,
+        "stderr": stderr,
+    }
+
+
+def render_crawl_result_card(result: dict) -> None:
+    if not result:
+        return
+
+    status_text = "成功" if result["status"] == "success" else "失败"
+    status_color = "#16A34A" if result["status"] == "success" else "#DC2626"
+
+    st.markdown("##### 本次执行结果")
+    metric_cols = st.columns(4)
+    with metric_cols[0]:
+        st.metric("执行状态", status_text, delta=f"{result['duration_seconds']:.1f} 秒")
+    with metric_cols[1]:
+        st.metric("预计检索量", str(result["estimated_results"]), delta=f"{result['keyword_count']} 词 × {result['limit_val']} 条")
+    with metric_cols[2]:
+        st.metric("新增视频 / 评论", f"{result['added_videos']} / {result['added_comments']}")
+    with metric_cols[3]:
+        st.metric("写入文件", str(len(result["touched_files"])))
+
+    st.markdown(
+        f"<div style='font-size:13px; color:#475569; margin:8px 0 12px 0;'>当前平台：<span style='color:{status_color}; font-weight:700;'>{_html.escape(result['platform_label'])}</span></div>",
+        unsafe_allow_html=True,
+    )
+
+    if result["touched_files"]:
+        st.markdown("**文件回执**")
+        for item in result["touched_files"][:6]:
+            delta_text = f"+{item['row_delta']}" if item["row_delta"] >= 0 else str(item["row_delta"])
+            st.markdown(f"- `{item['path']}`  行数变化：`{delta_text}`")
+        if len(result["touched_files"]) > 6:
+            st.caption(f"另有 {len(result['touched_files']) - 6} 个文件发生变化。")
+    else:
+        st.info("本次运行未检测到平台目录中的文件变化。")
+
+    with st.expander("查看原始执行日志", expanded=result["status"] != "success"):
+        st.code((result["stdout"] + "\n" + result["stderr"]).strip(), language="bash")
+
+
+def render_keyword_library(editor_prefix: str = "crawl") -> dict:
+    kw_data, merged_keywords, expansion = load_keyword_library()
+    save_status = {"text": "已同步到本地", "tone": "normal"}
+
+    with st.container(border=True):
+        st.markdown(
+            """
+            <div style='padding:4px 2px 10px 2px;'>
+                <div style='font-size:18px; font-weight:700; color:#111;'>关键词库</div>
+                <div style='font-size:13px; color:#666; margin-top:6px; line-height:1.6;'>在这里统一维护采集关键词，并在同一处完成扩词与保存。</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        meta_col1, meta_col2 = st.columns(2)
+        with meta_col1:
+            st.markdown(
+                f"<div style='padding:12px 14px; border:1px solid #EAEAEA; border-radius:10px; background:#FFFFFF; min-height:92px;'><div style='font-size:12px; color:#666;'>当前关键词数</div><div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{len(merged_keywords)}</div></div>",
+                unsafe_allow_html=True,
+            )
+        with meta_col2:
+            last_saved_placeholder = st.empty()
+
+        def render_last_saved_card() -> None:
+            last_saved_placeholder.markdown(
+                f"<div style='padding:12px 14px; border:1px solid #EAEAEA; border-radius:10px; background:#FFFFFF; min-height:92px;'><div style='font-size:12px; color:#666;'>最近保存时间</div><div style='font-size:16px; font-weight:700; color:#111; margin-top:12px;'>{format_file_mtime(KEYWORDS_FILE)}</div></div>",
+                unsafe_allow_html=True,
+            )
+
+        render_last_saved_card()
+
+        st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("##### 编辑关键词")
+            st.caption("双击表格即可编辑。修改会自动保存，刷新页面后仍会保留。")
+
+            keyword_df = pd.DataFrame(
+                [{"序号": idx, "关键词": k} for idx, k in enumerate(merged_keywords, start=1)]
+            )
+            if keyword_df.empty:
+                keyword_df = pd.DataFrame(columns=["序号", "关键词"])
+
+            edited_keywords = st.data_editor(
+                keyword_df,
+                num_rows="dynamic",
+                use_container_width=True,
+                hide_index=True,
+                height=360,
+                column_config={
+                    "序号": st.column_config.NumberColumn("序号", width=56, disabled=True),
+                    "关键词": st.column_config.TextColumn("关键词", help="平台搜索将直接使用的检索词"),
+                },
+                key=f"{editor_prefix}_keyword_editor",
+            )
+
+        st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("##### 自动扩词设置")
+            st.caption("基于既有目标和语料自动补充关键词，结果会直接合并回当前词库。")
+
+            exp_col1, exp_col2 = st.columns(2)
+            with exp_col1:
+                exp_enabled = st.toggle(
+                    "启用自动扩词",
+                    value=expansion.get("enabled", True),
+                    key=f"{editor_prefix}_exp_enabled",
+                )
+            with exp_col2:
+                provider_options = ["deepseek", "openai", "qwen"]
+                provider_value = expansion.get("llm_provider", "deepseek")
+                provider_index = provider_options.index(provider_value) if provider_value in provider_options else 0
+                exp_provider = st.selectbox(
+                    "LLM Provider",
+                    provider_options,
+                    index=provider_index,
+                    key=f"{editor_prefix}_exp_provider",
+                )
+
+            exp_max = st.number_input(
+                "最大提取数 (10-200)",
+                min_value=10,
+                max_value=200,
+                value=int(expansion.get("max_expanded_keywords", 50)),
+                key=f"{editor_prefix}_exp_max",
+            )
+
+            current_keywords = normalize_keyword_rows(edited_keywords)
+            persisted_state = {
+                "keywords": merged_keywords,
+                "enabled": bool(expansion.get("enabled", True)),
+                "provider": expansion.get("llm_provider", "deepseek"),
+                "max_keywords": int(expansion.get("max_expanded_keywords", 50)),
+            }
+            current_state = {
+                "keywords": current_keywords,
+                "enabled": bool(exp_enabled),
+                "provider": exp_provider,
+                "max_keywords": int(exp_max),
+            }
+
+            auto_saved = False
+            if current_state != persisted_state:
+                try:
+                    save_keyword_library(kw_data, current_keywords, exp_enabled, exp_provider, int(exp_max))
+                    auto_saved = True
+                    save_status = {"text": "已自动保存到本地", "tone": "success"}
+                    render_last_saved_card()
+                except Exception as e:
+                    save_status = {"text": "自动保存失败", "tone": "error"}
+                    st.error(f"自动保存失败：{e}")
+
+            if auto_saved:
+                st.caption("已自动保存到本地 `keywords.yaml`。")
+
+            action_cols = st.columns([1, 1])
+            with action_cols[0]:
+                tone_color = {"success": "#16A34A", "error": "#DC2626", "normal": "#475569"}.get(save_status["tone"], "#475569")
+                st.markdown(
+                    f"<div style='padding:10px 12px; border:1px dashed #D4D4D4; border-radius:10px; background:#FCFCFC; font-size:13px; color:{tone_color}; font-weight:600;'>{save_status['text']}</div>",
+                    unsafe_allow_html=True,
+                )
+
+            with action_cols[1]:
+                if st.button("立即执行扩词", type="secondary", use_container_width=True, key=f"{editor_prefix}_run_expand"):
+                    from src.core.config import load_config
+                    from src.core.keyword_expander import KeywordExpander
+
+                    conf = load_config()
+                    pbar = st.progress(0)
+                    status_txt = st.empty()
+
+                    def cb(cur, tot, name):
+                        pbar.progress(cur / tot)
+                        status_txt.text(f"[{cur}/{tot}] 正在抓取语料: {name}")
+
+                    with st.spinner("正在扩展关键词，请勿刷新页面..."):
+                        expander = KeywordExpander(conf)
+                        results = expander.expand(provider=exp_provider, max_keywords=int(exp_max), progress_callback=cb)
+
+                    if results:
+                        keywords = list(current_keywords)
+                        added = 0
+                        for result in results:
+                            keyword = str(result).strip()
+                            if keyword and keyword not in keywords:
+                                keywords.append(keyword)
+                                added += 1
+
+                        try:
+                            save_keyword_library(kw_data, keywords, exp_enabled, exp_provider, int(exp_max))
+                            status_txt.text("")
+                            save_status = {"text": "扩词结果已写入本地", "tone": "success"}
+                            render_last_saved_card()
+                            st.success(f"成功提取 {len(results)} 个候选词，并自动合并了 {added} 个新词。")
+                            with st.expander("查看本次提取词典"):
+                                st.json(results)
+                        except Exception as e:
+                            save_status = {"text": "扩词结果写入失败", "tone": "error"}
+                            st.error(f"扩词结果保存失败：{e}")
+                    else:
+                        status_txt.text("")
+                        st.error("提取失败或未获取到语料。")
+
+    current_keywords = current_keywords if 'current_keywords' in locals() else merged_keywords
+    return {
+        "keywords": current_keywords,
+        "keyword_count": len(current_keywords),
+        "save_status": save_status,
+        "last_saved_at": format_file_mtime(KEYWORDS_FILE),
+    }
 
 
 # ─── 侧边栏菜单 ──────────────────────────────────────────────────────────────
@@ -665,106 +1185,236 @@ if page == "总览":
 elif page == "采集":
     st.markdown("<h1>内容采集</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 1.5rem;'>手动介入向指定媒介触发爬虫网络或更新快照状态。</p>", unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div style='margin-bottom: 12px; border-left: 3px solid #16a34a; padding-left: 12px;'>
-        <div style='font-size:11px; color:#16a34a; font-weight:700; letter-spacing:0.5px;'>STEP 01</div>
-        <div style='font-size:15px; font-weight:600; color:#111; margin-top:2px;'>挂载目标平台</div>
-    </div>
-    """, unsafe_allow_html=True)
-    platform_options = {
-        "bilibili": "哔哩哔哩",
-        "youtube": "YouTube",
-        "taptap": "TapTap",
-        "douyin": "抖音",
-        "kuaishou": "快手",
-        "xiaohongshu": "小红书"
-    }
-    platform = st.selectbox(
-        "选择执行平台", 
-        list(platform_options.keys()), 
-        format_func=lambda x: platform_options[x],
-        label_visibility="collapsed"
-    )
+    left_col, right_col = st.columns([1.7, 1.05], gap="large")
+    keyword_runtime = {}
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style='margin-bottom: 12px; border-left: 3px solid #2563eb; padding-left: 12px;'>
-        <div style='font-size:11px; color:#2563eb; font-weight:700; letter-spacing:0.5px;'>STEP 02</div>
-        <div style='font-size:15px; font-weight:600; color:#111; margin-top:2px;'>注入运行模式与授权凭证</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if platform in ["xiaohongshu", "douyin", "kuaishou"]:
-        mode = st.radio("授权执行模式", ["MediaCrawler 受限沙盒模式 (强制要求本地环境)"], label_visibility="collapsed")
-        st.markdown("<p style='font-size:13px; color:#dc2626; margin-top:4px;'>⚠️ 平台风控极高，必须采用本地扫码沙盒获取临时 Token。</p>", unsafe_allow_html=True)
-    else:
-        mode = st.radio("授权执行模式", ["基础免登录模式 (适合云端自动化配置)", "鉴权模式 (需要载入本地会话环境)"], label_visibility="collapsed")
+    with right_col:
+        keyword_runtime = render_keyword_library("crawl")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style='margin-bottom: 12px; border-left: 3px solid #d97706; padding-left: 12px;'>
-        <div style='font-size:11px; color:#d97706; font-weight:700; letter-spacing:0.5px;'>STEP 03</div>
-        <div style='font-size:15px; font-weight:600; color:#111; margin-top:2px;'>选择采集深度</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if platform in ["xiaohongshu", "douyin", "kuaishou"]:
-        depth = st.radio("采集深度", ["受限单体深度遍历"], label_visibility="collapsed", disabled=True)
-    else:
-        depth = st.radio("采集深度", ["基础采集", "深度采集"], label_visibility="collapsed")
-    
-    st.markdown("<p style='font-size:12px; color:#666; margin-top:4px;'>※ 具体采集的数据覆盖维度，请参考下方「探针约束矩阵」中的状态指引 (✅/⚠️/❌)。</p>", unsafe_allow_html=True)
+    with left_col:
+        render_step_overview(
+            [
+                ("01", "选择平台", "#16a34a"),
+                ("02", "是否鉴权", "#2563eb"),
+                ("03", "采集深度", "#d97706"),
+                ("04", "搜索策略", "#8b5cf6"),
+                ("05", "爬取数目", "#06b6d4"),
+            ]
+        )
 
-    # 针对研发深度分析的高级排序面板
-    order_val = "totalrank"
-    if platform == "bilibili":
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("""
-        <div style='margin-bottom: 12px; border-left: 3px solid #8b5cf6; padding-left: 12px;'>
-            <div style='font-size:11px; color:#8b5cf6; font-weight:700; letter-spacing:0.5px;'>STEP 04</div>
-            <div style='font-size:15px; font-weight:600; color:#111; margin-top:2px;'>附加高级选项：检索排序策略</div>
-        </div>
-        """, unsafe_allow_html=True)
-        order_map = {
-            "平台搜索默认排序 (Total Rank)": "totalrank",
-            "最新发布时间排序 (Publish Date)": "pubdate",
-            "最多点击播放排序 (Click)": "click",
-            "最多用户收藏排序 (Stow)": "stow"
+        platform_options = {
+            "bilibili": "哔哩哔哩",
+            "youtube": "YouTube",
+            "taptap": "TapTap",
+            "douyin": "抖音",
+            "kuaishou": "快手",
+            "xiaohongshu": "小红书",
         }
-        order_label = st.selectbox("检索排序策略", list(order_map.keys()), index=0, label_visibility="collapsed")
-        order_val = order_map[order_label]
-        
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("""
-    <div style='margin-bottom: 12px; border-left: 3px solid #06b6d4; padding-left: 12px;'>
-        <div style='font-size:11px; color:#06b6d4; font-weight:700; letter-spacing:0.5px;'>STEP 05</div>
-        <div style='font-size:15px; font-weight:600; color:#111; margin-top:2px;'>注入爬取配额限定 (视频/结果上限)</div>
-    </div>
-    """, unsafe_allow_html=True)
-    limit_options = {10: "10 条 (安全试探，极速)", 20: "20 条", 30: "30 条", 40: "40 条", 50: "50 条 (常规快照)"}
-    limit_val = st.selectbox("最大获取限额", list(limit_options.keys()), format_func=lambda x: limit_options[x], label_visibility="collapsed")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+        keyword_count = keyword_runtime.get("keyword_count", len(load_keyword_library()[1]))
 
-    # ── 行动按钮 ──────────────────────────────────────────────────────────────
-    if st.button(f"启动 {platform.capitalize()} 采集链路", type="primary"):
-        m_val = "actions" if "基础免登录" in mode else "local"
-        with st.spinner(f"探测器正在后台接入 {platform.capitalize()} 信息流，通常耗时一至两分钟，请勿刷新页面..."):
-            cmd_args = ["crawl", "--platform", platform, "--mode", m_val, "--order", order_val, "--limit", str(limit_val)]
-            if platform not in ["xiaohongshu", "douyin", "kuaishou"] and "基础" in depth:
-                cmd_args.extend(["--depth", "shallow"])
-            elif platform not in ["xiaohongshu", "douyin", "kuaishou"] and "深度" in depth:
-                cmd_args.extend(["--depth", "deep"])
-            stdout, stderr, code = run_cli(cmd_args)
-        if code == 0:
-            st.success(f"✅ 【{platform.capitalize()}】指令流已成功回归至正常终态，全部捕获已落盘。")
-        else:
-            st.error(f"❌ 子线程调度失败，返回状态码: {code}")
-        with st.expander("下层标准输入输出追踪", expanded=True if code != 0 else False):
-            st.code((stdout + "\n" + stderr).strip(), language="bash")
+        order_val = "totalrank"
+        limit_options = {
+            10: "10 条 (安全试探，极速)",
+            20: "20 条",
+            30: "30 条",
+            40: "40 条",
+            50: "50 条 (常规快照)",
+        }
 
+        with st.container(border=True):
+            st.markdown(
+                "<div style='font-size:18px; font-weight:700; color:#111; margin-bottom:6px;'>采集配置</div>",
+                unsafe_allow_html=True,
+            )
+
+            with st.container():
+                render_step_block_header("01", "选择平台", "#16a34a", "先确定本次采集要进入的平台。")
+                platform = st.selectbox(
+                    "选择执行平台",
+                    list(platform_options.keys()),
+                    format_func=lambda x: platform_options[x],
+                    key="crawl_platform",
+                    label_visibility="collapsed",
+                )
+
+            st.divider()
+
+            with st.container():
+                render_step_block_header("02", "是否鉴权", "#2563eb", "根据平台能力决定是否启用本地鉴权。")
+                if platform in ["xiaohongshu", "douyin", "kuaishou"]:
+                    mode = st.radio(
+                        "授权执行模式",
+                        ["是，必须在本地完成鉴权"],
+                        key="crawl_mode_media",
+                        label_visibility="collapsed",
+                    )
+                    st.markdown(
+                        "<p style='font-size:12px; color:#dc2626; margin:2px 0 0 0;'>该平台需在本地完成扫码授权后再执行采集。</p>",
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    mode = st.radio(
+                        "授权执行模式",
+                        ["否，使用免登录模式（适合自动化）", "是，使用本地鉴权（需要载入会话环境）"],
+                        key="crawl_mode_general",
+                        label_visibility="collapsed",
+                    )
+
+            st.divider()
+
+            with st.container():
+                render_step_block_header("03", "采集深度", "#d97706", "决定只抓基础元数据，还是继续深入评论层。")
+                if platform in ["xiaohongshu", "douyin", "kuaishou"]:
+                    depth = st.radio("采集深度", ["受限单体深度遍历"], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
+                else:
+                    depth = st.radio("采集深度", ["基础采集", "深度采集"], key="crawl_depth_general", label_visibility="collapsed")
+
+                st.markdown(
+                    "<p style='font-size:12px; color:#666; margin:2px 0 0 0;'>字段覆盖情况请参考下方能力矩阵。</p>",
+                    unsafe_allow_html=True,
+                )
+
+            st.divider()
+
+            with st.container():
+                if platform == "bilibili":
+                    render_step_block_header("04", "搜索策略", "#8b5cf6", "B 站支持额外指定搜索结果的排序方式。")
+                    order_map = {
+                        "平台搜索默认排序 (Total Rank)": "totalrank",
+                        "最新发布时间排序 (Publish Date)": "pubdate",
+                        "最多点击播放排序 (Click)": "click",
+                        "最多用户收藏排序 (Stow)": "stow",
+                    }
+                    order_label = st.selectbox(
+                        "检索排序策略",
+                        list(order_map.keys()),
+                        index=0,
+                        key="crawl_order_bilibili",
+                        label_visibility="collapsed",
+                    )
+                    order_val = order_map[order_label]
+                else:
+                    render_step_block_header("04", "搜索策略", "#8b5cf6", "当前平台没有额外排序参数，将沿用适配器默认策略。")
+                    order_label = "平台默认策略"
+                    st.markdown(
+                        "<div style='padding:10px 12px; border:1px dashed #D4D4D4; border-radius:10px; background:#FCFCFC; font-size:13px; color:#475569;'>该平台使用默认搜索策略，无需单独设置。</div>",
+                        unsafe_allow_html=True,
+                    )
+
+            st.divider()
+
+            with st.container():
+                render_step_block_header("05", "爬取数目", "#06b6d4", "最后设置本次采集的结果上限，并确认执行。")
+                action_left, action_right = st.columns([1, 1.1])
+                with action_left:
+                    limit_val = st.selectbox(
+                        "最大获取限额",
+                        list(limit_options.keys()),
+                        format_func=lambda x: limit_options[x],
+                        key="crawl_limit",
+                        label_visibility="collapsed",
+                    )
+                with action_right:
+                    estimated_results = limit_val * keyword_count
+                    mode_preview = "免登录" if "免登录" in mode else "本地鉴权"
+                    depth_preview = "深度采集" if "深度" in depth else "基础采集"
+                    order_preview = "平台默认" if platform != "bilibili" else order_label.replace("平台搜索默认排序 ", "").replace("(", "").replace(")", "")
+                    st.markdown(
+                        f"""
+                        <div style='padding:10px 12px; border:1px dashed #D4D4D4; border-radius:10px; background:#FCFCFC;'>
+                            <div style='font-size:12px; color:#666;'>本次执行概览</div>
+                            <div style='font-size:13px; color:#111; margin-top:6px; line-height:1.7;'>
+                                {platform_options[platform]} / {mode_preview} / {depth_preview} / {order_preview} / {limit_val} 条
+                            </div>
+                            <div style='font-size:13px; color:#2563EB; margin-top:6px; font-weight:600;'>
+                                预计关键词检索量：{limit_val} × {keyword_count} = {estimated_results} 条
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
+                media_platforms = {"xiaohongshu", "douyin", "kuaishou"}
+                from src.core.config import load_config
+                runtime_config = load_config()
+                can_execute = True
+                if keyword_count == 0:
+                    can_execute = False
+                    st.warning("当前关键词库为空，请先在右侧补充关键词后再执行采集。")
+                elif platform in media_platforms and not (ROOT / "MediaCrawler").exists():
+                    can_execute = False
+                    st.error("未检测到 MediaCrawler 子模块，当前平台暂不可执行。")
+                elif platform == "bilibili" and "鉴权" in mode and not runtime_config.bili_sessdata:
+                    st.info("当前未检测到 Bilibili 会话，仍可执行基础采集；如需评论等深度数据，请先完成本地鉴权。")
+
+                st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
+                if st.button(f"启动 {platform_options[platform]} 采集链路", type="primary", use_container_width=True, disabled=not can_execute):
+                    m_val = "actions" if "免登录" in mode else "local"
+                    started_at = datetime.now()
+                    before_snapshot = get_crawl_file_snapshot(platform)
+                    progress_state = init_crawl_progress_state(platform, keyword_count, limit_val)
+                    progress_title = st.empty()
+                    progress_bar = st.progress(0)
+                    progress_eta = st.empty()
+                    progress_detail = st.empty()
+
+                    def refresh_progress_ui() -> None:
+                        eta_seconds = estimate_remaining_seconds(progress_state)
+                        if progress_state["progress"] >= 1.0:
+                            progress_percent = 100
+                        else:
+                            progress_percent = max(min(int(progress_state["progress"] * 100), 99), 1)
+                        progress_title.markdown(
+                            f"<div style='font-size:13px; color:#111; font-weight:700;'>采集进度：{progress_percent}%</div>",
+                            unsafe_allow_html=True,
+                        )
+                        progress_bar.progress(progress_percent)
+                        if progress_percent >= 100:
+                            progress_eta.caption(f"当前阶段：{progress_state['stage']}")
+                        elif eta_seconds is None:
+                            progress_eta.caption("正在建立连接并准备采集任务...")
+                        else:
+                            progress_eta.caption(f"当前阶段：{progress_state['stage']} · 预计剩余 {eta_seconds} 秒")
+                        progress_detail.caption(progress_state["detail"])
+
+                    refresh_progress_ui()
+
+                    cmd_args = ["crawl", "--platform", platform, "--mode", m_val, "--order", order_val, "--limit", str(limit_val)]
+                    if platform not in ["xiaohongshu", "douyin", "kuaishou"] and "基础" in depth:
+                        cmd_args.extend(["--depth", "shallow"])
+                    elif platform not in ["xiaohongshu", "douyin", "kuaishou"] and "深度" in depth:
+                        cmd_args.extend(["--depth", "deep"])
+
+                    def on_progress_line(line: str) -> None:
+                        update_crawl_progress_state(progress_state, line)
+                        refresh_progress_ui()
+
+                    stdout, stderr, code = run_cli_stream(cmd_args, on_line=on_progress_line)
+                    progress_state["progress"] = 1.0 if code == 0 else max(progress_state["progress"], 0.92)
+                    progress_state["stage"] = "采集完成" if code == 0 else "采集结束，等待查看结果"
+                    refresh_progress_ui()
+                    after_snapshot = get_crawl_file_snapshot(platform)
+                    st.session_state["crawl_last_result"] = summarize_crawl_result(
+                        platform=platform,
+                        platform_label=platform_options[platform],
+                        before_snapshot=before_snapshot,
+                        after_snapshot=after_snapshot,
+                        keyword_count=keyword_count,
+                        limit_val=limit_val,
+                        started_at=started_at,
+                        return_code=code,
+                        stdout=stdout,
+                        stderr=stderr,
+                    )
+                    if code == 0:
+                        st.success(f"✅ 【{platform_options[platform]}】指令流已成功回归至正常终态，全部捕获已落盘。")
+                    else:
+                        st.error(f"❌ 子线程调度失败，返回状态码: {code}")
     st.markdown("<br>", unsafe_allow_html=True)
+    if st.session_state.get("crawl_last_result"):
+        render_crawl_result_card(st.session_state["crawl_last_result"])
+        st.markdown("<br>", unsafe_allow_html=True)
 
     # ── 动态构造 HTML 探针穿透能力矩阵表 ─────────────────────────────────────
     matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -785,93 +1435,93 @@ elif page == "采集":
     <table>
         <thead><tr>
             <th style="width:18%">属性</th>
-            <th style="width:30%">核心指令/接⼝</th>
-            <th style="width:25%">备注</th>
-            <th style="width:27%">可⾏性与限制</th>
+            <th style="width:30%">数据来源</th>
+            <th style="width:25%">业务价值</th>
+            <th style="width:27%">当前可见范围</th>
         </tr></thead>
         <tbody>"""
     
     if platform == "bilibili":
-        comp_title = "底层开源代理组件: <a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>bilibili-api-python (3.8k⭐)</a>"
+        comp_title = "采集引擎：<a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>bilibili-api-python</a>"
         iframe_height = 680
         
         is_simple = "基础" in depth
         is_basic = "免登录" in mode
         
-        sess_status = "<span class='g'>✅ 基于自算 Wbi 放行</span>" if is_basic else "<span class='g'>✅ SESSDATA 穿梭放行</span>"
-        deep_status = "<span class='g'>✅ 基于自算 Wbi 放行</span>" if is_basic else "<span class='g'>✅ SESSDATA 高效下行</span>"
+        sess_status = "<span class='g'>✅ 可获取</span>" if is_basic else "<span class='g'>✅ 可获取</span>"
+        deep_status = "<span class='g'>✅ 基础模式可获取</span>" if is_basic else "<span class='g'>✅ 鉴权模式可获取</span>"
         
         api_call = "<code>search.search_by_type()</code>" if is_simple else "<code>video.Video().get_info()</code>"
-        b_coin_status = "<span class='r'>❌ (简易广域搜索不返回)</span>" if is_simple else deep_status
+        b_coin_status = "<span class='y'>⚠️ 基础搜索不返回</span>" if is_simple else deep_status
         
-        cmt_status = "<span class='r'>❌ 遭到 Wbi 拦截: 零返回</span>" if is_basic else "<span class='g'>✅ SESSDATA 全量抽取</span>"
-        fav_status = "<span class='r'>❌ 拦截: 无凭证不予下发</span>" if is_basic else "<span class='g'>✅ 若用户公开即完全采集</span>"
-        follow_status = "<span class='r'>❌ 拦截: 需 SESSDATA</span>" if is_basic else "<span class='g'>✅ 解除屏蔽获得高阶权限</span>"
+        cmt_status = "<span class='y'>⚠️ 免登录模式下受限</span>" if is_basic else "<span class='g'>✅ 鉴权后可获取</span>"
+        fav_status = "<span class='y'>⚠️ 需鉴权且用户公开</span>" if is_basic else "<span class='g'>✅ 用户公开时可获取</span>"
+        follow_status = "<span class='y'>⚠️ 需鉴权</span>" if is_basic else "<span class='g'>✅ 可获取</span>"
 
         rows = f"""
-        <tr><td>BV号 (ID)</td><td><code>search.search_by_type()</code></td><td class="desc">作为视频全局唯一标识符主键</td><td>{sess_status}</td></tr>
-        <tr><td>视频标题 (Title)</td><td><code>search.search_by_type()</code></td><td class="desc">做包含特定游戏名切分的语料</td><td>{sess_status}</td></tr>
-        <tr><td>UP主名称 (Author)</td><td><code>search.search_by_type()</code></td><td class="desc">追踪头部 KOL 和腰部发声者</td><td>{sess_status}</td></tr>
-        <tr><td>发布日期 (Pubdate)</td><td><code>search.search_by_type()</code></td><td class="desc">进行周报的增量周期界定标准</td><td>{sess_status}</td></tr>
-        <tr><td>播放量 (View)</td><td>{api_call}</td><td class="desc">最核心的曝光量级评判指标</td><td>{deep_status if not is_simple else sess_status}</td></tr>
-        <tr><td>点赞数 (Like)</td><td>{api_call}</td><td class="desc">计算互动率 (Like/View) 核心参考数</td><td>{deep_status if not is_simple else sess_status}</td></tr>
-        <tr><td>投币数 (Coin)</td><td>{api_call}</td><td class="desc">体现高优硬派用户认可度的硬核指标</td><td>{b_coin_status}</td></tr>
-        <tr><td>收藏数 (Favorite)</td><td>{api_call}</td><td class="desc">沉淀为用户长尾关注的囤积量转化</td><td>{deep_status if not is_simple else sess_status}</td></tr>
-        <tr><td>分享数 (Share)</td><td>{api_call}</td><td class="desc">衡量跨平台破圈能力的传播量标识</td><td>{b_coin_status}</td></tr>
-        <tr><td>评论者 UID</td><td><code>video.Video().get_comments()</code></td><td class="desc">用以溯源画像的长尾横向指标来源</td><td>{cmt_status}</td></tr>
-        <tr><td>评论内容纯文本</td><td><code>video.Video().get_comments()</code></td><td class="desc">用于 NLP 情感计算极性(正向/负向)</td><td>{cmt_status}</td></tr>
-        <tr><td>被点赞数 (Like)</td><td><code>video.Video().get_comments()</code></td><td class="desc">作为该条神评在玩家群中影响力的权重</td><td>{cmt_status}</td></tr>
-        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">反向暴露这名核心玩家它游心智偏好</td><td>{fav_status}</td></tr>
-        <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">挖掘订阅重合度及竞品官方追随意向</td><td>{follow_status}</td></tr>"""
+        <tr><td>BV号 (ID)</td><td><code>search.search_by_type()</code></td><td class="desc">用于唯一定位内容</td><td>{sess_status}</td></tr>
+        <tr><td>视频标题 (Title)</td><td><code>search.search_by_type()</code></td><td class="desc">用于判断题材与关键词相关性</td><td>{sess_status}</td></tr>
+        <tr><td>UP主名称 (Author)</td><td><code>search.search_by_type()</code></td><td class="desc">用于识别重点创作者与渠道</td><td>{sess_status}</td></tr>
+        <tr><td>发布日期 (Pubdate)</td><td><code>search.search_by_type()</code></td><td class="desc">用于界定分析周期</td><td>{sess_status}</td></tr>
+        <tr><td>播放量 (View)</td><td>{api_call}</td><td class="desc">用于判断内容曝光规模</td><td>{deep_status if not is_simple else sess_status}</td></tr>
+        <tr><td>点赞数 (Like)</td><td>{api_call}</td><td class="desc">用于衡量内容正向反馈</td><td>{deep_status if not is_simple else sess_status}</td></tr>
+        <tr><td>投币数 (Coin)</td><td>{api_call}</td><td class="desc">用于识别高认可度内容</td><td>{b_coin_status}</td></tr>
+        <tr><td>收藏数 (Favorite)</td><td>{api_call}</td><td class="desc">用于观察长期关注意愿</td><td>{deep_status if not is_simple else sess_status}</td></tr>
+        <tr><td>分享数 (Share)</td><td>{api_call}</td><td class="desc">用于判断传播扩散能力</td><td>{b_coin_status}</td></tr>
+        <tr><td>评论者 UID</td><td><code>video.Video().get_comments()</code></td><td class="desc">用于后续用户画像与溯源</td><td>{cmt_status}</td></tr>
+        <tr><td>评论内容纯文本</td><td><code>video.Video().get_comments()</code></td><td class="desc">用于情感与话题分析</td><td>{cmt_status}</td></tr>
+        <tr><td>被点赞数 (Like)</td><td><code>video.Video().get_comments()</code></td><td class="desc">用于识别高影响评论</td><td>{cmt_status}</td></tr>
+        <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">用于辅助判断用户偏好</td><td>{fav_status}</td></tr>
+        <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">用于识别关联账号与兴趣重合</td><td>{follow_status}</td></tr>"""
     elif platform == "youtube":
-        comp_title = "底层开源代理组件: <a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-dlp (155k⭐)</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>scrapetube (500⭐)</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-cmt-dl (1.2k⭐)</a>"
+        comp_title = "采集引擎：<a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-dlp</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>scrapetube</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-cmt-dl</a>"
         iframe_height = 600
         rows = """
-        <tr><td>视频 ID (videoId)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">唯一内容标识符引擎关联锚点</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
-        <tr><td>视频标题 (Title)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">提供检索和展示的语义内容实体</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
-        <tr><td>所属频道 (Channel)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">追踪外围营销买量实体名溯源</td><td><span class="g">✅ 工具内置安全绕过</span></td></tr>
-        <tr><td>下辖视频列表</td><td><code>scrapetube.get_channel()</code></td><td class="desc">保证不遗漏单发渠道内的任何视频</td><td><span class="g">✅ 突破万级接口限制</span></td></tr>
-        <tr><td>基础发布日期</td><td><code>scrapetube.get_channel()</code></td><td class="desc">有效过滤非周报计算周期内的废料</td><td><span class="g">✅ 突破万级接口限制</span></td></tr>
-        <tr><td>基础播放量</td><td><code>scrapetube.get_channel()</code></td><td class="desc">初筛高价值瀑布流水线视频门槛</td><td><span class="g">✅ 突破万级接口限制</span></td></tr>
-        <tr><td>精准真播放 (viewCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">精确曝光播放真实评估数据</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
-        <tr><td>精准点赞数 (likeCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">海外受众视频正面交汇交互反馈</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
-        <tr><td>视频受众标签 (Tags)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">读取创作者自行锚定的内容生态隐喻</td><td><span class="g">✅ 原生免登录解包</span></td></tr>
-        <tr><td>网民 ID 与昵称</td><td><code>youtube-comment-downloader</code></td><td class="desc">特定海外核心主见发帖人的标识抓手</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>
-        <tr><td>高价值点赞数</td><td><code>youtube-comment-downloader</code></td><td class="desc">找出能左右整个外围论坛社区风向的热门置顶</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>
-        <tr><td>详细发送时间戳</td><td><code>youtube-comment-downloader</code></td><td class="desc">过滤旧网游在长尾史前周期的旧评论</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>
-        <tr><td>评论完整纯文本</td><td><code>youtube-comment-downloader</code></td><td class="desc">进入外网语料进行大规模 NLP 情报清洗底仓</td><td><span class="g">✅ 千万级并发安全穿刺</span></td></tr>"""
+        <tr><td>视频 ID (videoId)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于唯一定位内容</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>视频标题 (Title)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于识别内容主题</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>所属频道 (Channel)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于识别重点创作者</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>下辖视频列表</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于补充频道维度内容</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>基础发布日期</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于筛选分析周期</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>基础播放量</td><td><code>scrapetube.get_channel()</code></td><td class="desc">用于快速识别高热内容</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>精准真播放 (viewCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于评估真实曝光规模</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>精准点赞数 (likeCount)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于判断正向反馈强度</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>视频受众标签 (Tags)</td><td><code>yt-dlp --dump-json</code></td><td class="desc">用于提取话题标签与语义线索</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>网民 ID 与昵称</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于追踪高价值评论用户</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>高价值点赞数</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于识别高影响评论</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>详细发送时间戳</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于判断讨论时效性</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>评论完整纯文本</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于情感与主题分析</td><td><span class="g">✅ 可获取</span></td></tr>"""
     elif platform == "taptap":
-        comp_title = "底层支撑策略: <span style='font-family:monospace; font-weight:600; color:#333; background:#e2e8f0; padding:4px 8px; border-radius:6px;'>自有协议解析引擎 (Requests + BS4 + 指纹 Header)</span>"
+        comp_title = "采集引擎：<span style='font-family:monospace; font-weight:600; color:#333; background:#e2e8f0; padding:4px 8px; border-radius:6px;'>自有协议解析引擎</span>"
         iframe_height = 420
         rows = """
-        <tr><td>核心星评 (1-5星)</td><td><code>API /v2/review/thread</code></td><td class="desc">TapTap 极具风向标价值的核心数值战损</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>测评明文大段内容</td><td><code>API /v2/review/thread</code></td><td class="desc">提供对游戏极为深刻硬核的长难句发声本体</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>社区支持度 (ups)</td><td><code>API /v2/review/thread</code></td><td class="desc">判断老哥发帖观点被附议赞同的社会学指标</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>社区反对数 (downs)</td><td><code>API /v2/review/thread</code></td><td class="desc">追踪两派群体矛盾舆情高发冲突发酵点的凭证</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>发帖物理设备名</td><td><code>API /v2/review/thread</code></td><td class="desc">推敲下沉量级机器分布和高净值氪佬占比</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>硬核游玩时长</td><td><code>API /v2/review/thread</code></td><td class="desc">分辨高声量云玩家黑粉与真正 SLG 核爆肝帝的神器</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>网民专属 UID</td><td><code>API /v2/review/thread</code></td><td class="desc">深度锁定核心目标后为二次高维解析埋下接口锚</td><td><span class="g">✅ 原生 WebAPI 头部伪装</span></td></tr>
-        <tr><td>玩家曾游玩游戏库</td><td><code>API /v2/game/games</code></td><td class="desc">通过玩过的交集列表判定是否对三消等有强力沉淀</td><td><span class="g">✅ 免 Cookie 高频并发下行</span></td></tr>
-        <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">找出该玩家从三战开溜入驻新端的核心缘由缩影</td><td><span class="g">✅ 免 Cookie 高频并发下行</span></td></tr>"""
+        <tr><td>核心星评 (1-5星)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于观察口碑趋势</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>测评明文大段内容</td><td><code>API /v2/review/thread</code></td><td class="desc">用于分析深度反馈</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>社区支持度 (ups)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于判断观点共鸣度</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>社区反对数 (downs)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于识别争议反馈</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>发帖物理设备名</td><td><code>API /v2/review/thread</code></td><td class="desc">用于辅助判断设备分布</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>硬核游玩时长</td><td><code>API /v2/review/thread</code></td><td class="desc">用于区分轻度与重度玩家</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>网民专属 UID</td><td><code>API /v2/review/thread</code></td><td class="desc">用于后续用户维度分析</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>玩家曾游玩游戏库</td><td><code>API /v2/game/games</code></td><td class="desc">用于识别用户偏好结构</td><td><span class="g">✅ 可获取</span></td></tr>
+        <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">用于对比竞品体验路径</td><td><span class="g">✅ 可获取</span></td></tr>"""
     elif platform in ["xiaohongshu", "douyin", "kuaishou"]:
-        comp_title = "外部核心桥接库: <a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>MediaCrawler (16.9k⭐)</a> · <span style='font-family:monospace; color:#333; font-weight:600; font-size:11px;'>(Playwright 子进程挂载)</span>"
+        comp_title = "采集引擎：<a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>MediaCrawler</a> 本地桥接"
         iframe_height = 560
         rows = """
-        <tr><td>帖子/视频 ID</td><td><code>MediaCrawler (aweme_id)</code></td><td class="desc">精准阻击买量爆款的唯一溯源标识</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>视频文案标题 (Title)</td><td><code>MediaCrawler (desc)</code></td><td class="desc">提供检索和展示的语义内容实体营销文案</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>创作者名称 (Author)</td><td><code>MediaCrawler (nickname)</code></td><td class="desc">判断出稿方主体是官方号还是野蛮生长的二创者</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>短片真实播放量</td><td><code>MediaCrawler (play_count)</code></td><td class="desc">初筛高价值瀑布流水线视频门槛和传播穿透度</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>核心点赞数 (like)</td><td><code>MediaCrawler (like_count)</code></td><td class="desc">评估受众对于该套 SLG 营销素材的正向交汇反馈</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>二次分享转发量</td><td><code>MediaCrawler (share_count)</code></td><td class="desc">衡量整包游戏被玩家“人传人”裂变的超级质变指数</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>私域背书收藏数</td><td><code>MediaCrawler (collect)</code></td><td class="desc">记录防守玩家将攻略/买量视频作为个人资产的意图</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>内容定向算法标签</td><td><code>MediaCrawler (tags)</code></td><td class="desc">捕捉小红书/抖音分发引擎为内容加盖的隐喻标识</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>评论者 ID (user_id)</td><td><code>MediaCrawler (comments)</code></td><td class="desc">追踪恶意带节奏/或死忠粉的底层账号坐标体系</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>神评文本明文</td><td><code>MediaCrawler (text)</code></td><td class="desc">大量沉淀充满缩写梗的粗粝原生态情绪语料库</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>
-        <tr><td>网民 IP 物理归属</td><td><code>MediaCrawler (ip_location)</code></td><td class="desc">还原该竞品下沉市场的真实地域浓度与氪金能力分布</td><td><span class="g">✅ 终端沙盒原生穿透</span></td></tr>"""
+        <tr><td>帖子/视频 ID</td><td><code>MediaCrawler (aweme_id)</code></td><td class="desc">用于唯一定位内容</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>视频文案标题 (Title)</td><td><code>MediaCrawler (desc)</code></td><td class="desc">用于识别内容主题</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>创作者名称 (Author)</td><td><code>MediaCrawler (nickname)</code></td><td class="desc">用于判断内容来源</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>短片真实播放量</td><td><code>MediaCrawler (play_count)</code></td><td class="desc">用于判断内容传播规模</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>核心点赞数 (like)</td><td><code>MediaCrawler (like_count)</code></td><td class="desc">用于观察正向反馈</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>二次分享转发量</td><td><code>MediaCrawler (share_count)</code></td><td class="desc">用于判断扩散能力</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>私域背书收藏数</td><td><code>MediaCrawler (collect)</code></td><td class="desc">用于观察长期关注意愿</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>内容定向算法标签</td><td><code>MediaCrawler (tags)</code></td><td class="desc">用于提取平台标签线索</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>评论者 ID (user_id)</td><td><code>MediaCrawler (comments)</code></td><td class="desc">用于用户维度分析</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>神评文本明文</td><td><code>MediaCrawler (text)</code></td><td class="desc">用于情感与话题分析</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>
+        <tr><td>网民 IP 物理归属</td><td><code>MediaCrawler (ip_location)</code></td><td class="desc">用于观察地域分布</td><td><span class="g">✅ 本地授权后可获取</span></td></tr>"""
 
     matrix_html = matrix_html_base + rows + "</tbody></table></body></html>"
     
-    st.markdown(f"<div style='margin-top:1.5rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end;'><div><p style='font-size:14px; color:#111; font-weight:600; margin:0;'>当前选中模式探针约束矩阵</p></div><div style='font-size:12px; color:#666;'>{comp_title}</div></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='margin-top:1.5rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end;'><div><p style='font-size:14px; color:#111; font-weight:600; margin:0;'>当前平台字段能力矩阵</p></div><div style='font-size:12px; color:#666;'>{comp_title}</div></div>", unsafe_allow_html=True)
     st_components.html(matrix_html, height=iframe_height, scrolling=False)
 
 
@@ -1204,8 +1854,9 @@ elif page == "设置":
     import os
     st.markdown("<h1>系统设置</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 2rem;'>直接在下方编辑配置内容，点击保存后立即生效，无需修改代码。</p>", unsafe_allow_html=True)
+    st.info("关键词库已移动到「采集」页面右侧，便于边维护词库边执行采集。")
 
-    t1, t2, t3 = st.tabs(["追踪目标 (targets.yaml)", "关键词库 (keywords.yaml)", "运行环境变量"])
+    t1, t2 = st.tabs(["追踪目标 (targets.yaml)", "运行环境变量"])
 
     with t1:
         targets_data = load_yaml(TARGETS_FILE)
@@ -1247,96 +1898,6 @@ elif page == "设置":
                 st.error(f"保存失败：{e}")
 
     with t2:
-        kw_data = load_yaml(KEYWORDS_FILE)
-        if "seed_keywords" not in kw_data: kw_data["seed_keywords"] = {"games": [], "categories": []}
-        if "expansion" not in kw_data: kw_data["expansion"] = {"enabled": True, "llm_provider": "deepseek", "max_expanded_keywords": 50}
-
-        st.info("这里的关键词会被系统直接丢到各个平台的搜索框里去执行大范围的内容检索。\n\n注：之所以把游戏名称和游戏品类拆分成两张单独的表，是因为底下的 AI 扩词功能需要同时参考这两项，才能更聪明的为你联想出类似“三战开荒”这样的民间俗称与黑话组合。")
-        st.markdown("<p style='font-size:13px; color:#666; margin-bottom:1.5rem;'>操作说明：在下方表格双击单元格即可修改或新增系统追踪词条（支持选中行首数字后按 Delete 键删除行）。</p>", unsafe_allow_html=True)
-
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("##### ⚔️ 游戏名称种子词")
-            g_df = pd.DataFrame([{"词条": k} for k in kw_data["seed_keywords"].get("games", []) if k])
-            if g_df.empty: g_df = pd.DataFrame(columns=["词条"])
-            edit_games = st.data_editor(g_df, num_rows="dynamic", use_container_width=True, key="ed_game", hide_index=True)
-
-        with c2:
-            st.markdown("##### 🏷️ 游戏品类种子词")
-            c_df = pd.DataFrame([{"词条": k} for k in kw_data["seed_keywords"].get("categories", []) if k])
-            if c_df.empty: c_df = pd.DataFrame(columns=["词条"])
-            edit_cats = st.data_editor(c_df, num_rows="dynamic", use_container_width=True, key="ed_cat", hide_index=True)
-
-        st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
-        st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
-        st.markdown("##### 🤖 RAG 语义逆向提取 (数据驱动)")
-        
-        st.markdown("<p style='font-size:12px; color:#666;'>告别全凭 AI 脑补！系统将遍历靶标库内的头部 SLG 游戏，拉取真实文案与标签交由 AI 提纯重构。</p>", unsafe_allow_html=True)
-        exp = kw_data.get("expansion", {})
-        cc1, cc2, cc3 = st.columns(3)
-        with cc1:
-            exp_enabled = st.toggle("启用自动扩词", value=exp.get("enabled", True))
-        with cc2:
-            exp_provider = st.selectbox("LLM Provider", ["deepseek", "openai", "qwen"], index=["deepseek", "openai", "qwen"].index(exp.get("llm_provider", "deepseek")) if exp.get("llm_provider", "deepseek") in ["deepseek", "openai", "qwen"] else 0)
-        with cc3:
-            exp_max = st.number_input("最大提取数 (10-200)", min_value=10, max_value=200, value=exp.get("max_expanded_keywords", 50))
-            
-        c_btn, c_rag = st.columns([1, 1])
-
-        with c_btn:
-            if st.button("💾 保存 Keywords", type="primary", use_container_width=True):
-                new_games = [row["词条"] for _, row in edit_games.dropna(how="all").iterrows() if str(row["词条"]).strip()]
-                new_cats = [row["词条"] for _, row in edit_cats.dropna(how="all").iterrows() if str(row["词条"]).strip()]
-                kw_data["seed_keywords"]["games"] = new_games
-                kw_data["seed_keywords"]["categories"] = new_cats
-                kw_data["expansion"] = {
-                    "enabled": exp_enabled,
-                    "llm_provider": exp_provider,
-                    "max_expanded_keywords": exp_max
-                }
-                try:
-                    with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
-                        yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
-                    st.success("🎉 keywords.yaml 已保存！")
-                except Exception as e:
-                    st.error(f"保存失败：{e}")
-                    
-        with c_rag:
-            if st.button("🚀 立即执行 RAG 语义提取", type="secondary", use_container_width=True):
-                from src.core.config import load_config
-                from src.core.keyword_expander import KeywordExpander
-                
-                conf = load_config()
-                pbar = st.progress(0)
-                status_txt = st.empty()
-                
-                def cb(cur, tot, name):
-                    pbar.progress(cur / tot)
-                    status_txt.text(f"[{cur}/{tot}] 正在抓取语料: {name}")
-
-                with st.spinner("引擎提纯中，请勿刷新页面..."):
-                    expander = KeywordExpander(conf)
-                    results = expander.expand(provider=exp_provider, max_keywords=exp_max, progress_callback=cb)
-                    
-                    if results:
-                        status_txt.text("")
-                        st.success(f"✅ 成功提取 {len(results)} 个高潜长尾词！")
-                        # 注入回配置文件并保留
-                        new_cats = kw_data["seed_keywords"]["categories"]
-                        added = 0
-                        for r in results:
-                            if r not in new_cats:
-                                new_cats.append(r)
-                                added += 1
-                        with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
-                            yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
-                        st.info(f"已自动合并 {added} 个新词入库。请前往侧边栏或重新载入本页浏览！")
-                        with st.expander("查看本次提取词典"):
-                            st.json(results)
-                    else:
-                        st.error("提取失败或未获取到语料。")
-
-    with t3:
         from src.core.config import DEFAULT_SECRETS_FILE, load_secrets
         
         st.info("🔐 **凭据集中管控**：在此填写的敏感配置将直接存入本地 `secrets.yaml`，优先于系统环境变量读取，且绝不会被提交到代码仓库。")
