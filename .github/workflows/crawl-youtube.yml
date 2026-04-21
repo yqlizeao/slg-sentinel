@@ -39,7 +39,7 @@ jobs:
         run: pip install yt-dlp scrapetube youtube-comment-downloader pyyaml
 
       - name: Run YouTube爬虫
-        run: python -m src.cli crawl --platform youtube --mode actions
+        run: python -m src.cli crawl --platform youtube --mode actions --depth shallow --order pubdate --limit 10
 
       - name: Commit data
         run: |

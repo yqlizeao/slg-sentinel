@@ -20,9 +20,20 @@ def build_suffix(args: argparse.Namespace, num_keywords: int) -> str:
     m_name = "免登陆" if getattr(args, "mode", "actions") == "actions" else "鉴权"
     d_name = "基础" if getattr(args, "depth", "shallow") == "shallow" else "深度"
     order_val = getattr(args, "order", "totalrank")
-    o_name = "TotalRank" if order_val == "totalrank" else order_val.title()
+    order_names = {
+        "totalrank": "TotalRank",
+        "pubdate": "PublishDate",
+        "click": "Click",
+        "stow": "Stow",
+        "danmaku": "Danmaku",
+    }
+    o_name = order_names.get(order_val, str(order_val).title())
     limit = getattr(args, "limit", 50)
     return f"{p_name}_{m_name}_{d_name}_{o_name}_{limit}结果_{num_keywords}关键词"
+
+
+def is_deep_crawl(args: argparse.Namespace) -> bool:
+    return getattr(args, "depth", "deep") == "deep"
 
 
 def crawl(args: argparse.Namespace) -> None:
@@ -85,7 +96,7 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
     else:
         print("⚠️  未采集到任何数据，请检查关键词配置和网络连接")
 
-    if all_snapshots and args.mode in ("actions", "local"):
+    if all_snapshots and is_deep_crawl(args):
         top_videos = sorted(all_snapshots, key=lambda s: s.view_count, reverse=True)[:3]
         for snap in top_videos:
             if not snap.video_id:
@@ -124,10 +135,11 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
             except Exception as e:
                 logger.error(f"关键词 '{kw}' YouTube 搜索失败: {e}")
 
+    channel_sort = "newest" if getattr(args, "order", "totalrank") == "pubdate" else "popular"
     for channel in config.targets.youtube_channels:
         if channel.channel_id and channel.channel_id != "UCxxx":
             try:
-                ch_snaps = adapter.get_channel_videos(channel_id=channel.channel_id, sort_by="popular", limit=30)
+                ch_snaps = adapter.get_channel_videos(channel_id=channel.channel_id, sort_by=channel_sort, limit=limit)
                 all_snapshots.extend(ch_snaps)
                 logger.info(f"频道 '{channel.name}' 获取 {len(ch_snaps)} 条视频")
             except Exception as e:
@@ -148,7 +160,7 @@ def _crawl_youtube(args: argparse.Namespace) -> None:
     else:
         print("⚠️  YouTube 未采集到任何数据，请检查关键词配置和网络连接")
 
-    if all_snapshots and args.mode in ("actions", "local"):
+    if all_snapshots and is_deep_crawl(args):
         top_videos = sorted(all_snapshots, key=lambda s: s.view_count, reverse=True)[:3]
         for snap in top_videos:
             if not snap.video_id:
@@ -173,6 +185,7 @@ def _crawl_taptap(args: argparse.Namespace) -> None:
     suffix = build_suffix(args, len(config.keywords.all_keywords()))
     all_reviews = []
     all_snapshots = []
+    limit = getattr(args, "limit", 20)
     valid_games = [g for g in config.targets.taptap_games if g.app_id and g.app_id != "xxx"]
 
     if valid_games:
@@ -183,14 +196,15 @@ def _crawl_taptap(args: argparse.Namespace) -> None:
                 if snap:
                     snap.title = snap.title or game.name
                     all_snapshots.append(snap)
-                reviews = adapter.get_reviews(app_id=game.app_id, game_name=game.name, sort="new", max_pages=20)
-                all_reviews.extend(reviews)
-                logger.info(f"游戏 '{game.name}' 采集 {len(reviews)} 条评论")
+                if is_deep_crawl(args):
+                    max_pages = max(1, (limit + 9) // 10)
+                    reviews = adapter.get_reviews(app_id=game.app_id, game_name=game.name, sort="new", max_pages=max_pages)
+                    all_reviews.extend(reviews[:limit])
+                    logger.info(f"游戏 '{game.name}' 采集 {len(reviews[:limit])} 条评论")
             except Exception as e:
                 logger.error(f"TapTap 游戏 '{game.name}' 采集失败: {e}")
     else:
         keywords = config.keywords.all_keywords()
-        limit = getattr(args, "limit", 20)
         logger.info(f"targets.yaml 未配置 TapTap 游戏，改用关键词搜索（限额: {limit}）")
         for kw in keywords[:3]:
             try:

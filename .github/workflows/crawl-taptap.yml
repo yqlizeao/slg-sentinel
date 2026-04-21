@@ -39,7 +39,7 @@ jobs:
         run: pip install requests beautifulsoup4 pyyaml
 
       - name: Run TapTap爬虫
-        run: python -m src.cli crawl --platform taptap --mode actions
+        run: python -m src.cli crawl --platform taptap --mode actions --depth shallow --order pubdate --limit 10
 
       - name: Commit data
         run: |

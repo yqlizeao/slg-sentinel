@@ -40,7 +40,7 @@ jobs:
         run: pip install bilibili-api-python httpx pyyaml
 
       - name: Run B站爬虫
-        run: python -m src.cli crawl --platform bilibili --mode actions
+        run: python -m src.cli crawl --platform bilibili --mode actions --depth shallow --order pubdate --limit 10
         env:
           BILI_SESSDATA: ${{ secrets.BILI_SESSDATA }}   # 可选，深度功能
           KEYWORDS_FILE: keywords.yaml
