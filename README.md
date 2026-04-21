@@ -81,7 +81,7 @@ python -m src.cli crawl --platform taptap --mode actions
 python -m src.cli analyze --type weekly
 
 # LLM 关键词扩展
-python -m src.cli expand --provider deepseek
+python -m src.cli expand-keywords --provider deepseek
 ```
 
 ---
@@ -91,9 +91,14 @@ python -m src.cli expand --provider deepseek
 ```
 slg-sentinel/
 ├── app.py                      # Streamlit 控制台
+├── ui/
+│   ├── pages/                  # Streamlit 页面：总览、采集、画像、报表、设置
+│   ├── components/             # 通用 UI 组件与采集页组件
+│   └── services/               # GUI 服务层：文件扫描、统计、关键词、报告等
 ├── src/
-│   ├── cli.py                  # CLI 入口
+│   ├── cli.py                  # CLI 入口：参数解析与命令分发
 │   ├── core/                   # 配置、模型、存储、重试
+│   ├── services/               # CLI 服务层：采集、画像、报告编排
 │   ├── adapters/               # 6 平台采集适配器
 │   └── analysis/               # 情感分析、画像、周报
 ├── tests/                      # pytest 测试套件
@@ -177,7 +182,7 @@ bilibili:
 python -m pytest tests/ -v
 ```
 
-当前覆盖 20 条测试，验证：模型身份判等、CSV 幂等存储、情感分析准确性、配置加载容错。
+当前覆盖 27 条测试，验证：模型身份判等、CSV 幂等存储、情感分析准确性、配置加载容错、周报生成、TapTap review 转换、用户画像聚合与保存。
 
 ---
 

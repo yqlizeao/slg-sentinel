@@ -32,15 +32,31 @@
 
 ```
 slg-sentinel/
-├── app.py                          # Streamlit 企业级控制台（GUI 入口）
+├── app.py                          # Streamlit GUI 入口（全局配置、CSS、侧边栏、页面分发）
+├── ui/
+│   ├── pages/
+│   │   ├── overview.py             # 总览页
+│   │   ├── crawl.py                # 采集页
+│   │   ├── profile.py              # 用户画像页
+│   │   ├── report.py               # 智能报表页
+│   │   └── settings.py             # 设置页
+│   ├── components/
+│   │   ├── common.py               # 通用标题区块等组件
+│   │   └── crawl.py                # 采集步骤条、关键词库、结果卡等组件
+│   └── services/
+│       └── app_services.py         # GUI 服务层（统计、文件扫描、关键词、报告、配置读写）
 ├── src/
-│   ├── cli.py                      # CLI 指令分发网关（argparse）
+│   ├── cli.py                      # CLI 指令分发网关（argparse，尽量不承载业务编排）
 │   ├── core/
 │   │   ├── models.py               # 数据模型（VideoSnapshot, Comment, TapTapReview, UserProfile）
 │   │   ├── csv_store.py            # CSV 持久层（去重、BOM 修复、路径路由）
 │   │   ├── config.py               # 配置中心（YAML 加载、环境变量、密钥管理）
 │   │   ├── keyword_expander.py     # LLM 驱动的搜索关键词自动扩展
 │   │   └── retry.py                # 网络请求重试装饰器（指数退避）
+│   ├── services/
+│   │   ├── crawl_service.py        # 平台无关采集入口与各平台采集编排
+│   │   ├── profile_service.py      # 用户画像生成与保存编排
+│   │   └── report_service.py       # 周报/情感分析入口编排
 │   ├── adapters/
 │   │   ├── base.py                 # 适配器抽象基类
 │   │   ├── bilibili.py             # B 站适配器（bilibili-api-python）
@@ -52,7 +68,9 @@ slg-sentinel/
 │       ├── profiler.py             # 用户画像推断（年龄/付费/玩家标签）
 │       └── weekly_report.py        # 周报生成器（Markdown + JSON 统计）
 ├── tests/
-│   └── test_core.py                # 基础测试套件（20 条，覆盖 models/csv_store/sentiment/config）
+│   ├── test_core.py                # 基础测试套件（models/csv_store/sentiment/config）
+│   ├── test_weekly_report.py       # 周报生成、TapTap review 转换、JSON 统计
+│   └── test_profiler.py            # 用户画像聚合、规则推断、保存路径
 ├── data/                           # 时序数据目录（由 data 分支管理，main 分支 gitignore）
 │   ├── summary/daily/              # 每日全网快照汇总
 │   ├── video_platforms/             # B 站 / YouTube / 抖音 / 快手 / 小红书
@@ -104,7 +122,18 @@ CSV 的 Header 表头由以下 dataclass 直接生成：
 
 ## 6. GUI 界面约束
 
-`app.py` 是基于 Streamlit 构建的企业级控制台，注入了 200+ 行自定义 CSS，定义如下：
+GUI 是基于 Streamlit 构建的企业级控制台。`app.py` 只保留全局配置、CSS 注入、侧边栏导航和页面分发；页面、组件和服务逻辑分别放在 `ui/pages/`、`ui/components/`、`ui/services/`。
+
+### 分层边界
+
+- `ui/pages/`：只负责页面布局和调用服务，不直接拼装磁盘路径，不直接实现 CSV 统计逻辑。
+- `ui/components/`：只负责可复用渲染，公共组件必须通过显式参数接收数据，不依赖页面局部变量。
+- `ui/services/`：承接 GUI 侧非 UI 逻辑，例如平台统计、系统健康、热点内容读取、关键词读写、采集结果汇总、报告发现、文件扫描。
+- `src/services/`：承接 CLI 侧采集、画像、报告编排；`src/cli.py` 只负责 parser、参数校验、调用 service 和输出 CLI 文案。
+
+### 视觉约束
+
+当前 GUI 注入了自定义 CSS，定义如下：
 
 - **Light Mode Only**，白底工业风（Inter 字体），黑灰主色调。
 - 禁止使用 Streamlit 自带的粗糙 UI 组件，大量使用内联 HTML 渲染数据表格、视频播放器、标签。
@@ -135,7 +164,8 @@ CSV 的 Header 表头由以下 dataclass 直接生成：
 - 新建文件写入 UTF-8 BOM，追加模式不重复写入 BOM。
 
 ### 测试
-- 测试位于 `tests/test_core.py`，使用 pytest 执行。
+- 测试位于 `tests/`，使用 pytest 执行。
+- 当前自动测试覆盖 `test_core.py`、`test_weekly_report.py`、`test_profiler.py`，共 27 条。
 - 运行命令：`python -m pytest tests/ -v`
 
 ---
@@ -144,10 +174,10 @@ CSV 的 Header 表头由以下 dataclass 直接生成：
 
 如果你是新唤醒的 AI，请优先检查用户是否要求解决以下核心遗留问题：
 
-- [ ] **User Profiler 画像推测引擎落地**：当前 `profiler.py` 基于关键词启发式规则，精度有限。计划接入轻量级 LLM 提升画像质量，并将结果对接回 `app.py` 面板做图表展示。
+- [ ] **User Profiler 画像推测引擎升级**：当前 `profiler.py` 基于关键词启发式规则，已经有基础回归测试，但精度有限。后续可接入轻量级 LLM 提升画像质量，并将结果对接回画像页做更完整的图表展示。
 - [ ] **周报 LLM 深度语义分析**：`weekly_report.py` 的第 4 节（深度语义洞察）目前为 TODO 占位。需接入 DeepSeek/GPT-4o 对本周高赞评论进行自动聚类摘要。
 - [ ] **MediaCrawler 全域联调验证**：验证 local 模式下桥接 MediaCrawler 的扫码沙盒流程，确保 CSV 正确导入 `data/` 目录。
 
 ---
 
-*文档最后更新：2026-04-18*
+*文档最后更新：2026-04-21*
