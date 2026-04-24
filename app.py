@@ -7,6 +7,7 @@ import streamlit as st
 from ui.pages.crawl import render_crawl_page
 from ui.pages.overview import render_overview_page
 from ui.pages.profile import render_profile_page
+from ui.pages.recursive_crawl import render_recursive_crawl_page
 from ui.pages.report import render_report_page
 from ui.pages.settings import render_settings_page
 
@@ -166,6 +167,61 @@ button[kind="primary"]:hover {
     margin-right: 8px;
     border-radius: 2px;
 }
+
+.platform-stat-card {
+    min-height: 150px;
+    margin-bottom: 16px;
+    padding: 18px 24px 20px;
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
+    background: #FFFFFF;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.platform-stat-card__header {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    margin-bottom: 48px;
+}
+
+.platform-stat-card__header .platform-icon {
+    flex: 0 0 18px;
+    display: block;
+}
+
+.platform-stat-card__label {
+    min-width: 0;
+    overflow: hidden;
+    color: #666666;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.platform-stat-card__value {
+    color: #000000;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.platform-stat-card__delta {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    margin-top: 22px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #EAF7ED;
+    color: #168A35;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: normal;
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -198,7 +254,7 @@ def render_sidebar() -> str:
 
         page = st.radio(
             "应用导航",
-            ["总览", "采集", "画像", "智能报表", "设置"],
+            ["总览", "采集", "递归采集", "画像", "智能报表", "设置"],
             label_visibility="collapsed",
         )
         st.markdown("<br/>", unsafe_allow_html=True)
@@ -211,6 +267,8 @@ if page == "总览":
     render_overview_page()
 elif page == "采集":
     render_crawl_page()
+elif page == "递归采集":
+    render_recursive_crawl_page()
 elif page == "画像":
     render_profile_page()
 elif page == "智能报表":

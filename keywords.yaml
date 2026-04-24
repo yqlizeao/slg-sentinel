@@ -5,7 +5,6 @@ seed_keywords:
   - 三国谋定天下
   - 世界启元
   - 鸿图之下
-  - 荣耀新三国
   - 汉末霸业
   - 三国群英传
   - 同人圣三国蜀汉传
@@ -14,14 +13,11 @@ seed_keywords:
   - 秦皇汉武
   - 全战三国
   - 三国志
-  categories:
   - 三国SLG
   - 沙盘战略
-  - 同盟国战
-  - 历史模拟
   - 率土like
-  - 开荒打地
+  categories: []
 expansion:
-  enabled: true
+  enabled: false
   llm_provider: deepseek
-  max_expanded_keywords: 60
+  max_expanded_keywords: 53

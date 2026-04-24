@@ -87,6 +87,10 @@ class BilibiliAdapter(BaseAdapter):
         order = kwargs.get("order", "totalrank")
         return _run(self._async_search_videos(keyword, limit, order))
 
+    def search_videos_with_meta(self, keyword: str, limit: int = 20, **kwargs) -> tuple[List[VideoSnapshot], dict]:
+        order = kwargs.get("order", "totalrank")
+        return _run(self._async_search_videos_with_meta(keyword, limit, order))
+
     def get_video_info(self, video_id: str) -> VideoSnapshot:
         """
         获取视频详情——免登录。
@@ -131,6 +135,12 @@ class BilibiliAdapter(BaseAdapter):
     async def _async_search_videos(
         self, keyword: str, limit: int = 20, order: str = "totalrank"
     ) -> List[VideoSnapshot]:
+        snapshots, _ = await self._async_search_videos_with_meta(keyword, limit, order)
+        return snapshots
+
+    async def _async_search_videos_with_meta(
+        self, keyword: str, limit: int = 20, order: str = "totalrank"
+    ) -> tuple[List[VideoSnapshot], dict]:
         try:
             from bilibili_api import search
             
@@ -144,6 +154,10 @@ class BilibiliAdapter(BaseAdapter):
             bili_order = order_mapping.get(order, getattr(search.OrderVideo, 'TOTALRANK', getattr(search.OrderVideo, 'DEFAULT', None)))
 
             all_snapshots = []
+            search_total = None
+            search_num_pages = 0
+            search_page_size = 0
+            search_is_capped = False
             page = 1
             while len(all_snapshots) < limit:
                 result = await search.search_by_type(
@@ -152,6 +166,11 @@ class BilibiliAdapter(BaseAdapter):
                     order_type=bili_order,
                     page=page,
                 )
+                if search_total is None:
+                    search_total = self._extract_search_total(result)
+                    search_num_pages = self._safe_int(result.get("numPages"))
+                    search_page_size = self._safe_int(result.get("pagesize") or result.get("page_size"))
+                    search_is_capped = bool(search_total is not None and search_total >= 1000)
                 items = result.get("result", [])
                 if not items:
                     break
@@ -187,15 +206,74 @@ class BilibiliAdapter(BaseAdapter):
                     except Exception as e:
                         logger.warning(f"解析搜索结果失败: {e}, item={item}")
                         
-                logger.info(f"B站搜索 '{keyword}' 第{page}页，已累计获取 {len(all_snapshots)} 条视频")
+                if search_total is None:
+                    total_text = ""
+                elif search_is_capped:
+                    total_text = f"，搜索结果池 ≥{search_total}（B站接口封顶）"
+                else:
+                    total_text = f"，搜索结果总量 {search_total}"
+                logger.info(f"B站搜索 '{keyword}' 第{page}页，已累计获取 {len(all_snapshots)} 条视频{total_text}")
                 if len(all_snapshots) >= limit or len(items) == 0:
                     break
                 page += 1
                 await asyncio.sleep(REQUEST_INTERVAL)
-            return all_snapshots
+            return all_snapshots, {
+                "keyword": keyword,
+                "order": order,
+                "limit": limit,
+                "total_results": search_total,
+                "total_results_display": f">={search_total}" if search_total is not None and search_is_capped else str(search_total or ""),
+                "is_capped": search_is_capped,
+                "num_pages": search_num_pages,
+                "page_size": search_page_size,
+                "fetched_count": len(all_snapshots),
+                "pages": page,
+            }
         except Exception as e:
             logger.error(f"B站搜索失败: {e}")
-            return []
+            return [], {
+                "keyword": keyword,
+                "order": order,
+                "limit": limit,
+                "total_results": None,
+                "total_results_display": "",
+                "is_capped": False,
+                "num_pages": 0,
+                "page_size": 0,
+                "fetched_count": 0,
+                "pages": 0,
+                "error": str(e),
+            }
+
+    @staticmethod
+    def _extract_search_total(result: dict) -> int | None:
+        for key in ("numResults", "num_results", "total", "total_results"):
+            value = result.get(key)
+            if value is not None:
+                try:
+                    return int(value)
+                except Exception:
+                    pass
+
+        pageinfo = result.get("pageinfo")
+        if isinstance(pageinfo, dict):
+            video_info = pageinfo.get("video")
+            if isinstance(video_info, dict):
+                value = video_info.get("numResults") or video_info.get("total")
+                if value is not None:
+                    try:
+                        return int(value)
+                    except Exception:
+                        pass
+
+        return None
+
+    @staticmethod
+    def _safe_int(value) -> int:
+        try:
+            return int(value or 0)
+        except Exception:
+            return 0
 
     async def _async_get_video_info(self, bvid: str) -> Optional[VideoSnapshot]:
         try:

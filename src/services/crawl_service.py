@@ -1,10 +1,42 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import logging
 from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+SEARCH_METRIC_COLUMNS = [
+    "snapshot_date",
+    "platform",
+    "keyword",
+    "order",
+    "limit",
+    "total_results",
+    "total_results_display",
+    "is_capped",
+    "num_pages",
+    "page_size",
+    "fetched_count",
+    "pages",
+    "error",
+    "created_at",
+]
+
+LEGACY_SEARCH_METRIC_COLUMNS = [
+    "snapshot_date",
+    "platform",
+    "keyword",
+    "order",
+    "limit",
+    "total_results",
+    "fetched_count",
+    "pages",
+    "error",
+    "created_at",
+]
 
 
 def build_suffix(args: argparse.Namespace, num_keywords: int) -> str:
@@ -36,6 +68,75 @@ def is_deep_crawl(args: argparse.Namespace) -> bool:
     return getattr(args, "depth", "deep") == "deep"
 
 
+def save_search_metrics(platform: str, metrics: list[dict], date_str: str) -> Path | None:
+    if not metrics:
+        return None
+
+    metrics_dir = Path("data") / "search_metrics" / platform
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+    file_path = metrics_dir / f"{date_str}_search_metrics.csv"
+    fieldnames = SEARCH_METRIC_COLUMNS
+    write_header = not file_path.exists()
+
+    existing_rows = []
+    if file_path.exists():
+        with open(file_path, newline="", encoding="utf-8-sig") as f:
+            reader = csv.reader(f)
+            header = next(reader, [])
+            if header != fieldnames:
+                for raw in reader:
+                    if len(raw) == len(fieldnames):
+                        existing_rows.append(dict(zip(fieldnames, raw)))
+                    elif len(raw) == len(LEGACY_SEARCH_METRIC_COLUMNS):
+                        existing_rows.append(dict(zip(LEGACY_SEARCH_METRIC_COLUMNS, raw)))
+                write_header = True
+                file_path.unlink()
+
+    with open(file_path, "a", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if write_header:
+            writer.writeheader()
+            for row in existing_rows:
+                writer.writerow(
+                    {
+                        "snapshot_date": row.get("snapshot_date", ""),
+                        "platform": row.get("platform", platform),
+                        "keyword": row.get("keyword", ""),
+                        "order": row.get("order", ""),
+                        "limit": row.get("limit", ""),
+                        "total_results": row.get("total_results", ""),
+                        "total_results_display": row.get("total_results_display", ""),
+                        "is_capped": row.get("is_capped", False),
+                        "num_pages": row.get("num_pages", 0),
+                        "page_size": row.get("page_size", 0),
+                        "fetched_count": row.get("fetched_count", 0),
+                        "pages": row.get("pages", 0),
+                        "error": row.get("error", ""),
+                        "created_at": row.get("created_at", ""),
+                    }
+                )
+        for metric in metrics:
+            writer.writerow(
+                {
+                    "snapshot_date": date_str,
+                    "platform": platform,
+                    "keyword": metric.get("keyword", ""),
+                    "order": metric.get("order", ""),
+                    "limit": metric.get("limit", ""),
+                    "total_results": "" if metric.get("total_results") is None else metric.get("total_results"),
+                    "total_results_display": metric.get("total_results_display", ""),
+                    "is_capped": metric.get("is_capped", False),
+                    "num_pages": metric.get("num_pages", 0),
+                    "page_size": metric.get("page_size", 0),
+                    "fetched_count": metric.get("fetched_count", 0),
+                    "pages": metric.get("pages", 0),
+                    "error": metric.get("error", ""),
+                    "created_at": datetime.now().isoformat(timespec="seconds"),
+                }
+            )
+    return file_path
+
+
 def crawl(args: argparse.Namespace) -> None:
     logger.info(f"开始采集: platform={args.platform}, mode={args.mode}, date={args.date}")
 
@@ -63,6 +164,7 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
     store = CSVStore()
     suffix = build_suffix(args, len(config.keywords.all_keywords()))
     all_snapshots = []
+    search_metrics = []
     keywords = config.keywords.all_keywords()
     limit = getattr(args, "limit", 20)
 
@@ -72,11 +174,37 @@ def _crawl_bilibili(args: argparse.Namespace) -> None:
         logger.info(f"开始关键词搜索，共 {len(keywords)} 个关键词，每词限额 {limit} 条")
         for kw in keywords:
             try:
-                snaps = adapter.search_videos(keyword=kw, limit=limit, order=args.order)
+                snaps, metric = adapter.search_videos_with_meta(keyword=kw, limit=limit, order=args.order)
                 all_snapshots.extend(snaps)
-                logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 个视频")
+                search_metrics.append(metric)
+                if metric.get("total_results") is None:
+                    total_text = ""
+                elif metric.get("is_capped"):
+                    total_text = f"，B站搜索结果池 ≥{metric['total_results']}（接口封顶）"
+                else:
+                    total_text = f"，B站搜索结果总量 {metric['total_results']}"
+                logger.info(f"关键词 '{kw}' 搜索到 {len(snaps)} 个视频{total_text}")
             except Exception as e:
                 logger.error(f"关键词 '{kw}' 搜索失败: {e}")
+                search_metrics.append(
+                    {
+                        "keyword": kw,
+                        "order": args.order,
+                        "limit": limit,
+                        "total_results": None,
+                        "total_results_display": "",
+                        "is_capped": False,
+                        "num_pages": 0,
+                        "page_size": 0,
+                        "fetched_count": 0,
+                        "pages": 0,
+                        "error": str(e),
+                    }
+                )
+
+    metrics_path = save_search_metrics("bilibili", search_metrics, args.date)
+    if metrics_path:
+        print(f"📊  已记录 {len(search_metrics)} 条关键词搜索总量 → {metrics_path}")
 
     for channel in config.targets.bilibili_channels:
         if channel.uid and channel.uid != "xxx":

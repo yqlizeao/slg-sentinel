@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import math
 import html as _html
 import json
 import os
@@ -36,6 +37,65 @@ PLATFORM_OPTIONS = {
     "douyin": "抖音",
     "kuaishou": "快手",
     "xiaohongshu": "小红书",
+}
+
+SEARCH_METRIC_COLUMNS = [
+    "snapshot_date",
+    "platform",
+    "keyword",
+    "order",
+    "limit",
+    "total_results",
+    "total_results_display",
+    "is_capped",
+    "num_pages",
+    "page_size",
+    "fetched_count",
+    "pages",
+    "error",
+    "created_at",
+]
+
+LEGACY_SEARCH_METRIC_COLUMNS = [
+    "snapshot_date",
+    "platform",
+    "keyword",
+    "order",
+    "limit",
+    "total_results",
+    "fetched_count",
+    "pages",
+    "error",
+    "created_at",
+]
+
+KEYWORD_STOPWORDS = {
+    "一个",
+    "一些",
+    "这个",
+    "那个",
+    "什么",
+    "怎么",
+    "真的",
+    "可以",
+    "不是",
+    "没有",
+    "现在",
+    "还是",
+    "就是",
+    "视频",
+    "游戏",
+    "攻略",
+    "分享",
+    "教程",
+    "挑战",
+    "官方",
+    "版本",
+    "活动",
+    "玩家",
+    "手机游戏",
+    "bilibili",
+    "youtube",
 }
 
 
@@ -91,6 +151,8 @@ def init_crawl_progress_state(platform: str, keyword_count: int, limit_val: int)
         "keyword_total": max(keyword_count, 1),
         "keyword_done": 0,
         "comment_done": 0,
+        "search_metric_done": 0,
+        "search_total_latest": None,
         "progress": 0.03,
         "stage": "准备启动",
         "detail": f"预计检索 {keyword_count} 个关键词，每词上限 {limit_val} 条",
@@ -114,9 +176,19 @@ def update_crawl_progress_state(state: dict, line: str) -> None:
 
     if "关键词 '" in clean and ("搜索到" in clean or "搜索失败" in clean):
         state["keyword_done"] += 1
+        total_match = re.search(r"搜索结果(?:总量|池)\s*(≥)?\s*(\d+)", clean)
+        if total_match:
+            prefix = "≥" if total_match.group(1) else ""
+            state["search_total_latest"] = f"{prefix}{total_match.group(2)}"
         total = max(state["keyword_total"], 1)
         state["stage"] = f"正在检索关键词（{min(state['keyword_done'], total)}/{total}）"
         state["progress"] = max(state["progress"], min(0.72, 0.10 + 0.62 * (state["keyword_done"] / total)))
+        return
+
+    if "已记录" in clean and "关键词搜索总量" in clean:
+        state["search_metric_done"] += 1
+        state["stage"] = "正在记录关键词搜索总量"
+        state["progress"] = max(state["progress"], 0.84)
         return
 
     if "TapTap 搜索 '" in clean and ("找到" in clean or "失败" in clean):
@@ -376,6 +448,272 @@ def save_keyword_library(kw_data: dict, keywords: list[str], enabled: bool, prov
 
     with open(KEYWORDS_FILE, "w", encoding="utf-8") as f:
         yaml.safe_dump(kw_data, f, allow_unicode=True, sort_keys=False)
+
+
+def _get_platform_data_dirs(platform: str) -> tuple[Path, Path]:
+    from src.core.csv_store import COMMUNITY_PLATFORMS, VIDEO_PLATFORMS
+
+    if platform in VIDEO_PLATFORMS:
+        category = "video_platforms"
+    elif platform in COMMUNITY_PLATFORMS:
+        category = "community_platforms"
+    else:
+        category = "misc_platforms"
+
+    base_dir = DATA_DIR / category / platform
+    return base_dir / "videos", base_dir / "comments"
+
+
+def _read_recent_csv_rows(paths: list[Path], max_files: int, max_rows: int) -> list[dict]:
+    rows: list[dict] = []
+    recent_paths = sorted((p for p in paths if p.exists()), key=lambda p: p.stat().st_mtime, reverse=True)[:max_files]
+    for csv_path in recent_paths:
+        try:
+            with open(csv_path, encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    row["_source_file"] = str(csv_path)
+                    rows.append(row)
+                    if len(rows) >= max_rows:
+                        return rows
+        except Exception:
+            continue
+    return rows
+
+
+def _tokenize_keyword_text(text: str) -> list[str]:
+    normalized = re.sub(r"https?://\S+", " ", str(text or ""))
+    normalized = re.sub(r"[^\w\u4e00-\u9fff]+", " ", normalized)
+
+    try:
+        import jieba  # type: ignore
+
+        raw_tokens = list(jieba.cut(normalized))
+    except Exception:
+        raw_tokens = re.findall(r"[A-Za-z][A-Za-z0-9_-]{1,24}|[\u4e00-\u9fff]{2,12}", normalized)
+
+    tokens = []
+    for raw_token in raw_tokens:
+        token = str(raw_token).strip().lower()
+        token = re.sub(r"^\d+|\d+$", "", token)
+        if not token:
+            continue
+        if len(token) < 2 or len(token) > 18:
+            continue
+        if token.isdigit() or token in KEYWORD_STOPWORDS:
+            continue
+        tokens.append(token)
+    return tokens
+
+
+def extract_keywords_from_crawl_data(
+    platform: str,
+    existing_keywords: list[str],
+    max_keywords: int = 24,
+    min_score: float = 2.0,
+    max_files: int = 8,
+    max_rows: int = 1200,
+) -> dict:
+    videos_dir, comments_dir = _get_platform_data_dirs(platform)
+    video_rows = _read_recent_csv_rows(list(videos_dir.glob("*.csv")) if videos_dir.exists() else [], max_files=max_files, max_rows=max_rows)
+    comment_rows = _read_recent_csv_rows(list(comments_dir.glob("*.csv")) if comments_dir.exists() else [], max_files=max_files, max_rows=max_rows)
+
+    existing = {keyword.strip().lower() for keyword in existing_keywords if str(keyword).strip()}
+    scores: dict[str, dict] = {}
+
+    def add_token(token: str, weight: float, source: str, evidence: str) -> None:
+        if token in existing:
+            return
+        if token not in scores:
+            scores[token] = {
+                "keyword": token,
+                "score": 0.0,
+                "frequency": 0,
+                "sources": set(),
+                "evidence": set(),
+                "source_scores": {"标题": 0.0, "标签": 0.0, "高赞评论": 0.0},
+            }
+        scores[token]["score"] += weight
+        scores[token]["frequency"] += 1
+        scores[token]["sources"].add(source)
+        scores[token]["source_scores"][source] = scores[token]["source_scores"].get(source, 0.0) + weight
+        if evidence:
+            scores[token]["evidence"].add(evidence[:42])
+
+    for row in video_rows:
+        engagement = 1.0
+        try:
+            engagement += min(math.log10(max(int(row.get("view_count", 0)), 1)), 6) / 5
+        except Exception:
+            pass
+
+        for token in _tokenize_keyword_text(row.get("title", "")):
+            add_token(token, 2.2 * engagement, "标题", row.get("title", ""))
+
+        tags = re.split(r"[,，/、\s]+", str(row.get("tags", "")))
+        for tag in tags:
+            tag = tag.strip()
+            for token in _tokenize_keyword_text(tag):
+                add_token(token, 2.8 * engagement, "标签", tag)
+
+    for row in comment_rows:
+        like_boost = 1.0
+        try:
+            like_boost += min(math.log10(max(int(row.get("like_count", 0)), 1)), 4) / 4
+        except Exception:
+            pass
+        for token in _tokenize_keyword_text(row.get("content", "")):
+            add_token(token, 1.25 * like_boost, "高赞评论", row.get("content", ""))
+
+    candidates = []
+    for item in scores.values():
+        if item["score"] < min_score:
+            continue
+        sources = sorted(item["sources"])
+        evidence = sorted(item["evidence"])
+        source_scores = item["source_scores"]
+        title_score = round(source_scores.get("标题", 0.0), 2)
+        tag_score = round(source_scores.get("标签", 0.0), 2)
+        comment_score = round(source_scores.get("高赞评论", 0.0), 2)
+        candidates.append(
+            {
+                "keyword": item["keyword"],
+                "score": round(item["score"], 2),
+                "frequency": item["frequency"],
+                "title_score": title_score,
+                "tag_score": tag_score,
+                "comment_score": comment_score,
+                "sources": " / ".join(sources),
+                "formula": f"标题 {title_score} + 标签 {tag_score} + 高赞评论 {comment_score}",
+                "reason": f"来自{ '、'.join(sources) }，可作为下一轮搜索触点",
+                "evidence": "；".join(evidence[:2]),
+            }
+        )
+
+    candidates.sort(key=lambda item: (item["score"], item["frequency"]), reverse=True)
+    return {
+        "candidates": candidates[:max_keywords],
+        "video_rows": len(video_rows),
+        "comment_rows": len(comment_rows),
+        "used_jieba": "jieba" in sys.modules,
+    }
+
+
+def write_temporary_keyword_file(keywords: list[str], label: str = "recursive") -> Path:
+    runtime_dir = DATA_DIR / "runtime"
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    safe_label = re.sub(r"[^A-Za-z0-9_-]+", "_", label).strip("_") or "recursive"
+    path = runtime_dir / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{safe_label}_keywords.yaml"
+    payload = {
+        "seed_keywords": {
+            "games": [keyword for keyword in keywords if str(keyword).strip()],
+            "categories": [],
+        },
+        "expansion": {
+            "enabled": False,
+            "llm_provider": "local-keyword-miner",
+            "max_expanded_keywords": len(keywords),
+        },
+    }
+    with open(path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(payload, f, allow_unicode=True, sort_keys=False)
+    return path
+
+
+def _read_search_metrics_csv(csv_path: Path) -> pd.DataFrame:
+    try:
+        return pd.read_csv(csv_path)
+    except Exception:
+        pass
+
+    rows = []
+    try:
+        with open(csv_path, newline="", encoding="utf-8-sig") as f:
+            reader = csv.reader(f)
+            header = next(reader, [])
+            for raw in reader:
+                if not raw:
+                    continue
+                if len(raw) == len(SEARCH_METRIC_COLUMNS):
+                    rows.append(dict(zip(SEARCH_METRIC_COLUMNS, raw)))
+                elif len(raw) == len(LEGACY_SEARCH_METRIC_COLUMNS):
+                    rows.append(dict(zip(LEGACY_SEARCH_METRIC_COLUMNS, raw)))
+                elif len(header) == len(raw):
+                    rows.append(dict(zip(header, raw)))
+    except Exception:
+        return pd.DataFrame()
+
+    return pd.DataFrame(rows)
+
+
+def load_latest_search_metrics(platform: str, limit: int = 12) -> pd.DataFrame:
+    metrics_dir = DATA_DIR / "search_metrics" / platform
+    if not metrics_dir.exists():
+        return pd.DataFrame()
+
+    files = sorted(metrics_dir.glob("*_search_metrics.csv"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not files:
+        return pd.DataFrame()
+
+    frames = []
+    for csv_path in files[:3]:
+        frame = _read_search_metrics_csv(csv_path)
+        if not frame.empty:
+            frames.append(frame)
+    if not frames:
+        return pd.DataFrame()
+
+    df = pd.concat(frames, ignore_index=True)
+    def normalize_total_value(value) -> int | None:
+        try:
+            if pd.isna(value) or value == "":
+                return None
+            return int(float(value))
+        except Exception:
+            return None
+
+    if "total_results_display" not in df.columns and "total_results" in df.columns:
+        df["total_results_display"] = df["total_results"].apply(
+            lambda value: f">={normalized}" if (normalized := normalize_total_value(value)) is not None and normalized >= 1000 else ("" if normalize_total_value(value) is None else str(normalize_total_value(value)))
+        )
+    elif "total_results_display" in df.columns and "total_results" in df.columns:
+        missing_display = df["total_results_display"].isna() | (df["total_results_display"].astype(str) == "")
+        df.loc[missing_display, "total_results_display"] = df.loc[missing_display, "total_results"].apply(
+            lambda value: f">={normalized}" if (normalized := normalize_total_value(value)) is not None and normalized >= 1000 else ("" if normalize_total_value(value) is None else str(normalize_total_value(value)))
+        )
+    if "is_capped" not in df.columns and "total_results" in df.columns:
+        df["is_capped"] = df["total_results"].apply(lambda value: bool((normalized := normalize_total_value(value)) is not None and normalized >= 1000))
+    elif "is_capped" in df.columns and "total_results" in df.columns:
+        df["is_capped"] = df["is_capped"].astype("object")
+        missing_capped = df["is_capped"].isna() | (df["is_capped"].astype(str) == "")
+        df.loc[missing_capped, "is_capped"] = df.loc[missing_capped, "total_results"].apply(
+            lambda value: bool((normalized := normalize_total_value(value)) is not None and normalized >= 1000)
+        )
+    for col in ("num_pages", "page_size"):
+        if col not in df.columns:
+            df[col] = ""
+    if "created_at" in df.columns:
+        df = df.sort_values("created_at", ascending=False)
+    return df.head(limit)
+
+
+def find_latest_search_metric(platform: str, keyword: str, started_at: datetime | None = None) -> dict:
+    metrics_df = load_latest_search_metrics(platform, limit=300)
+    if metrics_df.empty or "keyword" not in metrics_df.columns:
+        return {}
+
+    target = str(keyword).strip()
+    filtered = metrics_df[metrics_df["keyword"].astype(str) == target].copy()
+    if filtered.empty:
+        return {}
+
+    if started_at is not None and "created_at" in filtered.columns:
+        created = pd.to_datetime(filtered["created_at"], errors="coerce")
+        filtered = filtered[created >= pd.Timestamp(started_at)]
+        if filtered.empty:
+            return {}
+
+    return filtered.iloc[0].fillna("").to_dict()
 
 
 def get_crawl_file_snapshot(platform: str) -> dict[str, dict]:

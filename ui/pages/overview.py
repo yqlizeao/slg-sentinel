@@ -64,11 +64,18 @@ def render_overview_page() -> None:
             stats = get_platform_stats(platform_id)
             with cols[col_idx]:
                 st.markdown(
-                    f"<div style='margin-bottom:-35px; z-index:10; position:relative; padding:24px 24px 0 24px;'><img class='platform-icon' src='{PLATFORM_BRAND_ICONS.get(platform_id, '')}'> <span style='font-size:14px; font-weight:500; color:#666;'>{platform_label}</span></div>",
+                    f"""
+                    <div class="platform-stat-card">
+                        <div class="platform-stat-card__header">
+                            <img class="platform-icon" src="{PLATFORM_BRAND_ICONS.get(platform_id, '')}" alt="">
+                            <span class="platform-stat-card__label">{platform_label}</span>
+                        </div>
+                        <div class="platform-stat-card__value">{stats["videos_total"] if stats["videos_total"] else 0}</div>
+                        <div class="platform-stat-card__delta">↑ 今日新增: {stats["videos_today"]} 视频, {stats["comments_today"]} 评论</div>
+                    </div>
+                    """,
                     unsafe_allow_html=True,
                 )
-                delta_val = f"今日新增: {stats['videos_today']} 视频, {stats['comments_today']} 评论"
-                st.metric(label="​", value=str(stats["videos_total"]) if stats["videos_total"] else "0", delta=delta_val, delta_color="normal")
 
     st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
     render_section_title("热点内容追踪", "展示近期跨平台表现突出的内容，便于跟踪热点话题和高关注素材。")
