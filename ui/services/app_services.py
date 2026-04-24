@@ -799,23 +799,23 @@ def list_loaded_csv_files() -> list[dict]:
     for file_path in sorted(all_csv_files, key=lambda path: path.name, reverse=True):
         rel_parts = file_path.relative_to(data_base_dir).parts
         file_size_kb = file_path.stat().st_size / 1024
-        display_html = f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px;'><b>{file_path.name}</b></div>"
+        display_html = f"<div style='font-family:monospace; font-size:13px; color:rgba(232,228,220,0.72); padding-top:8px;'><b>{file_path.name}</b></div>"
         if len(rel_parts) >= 4 and rel_parts[0] in ["video_platforms", "community_platforms"]:
             platform_name = rel_parts[1].capitalize()
             data_type = rel_parts[2].capitalize()
-            badge_color = "#3b82f6" if "video" in data_type.lower() else "#8b5cf6" if "comment" in data_type.lower() else "#10b981"
-            plat_tag = f"<span style='background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; margin-right:6px;'>{platform_name}</span>"
+            badge_color = "#6B8BDB" if "video" in data_type.lower() else "#9B7FD4" if "comment" in data_type.lower() else "#5B9A6E"
+            plat_tag = f"<span style='background:rgba(180,160,120,0.10); color:rgba(232,228,220,0.55); padding:2px 6px; border-radius:4px; margin-right:6px;'>{platform_name}</span>"
             type_tag = f"<span style='background:{badge_color}20; color:{badge_color}; padding:2px 6px; border-radius:4px; margin-right:8px;'>{data_type}</span>"
-            display_html = f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px; white-space:nowrap;'>{plat_tag}{type_tag} <b>{file_path.name}</b></div>"
+            display_html = f"<div style='font-family:monospace; font-size:13px; color:rgba(232,228,220,0.72); padding-top:8px; white-space:nowrap;'>{plat_tag}{type_tag} <b>{file_path.name}</b></div>"
         elif len(rel_parts) == 3 and rel_parts[0] == "summary":
             display_html = (
-                f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px; white-space:nowrap;'>"
-                f"<span style='background:#fef3c7; color:#d97706; padding:2px 6px; border-radius:4px; margin-right:6px;'>Summary</span>"
-                f"<span style='background:#e0e7ff; color:#4338ca; padding:2px 6px; border-radius:4px; margin-right:8px;'>{rel_parts[1].capitalize()}</span> "
+                f"<div style='font-family:monospace; font-size:13px; color:rgba(232,228,220,0.72); padding-top:8px; white-space:nowrap;'>"
+                f"<span style='background:rgba(212,175,55,0.12); color:#d4af37; padding:2px 6px; border-radius:4px; margin-right:6px;'>Summary</span>"
+                f"<span style='background:rgba(107,139,219,0.12); color:#6B8BDB; padding:2px 6px; border-radius:4px; margin-right:8px;'>{rel_parts[1].capitalize()}</span> "
                 f"<b>{file_path.name}</b></div>"
             )
         else:
-            display_html = f"<div style='font-family:monospace; font-size:13px; color:#1e293b; padding-top:8px;'><b>{'/'.join(rel_parts[:-1])}</b> / {file_path.name}</div>"
+            display_html = f"<div style='font-family:monospace; font-size:13px; color:rgba(232,228,220,0.72); padding-top:8px;'><b>{'/'.join(rel_parts[:-1])}</b> / {file_path.name}</div>"
 
         results.append(
             {

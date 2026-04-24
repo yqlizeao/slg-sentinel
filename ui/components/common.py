@@ -7,6 +7,7 @@ SLG Sentinel — 通用 UI 组件
 from __future__ import annotations
 
 import streamlit as st
+from ui.i18n import t
 
 # ---------------------------------------------------------------------------
 # SVG 图标库 — 替代所有 emoji，保持 16×16 统一规格
@@ -48,14 +49,40 @@ def render_section_title(title: str, description: str | None = None) -> None:
     )
 
 
-def render_page_header(title: str, subtitle: str = "") -> None:
+def render_page_header(title: str, subtitle: str = "", stats: list[tuple[str, str]] | None = None) -> None:
     """统一的页面顶部标题区域，War-Atlas 风格。"""
-    sub_html = f"<div style='font-size:12px; color:rgba(232,228,220,0.35); margin-top:4px; letter-spacing:0.5px;'>{subtitle}</div>" if subtitle else ""
+    default_stats = [("MODE", t("common.default_mode")), ("YEAR", t("common.year_ad")), ("STATUS", t("common.default_status"))]
+    stat_items = (stats or default_stats)[:3]
+    stats_html = "".join(
+        f"""<div class='atlas-stat-chip'>
+            <div class='atlas-stat-label'>{label}</div>
+            <div class='atlas-stat-value {'is-gold' if idx == 1 else ''}'>{value}</div>
+        </div>"""
+        for idx, (label, value) in enumerate(stat_items)
+    )
+    sub_html = f"<div class='atlas-subtitle'>{subtitle}</div>" if subtitle else ""
     st.markdown(
-        f"""<div style='margin-bottom:24px; padding-bottom:18px; border-bottom:1px solid rgba(180,160,120,0.1);'>
-            <div style='font-family:Cinzel,serif; font-size:24px; font-weight:700; color:#E8E4DC;
-                        letter-spacing:3px; text-transform:uppercase;'>{title}</div>
-            {sub_html}
+        f"""<div class='atlas-page-header'>
+            <div class='atlas-header-inner'>
+                <div>
+                    <div class='atlas-eyebrow'>{t("common.eyebrow")}</div>
+                    <div class='atlas-title'>{title}</div>
+                    <div class='atlas-title-line'></div>
+                    {sub_html}
+                </div>
+                <div class='atlas-header-stats'>{stats_html}</div>
+            </div>
+            <div class='atlas-header-controls'>
+                <div class='atlas-header-control'>▣ {t("common.guided_workflow")}</div>
+                <div class='atlas-header-control'>◷ {t("common.this_cycle")}</div>
+                <div class='atlas-header-control'>⌖ {t("common.signal_near_me")}</div>
+                <div class='atlas-header-control'>▥ {t("common.stats")} <b>{stat_items[0][1]}</b></div>
+            </div>
+            <div class='atlas-page-range'>
+                <span>{t("common.seed")}</span>
+                <div class='atlas-page-range-track'><div class='atlas-page-range-thumb'></div></div>
+                <span>{t("common.year_ad")}</span>
+            </div>
         </div>""",
         unsafe_allow_html=True,
     )
@@ -66,8 +93,8 @@ def render_empty_state(icon_name: str, title: str, description: str, action_hint
     svg = icon(icon_name, color="rgba(180,160,120,0.5)")
     action_html = f"<div style='margin-top:12px; font-size:11px; color:#d4af37; letter-spacing:0.3px;'>{action_hint}</div>" if action_hint else ""
     st.markdown(
-        f"""<div style='padding:48px 24px; border:1px dashed rgba(180,160,120,0.15); border-radius:8px;
-                    background:rgba(12,15,20,0.6); text-align:center; margin:24px 0;'>
+        f"""<div style='position:relative; overflow:hidden; padding:56px 24px; border:1px dashed rgba(180,160,120,0.18); border-radius:8px;
+                    background:linear-gradient(rgba(212,175,55,0.025) 1px, transparent 1px),linear-gradient(90deg, rgba(212,175,55,0.025) 1px, transparent 1px),rgba(12,15,20,0.6); background-size:64px 64px; text-align:center; margin:24px 0;'>
             <div style='margin-bottom:16px; transform:scale(2.5); display:inline-block;'>{svg}</div>
             <div style='font-family:Cinzel,serif; font-size:16px; font-weight:600; color:rgba(232,228,220,0.7);
                         margin-bottom:8px; letter-spacing:1px;'>{title}</div>
@@ -79,9 +106,10 @@ def render_empty_state(icon_name: str, title: str, description: str, action_hint
     )
 
 
-def render_data_freshness(label: str = "数据截至") -> None:
+def render_data_freshness(label: str | None = None) -> None:
     """数据新鲜度指示器。"""
     from datetime import datetime
+    label = label or t("common.freshness")
     now = datetime.now().strftime("%m-%d %H:%M")
     clk = icon("clock", color="rgba(180,160,120,0.3)")
     st.markdown(
@@ -99,8 +127,66 @@ def render_kpi_card(label: str, value: str, accent: str = "#d4af37", sub: str = 
         f"box-shadow:0 4px 24px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.03);'>"
         f"<div style='font-family:IBM Plex Sans,sans-serif;font-size:10px;font-weight:600;"
         f"color:rgba(232,228,220,0.4);text-transform:uppercase;letter-spacing:1.2px;'>{label}</div>"
-        f"<div style='font-family:IBM Plex Mono,monospace;font-size:26px;font-weight:500;"
+        f"<div style='font-family:Cinzel,serif;font-size:28px;font-weight:700;letter-spacing:1px;"
         f"color:{accent};line-height:1;margin-top:12px;'>{value}</div>"
         f"{sub_html}</div>"
     )
 
+
+def render_atlas_callout(title: str, body: str, icon_name: str = "lightbulb") -> None:
+    svg = icon(icon_name, color="#d4af37")
+    st.markdown(
+        f"""<div class='atlas-callout'>
+            <div style='font-size:13px; font-weight:600; color:#E8E4DC; margin-bottom:8px;'>{svg} {title}</div>
+            <div class='atlas-body-copy'>{body}</div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+
+
+def render_atlas_ops_board(
+    title: str,
+    subtitle: str,
+    metrics: list[tuple[str, str]],
+    eyebrow: str = "OPERATION MAP",
+) -> None:
+    """Render a War Atlas inspired operational canvas with a side intelligence rail."""
+    dot_specs = [
+        ("22%", "62%", "7px", "#ff4b0b"),
+        ("34%", "44%", "5px", "#d4af37"),
+        ("46%", "58%", "8px", "#ff6a16"),
+        ("58%", "39%", "6px", "#6B8BDB"),
+        ("69%", "52%", "9px", "#ff4b0b"),
+        ("78%", "31%", "5px", "#d4af37"),
+        ("84%", "68%", "6px", "#ff6a16"),
+    ]
+    dots_html = "".join(
+        f"<span class='atlas-radar-dot' style='--x:{x}; --y:{y}; --s:{size}; --c:{color};'></span>"
+        for x, y, size, color in dot_specs
+    )
+    rows_html = "".join(
+        f"<div class='atlas-ops-row {'is-accent' if idx == 0 else ''}'><span>{label}</span><b>{value}</b></div>"
+        for idx, (label, value) in enumerate(metrics[:5])
+    )
+    st.markdown(
+        f"""<div class='atlas-ops-board'>
+            <div class='atlas-radar'>
+                {dots_html}
+                <div class='atlas-radar-title'>
+                    <b>{eyebrow}</b>
+                    <strong>{title}</strong>
+                    <span>{subtitle}</span>
+                </div>
+                <div class='atlas-radar-timeline'>
+                    <span>{t("common.seed")}</span>
+                    <div class='atlas-radar-track'></div>
+                    <span>{t("common.year_ad")}</span>
+                </div>
+            </div>
+            <div class='atlas-ops-side'>
+                <div class='atlas-ops-side-title'>{t("common.display")}</div>
+                {rows_html}
+            </div>
+        </div>""",
+        unsafe_allow_html=True,
+    )

@@ -6,13 +6,14 @@ import streamlit as st
 import streamlit.components.v1 as st_components
 
 from src.core.config import load_config
-from ui.components.common import render_page_header
+from ui.components.common import render_atlas_ops_board, render_page_header
 from ui.components.crawl import (
     render_crawl_result_card,
     render_keyword_library,
     render_step_block_header,
     render_step_overview,
 )
+from ui.i18n import t
 from ui.services.app_services import (
     PLATFORM_OPTIONS,
     estimate_remaining_seconds,
@@ -204,7 +205,18 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
 
 
 def render_crawl_page() -> None:
-    render_page_header("采集", "配置采集参数并启动平台数据采集任务")
+    keyword_count = len(load_keyword_library()[1])
+    render_page_header(
+        t("crawl.title"),
+        t("crawl.subtitle"),
+        [("mode", "crawl"), ("queue", "manual"), ("depth", "ops")],
+    )
+    render_atlas_ops_board(
+        t("crawl.ops.title"),
+        t("crawl.ops.subtitle"),
+        [("Seed Keywords", str(keyword_count)), ("Auth Mode", "adaptive"), ("Route", "5 steps"), ("Output", "csv")],
+        t("crawl.ops.eyebrow"),
+    )
     left_col, right_col = st.columns([1.7, 1.05], gap="large")
     keyword_runtime = {}
 
@@ -214,31 +226,38 @@ def render_crawl_page() -> None:
     with left_col:
         render_step_overview(
             [
-                ("01", "选择平台", "#16a34a"),
-                ("02", "是否鉴权", "#2563eb"),
-                ("03", "采集深度", "#d97706"),
-                ("04", "搜索策略", "#8b5cf6"),
-                ("05", "爬取数目", "#06b6d4"),
+                ("01", t("crawl.step.platform"), "#5B9A6E"),
+                ("02", t("crawl.step.auth"), "#6B8BDB"),
+                ("03", t("crawl.step.depth"), "#D4956B"),
+                ("04", t("crawl.step.strategy"), "#9B7FD4"),
+                ("05", t("crawl.step.limit"), "#7FB5B0"),
             ]
         )
 
-        keyword_count = keyword_runtime.get("keyword_count", len(load_keyword_library()[1]))
+        keyword_count = keyword_runtime.get("keyword_count", keyword_count)
         order_val = "totalrank"
         limit_options = {
-            10: "10 条 (安全试探，极速)",
-            20: "20 条",
-            30: "30 条",
-            40: "40 条",
-            50: "50 条 (常规快照)",
+            10: t("crawl.limit_10"),
+            20: t("crawl.limit_20"),
+            30: t("crawl.limit_30"),
+            40: t("crawl.limit_40"),
+            50: t("crawl.limit_50"),
         }
+        auth_required_label = t("crawl.auth_required")
+        auth_anonymous_label = t("crawl.auth_anonymous")
+        auth_local_label = t("crawl.auth_local")
+        depth_limited_label = t("crawl.depth_limited")
+        depth_basic_label = t("crawl.depth_basic")
+        depth_deep_label = t("crawl.depth_deep")
+        strategy_default_label = t("crawl.strategy_default")
 
         with st.container(border=True):
-            st.markdown("<div style='font-family:Cinzel,serif; font-size:16px; font-weight:600; color:#E8E4DC; letter-spacing:1px;'>采集配置</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-family:Cinzel,serif; font-size:16px; font-weight:600; color:#E8E4DC; letter-spacing:1px;'>{t('crawl.config_title')}</div>", unsafe_allow_html=True)
 
             with st.container():
-                render_step_block_header("01", "选择平台", "#16a34a", "先确定本次采集要进入的平台。")
+                render_step_block_header("01", t("crawl.step.platform"), "#5B9A6E", "Select the platform for this collection route.")
                 platform = st.selectbox(
-                    "选择执行平台",
+                    t("crawl.platform_label"),
                     list(PLATFORM_OPTIONS.keys()),
                     format_func=lambda x: PLATFORM_OPTIONS[x],
                     key="crawl_platform",
@@ -247,61 +266,61 @@ def render_crawl_page() -> None:
 
             st.divider()
             with st.container():
-                render_step_block_header("02", "是否鉴权", "#2563eb", "根据平台能力决定是否启用本地鉴权。")
+                render_step_block_header("02", t("crawl.step.auth"), "#6B8BDB", "Choose whether this platform should use local session authorization.")
                 if platform in ["xiaohongshu", "douyin", "kuaishou"]:
-                    mode = st.radio("授权执行模式", ["是，必须在本地完成鉴权"], key="crawl_mode_media", label_visibility="collapsed")
-                    st.markdown("<p style='font-size:12px; color:#dc2626; margin:2px 0 0 0;'>该平台需在本地完成扫码授权后再执行采集。</p>", unsafe_allow_html=True)
+                    mode = st.radio(t("crawl.auth_label"), [auth_required_label], key="crawl_mode_media", label_visibility="collapsed")
+                    st.markdown(f"<p style='font-size:12px; color:#E85D4A; margin:2px 0 0 0;'>{t('crawl.auth_required_note')}</p>", unsafe_allow_html=True)
                 else:
                     mode = st.radio(
-                        "授权执行模式",
-                        ["否，使用免登录模式（适合自动化）", "是，使用本地鉴权（需要载入会话环境）"],
+                        t("crawl.auth_label"),
+                        [auth_anonymous_label, auth_local_label],
                         key="crawl_mode_general",
                         label_visibility="collapsed",
                     )
 
             st.divider()
             with st.container():
-                render_step_block_header("03", "采集深度", "#d97706", "决定只抓基础元数据，还是继续深入评论层。")
+                render_step_block_header("03", t("crawl.step.depth"), "#D4956B", "Decide whether to collect only metadata or continue into comment depth.")
                 if platform in ["xiaohongshu", "douyin", "kuaishou"]:
-                    depth = st.radio("采集深度", ["受限单体深度遍历"], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
+                    depth = st.radio(t("crawl.step.depth"), [depth_limited_label], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
                 else:
-                    depth = st.radio("采集深度", ["基础采集", "深度采集"], key="crawl_depth_general", label_visibility="collapsed")
-                st.markdown("<p style='font-size:12px; color:rgba(232,228,220,0.4); margin:2px 0 0 0;'>字段覆盖情况请参考下方字段说明。</p>", unsafe_allow_html=True)
+                    depth = st.radio(t("crawl.step.depth"), [depth_basic_label, depth_deep_label], key="crawl_depth_general", label_visibility="collapsed")
+                st.markdown(f"<p style='font-size:12px; color:rgba(232,228,220,0.4); margin:2px 0 0 0;'>{t('crawl.depth_note')}</p>", unsafe_allow_html=True)
 
             st.divider()
             with st.container():
                 if platform == "bilibili":
-                    render_step_block_header("04", "搜索策略", "#8b5cf6", "B 站支持额外指定搜索结果的排序方式。")
+                    render_step_block_header("04", t("crawl.step.strategy"), "#9B7FD4", t("crawl.strategy_note"))
                     order_map = {
                         "平台搜索默认排序 (Total Rank)": "totalrank",
                         "最新发布时间排序 (Publish Date)": "pubdate",
                         "最多点击播放排序 (Click)": "click",
                         "最多用户收藏排序 (Stow)": "stow",
                     }
-                    order_label = st.selectbox("检索排序策略", list(order_map.keys()), index=0, key="crawl_order_bilibili", label_visibility="collapsed")
+                    order_label = st.selectbox(t("crawl.step.strategy"), list(order_map.keys()), index=0, key="crawl_order_bilibili", label_visibility="collapsed")
                     order_val = order_map[order_label]
                 else:
-                    render_step_block_header("04", "搜索策略", "#8b5cf6", "当前平台没有额外排序参数，将沿用适配器默认策略。")
-                    order_label = "平台默认策略"
-                    st.markdown("<div style='padding:10px 12px; border:1px dashed rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.6); font-size:12px; color:rgba(232,228,220,0.45);'>该平台使用默认搜索策略，无需单独设置。</div>", unsafe_allow_html=True)
+                    render_step_block_header("04", t("crawl.step.strategy"), "#9B7FD4", t("crawl.strategy_empty_note"))
+                    order_label = strategy_default_label
+                    st.markdown(f"<div style='padding:10px 12px; border:1px dashed rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.6); font-size:12px; color:rgba(232,228,220,0.45);'>{t('crawl.strategy_empty_note')}</div>", unsafe_allow_html=True)
 
             st.divider()
             with st.container():
-                render_step_block_header("05", "爬取数目", "#06b6d4", "最后设置本次采集的结果上限，并确认执行。")
+                render_step_block_header("05", t("crawl.step.limit"), "#7FB5B0", "Set the upper bound and confirm the operation.")
                 action_left, action_right = st.columns([1, 1.1])
                 with action_left:
-                    limit_val = st.selectbox("最大获取限额", list(limit_options.keys()), format_func=lambda x: limit_options[x], key="crawl_limit", label_visibility="collapsed")
+                    limit_val = st.selectbox(t("crawl.step.limit"), list(limit_options.keys()), format_func=lambda x: limit_options[x], key="crawl_limit", label_visibility="collapsed")
                 with action_right:
                     estimated_results = limit_val * keyword_count
-                    mode_preview = "免登录" if "免登录" in mode else "本地鉴权"
-                    depth_preview = "深度采集" if "深度" in depth else "基础采集"
-                    order_preview = "平台默认" if platform != "bilibili" else order_label.replace("平台搜索默认排序 ", "").replace("(", "").replace(")", "")
+                    mode_preview = "Anonymous" if mode == auth_anonymous_label else "Local Auth"
+                    depth_preview = "Deep" if depth == depth_deep_label else "Basic"
+                    order_preview = strategy_default_label if platform != "bilibili" else order_label.replace("平台搜索默认排序 ", "").replace("(", "").replace(")", "")
                     st.markdown(
                         f"""
                         <div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:12px 14px; box-shadow:0 4px 24px rgba(0,0,0,0.25);'>
-                            <div style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500; color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>本次执行概览</div>
-                            <div style='font-size:12px; color:rgba(232,228,220,0.65); margin-top:8px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {mode_preview} / {depth_preview} / {order_preview} / {limit_val} 条</div>
-                            <div style='font-size:12px; color:#d4af37; margin-top:6px; font-weight:600;'>预计检索量：{limit_val} × {keyword_count} = {estimated_results} 条</div>
+                            <div style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500; color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>{t('crawl.overview_title')}</div>
+                            <div style='font-size:12px; color:rgba(232,228,220,0.65); margin-top:8px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {mode_preview} / {depth_preview} / {order_preview} / {limit_val}</div>
+                            <div style='font-size:12px; color:#d4af37; margin-top:6px; font-weight:600;'>{t('crawl.estimated')}: {limit_val} × {keyword_count} = {estimated_results}</div>
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -313,16 +332,16 @@ def render_crawl_page() -> None:
                 can_execute = True
                 if keyword_count == 0:
                     can_execute = False
-                    st.warning("当前关键词库为空，请先在右侧补充关键词后再执行采集。")
+                    st.warning(t("crawl.empty_keywords"))
                 elif platform in media_platforms and not media_crawler_exists():
                     can_execute = False
-                    st.error("未检测到 MediaCrawler 子模块，当前平台暂不可执行。")
-                elif platform == "bilibili" and "鉴权" in mode and not runtime_config.bili_sessdata:
-                    st.info("当前未检测到 Bilibili 会话，仍可执行基础采集；如需评论等深度数据，请先完成本地鉴权。")
+                    st.error(t("crawl.mediacrawler_missing"))
+                elif platform == "bilibili" and mode != auth_anonymous_label and not runtime_config.bili_sessdata:
+                    st.info(t("crawl.bilibili_session_missing"))
 
                 st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-                if st.button(f"启动 {PLATFORM_OPTIONS[platform]} 采集链路", type="primary", use_container_width=True, disabled=not can_execute):
-                    mode_value = "actions" if "免登录" in mode else "local"
+                if st.button(t("crawl.run_button", platform=PLATFORM_OPTIONS[platform]), type="primary", use_container_width=True, disabled=not can_execute):
+                    mode_value = "actions" if mode == auth_anonymous_label else "local"
                     started_at = datetime.now()
                     before_snapshot = get_crawl_file_snapshot(platform)
                     progress_state = init_crawl_progress_state(platform, keyword_count, limit_val)
@@ -334,21 +353,21 @@ def render_crawl_page() -> None:
                     def refresh_progress_ui() -> None:
                         eta_seconds = estimate_remaining_seconds(progress_state)
                         progress_percent = 100 if progress_state["progress"] >= 1.0 else max(min(int(progress_state["progress"] * 100), 99), 1)
-                        progress_title.markdown(f"<div style='font-size:13px; color:#E8E4DC; font-weight:700;'>采集进度：{progress_percent}%</div>", unsafe_allow_html=True)
+                        progress_title.markdown(f"<div style='font-size:13px; color:#E8E4DC; font-weight:700;'>{t('crawl.progress')}: {progress_percent}%</div>", unsafe_allow_html=True)
                         progress_bar.progress(progress_percent)
                         if progress_percent >= 100:
-                            progress_eta.caption(f"当前阶段：{progress_state['stage']}")
+                            progress_eta.caption(f"{t('crawl.stage')}: {progress_state['stage']}")
                         elif eta_seconds is None:
-                            progress_eta.caption("正在建立连接并准备采集任务...")
+                            progress_eta.caption(t("crawl.connecting"))
                         else:
-                            progress_eta.caption(f"当前阶段：{progress_state['stage']} · 预计剩余 {eta_seconds} 秒")
+                            progress_eta.caption(f"{t('crawl.stage')}: {progress_state['stage']} · {t('crawl.remaining', seconds=eta_seconds)}")
                         progress_detail.caption(progress_state["detail"])
 
                     refresh_progress_ui()
                     cmd_args = ["crawl", "--platform", platform, "--mode", mode_value, "--order", order_val, "--limit", str(limit_val)]
-                    if platform not in media_platforms and "基础" in depth:
+                    if platform not in media_platforms and depth == depth_basic_label:
                         cmd_args.extend(["--depth", "shallow"])
-                    elif platform not in media_platforms and "深度" in depth:
+                    elif platform not in media_platforms and depth == depth_deep_label:
                         cmd_args.extend(["--depth", "deep"])
 
                     def on_progress_line(line: str) -> None:
@@ -373,9 +392,9 @@ def render_crawl_page() -> None:
                         stderr=stderr,
                     )
                     if code == 0:
-                        st.success(f"【{PLATFORM_OPTIONS[platform]}】采集已完成，结果已写入本地。")
+                        st.success(t("crawl.success", platform=PLATFORM_OPTIONS[platform]))
                     else:
-                        st.error(f"采集执行失败，返回状态码：{code}")
+                        st.error(t("crawl.failed_code", code=code))
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.session_state.get("crawl_last_result"):

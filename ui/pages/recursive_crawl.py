@@ -7,6 +7,7 @@ import streamlit as st
 import streamlit.components.v1 as st_components
 
 from src.core.config import load_config
+from ui.components.common import render_atlas_ops_board
 from ui.components.crawl import (
     render_crawl_result_card,
     render_keyword_library,
@@ -14,6 +15,7 @@ from ui.components.crawl import (
     render_recursive_crawl_flow,
     render_step_overview,
 )
+from ui.i18n import t
 from ui.services.app_services import (
     PLATFORM_OPTIONS,
     extract_keywords_from_crawl_data,
@@ -76,10 +78,10 @@ def _inject_recursive_page_styles() -> None:
             align-items: flex-start;
           }
           .recursive-eyebrow {
-            color: #0F766E;
+            color: #d4af37;
             font-size: 12px;
             font-weight: 800;
-            letter-spacing: 0;
+            letter-spacing: 1.2px;
             margin-bottom: 8px;
           }
           .recursive-title {
@@ -124,7 +126,7 @@ def _inject_recursive_page_styles() -> None:
             font-weight: 650;
           }
           .recursive-kpi-value {
-            color: #0F172A;
+            color: #E8E4DC;
             font-size: 22px;
             font-weight: 850;
             margin-top: 5px;
@@ -153,7 +155,7 @@ def _inject_recursive_page_styles() -> None:
           }
           .recursive-inline-note {
             border: 1px solid rgba(180,160,120,0.1);
-            border-left: 4px solid #0F766E;
+            border-left: 4px solid #d4af37;
             border-radius: 10px;
             background: rgba(12,15,20,0.7);
             color: rgba(232,228,220,0.7);
@@ -185,7 +187,7 @@ def _render_recursive_hero(is_expert: bool, keyword_count: int, latest_run: dict
     videos = summary.get("total_videos", 0)
     topics = summary.get("discovered_topics", 0)
     recommended = summary.get("recommended_topics", 0)
-    mode_label = "专家排查视角" if is_expert else "营销简洁视角"
+    mode_label = t("recursive.expert_mode") if is_expert else t("recursive.simple_mode")
     with st.container():
         st.markdown(
             f"""
@@ -193,13 +195,13 @@ def _render_recursive_hero(is_expert: bool, keyword_count: int, latest_run: dict
               <div class="recursive-hero-top">
                 <div>
                   <div class="recursive-eyebrow">AI TOPIC EXPLORATION</div>
-                  <h1 class="recursive-title">话题探索</h1>
-                  <div class="recursive-subtitle">从起始话题出发，自动完成 B站采集、关键词提炼、下一轮扩展和停止判断。默认关注“发现了什么”和“下一步做什么”，专家模式保留诊断链路。</div>
+                  <h1 class="recursive-title">{t('recursive.title')}</h1>
+                  <div class="recursive-subtitle">{t('recursive.subtitle')}</div>
                 </div>
                 <div class="recursive-mode-pill">{mode_label}</div>
               </div>
               <div class="recursive-hero-kpis">
-                <div class="recursive-kpi"><div class="recursive-kpi-label">起始话题</div><div class="recursive-kpi-value">{keyword_count}</div></div>
+                <div class="recursive-kpi"><div class="recursive-kpi-label">{t('recursive.step_seed')}</div><div class="recursive-kpi-value">{keyword_count}</div></div>
                 <div class="recursive-kpi"><div class="recursive-kpi-label">当前状态</div><div class="recursive-kpi-value">{status}</div></div>
                 <div class="recursive-kpi"><div class="recursive-kpi-label">已采集视频</div><div class="recursive-kpi-value">{videos}</div></div>
                 <div class="recursive-kpi"><div class="recursive-kpi-label">推荐继续</div><div class="recursive-kpi-value">{recommended}/{topics}</div></div>
@@ -377,7 +379,7 @@ def _render_recursive_tree(run: dict) -> None:
 
     status_colors = {
         "running": "#6B8BDB",
-        "success": "#16A34A",
+        "success": "#5B9A6E",
         "stopped": "#D4956B",
         "paused": "#D4956B",
         "error": "#E85D4A",
@@ -1012,35 +1014,41 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
 def render_recursive_crawl_page() -> None:
     _inject_recursive_page_styles()
     _, initial_keywords, _ = load_keyword_library()
-    current_expert = st.session_state.get("recursive_view_mode") == "专家模式"
+    current_expert = st.session_state.get("recursive_view_mode") == "expert"
     _render_recursive_hero(current_expert, len(initial_keywords), st.session_state.get("recursive_last_run"))
+    render_atlas_ops_board(
+        t("recursive.ops.title"),
+        t("recursive.ops.subtitle"),
+        [("Seed Topics", str(len(initial_keywords))), ("Mode", "expert" if current_expert else "simple"), ("Depth", "recursive"), ("Queue", "branch")],
+        t("recursive.ops.eyebrow"),
+    )
     toggle_cols = st.columns([1, 0.22], vertical_alignment="center")
     with toggle_cols[1]:
         is_expert = st.checkbox(
-            "打开专家模式",
+            t("recursive.open_expert"),
             value=current_expert,
             key="recursive_expert_mode_enabled",
-            help="打开后展示流程图、搜索量记录、递归树、节点详情和任务 JSON。",
+            help=t("recursive.expert_help"),
         )
-    st.session_state["recursive_view_mode"] = "专家模式" if is_expert else "简洁模式"
+    st.session_state["recursive_view_mode"] = "expert" if is_expert else "simple"
 
-    _render_section_header("STEP 01", "起始话题", "维护本次探索的种子词。默认收起，避免编辑区抢占主流程；需要增删改时展开。")
-    with st.expander("起始话题 / 关键词库", expanded=False):
+    _render_section_header("STEP 01", t("recursive.step_seed"), t("recursive.step_seed_desc"))
+    with st.expander(t("recursive.seed_expander"), expanded=False):
         st.markdown(
-            f"<div class='recursive-inline-note'>当前词库有 <b>{len(initial_keywords)}</b> 个起始话题。它们会作为第 1 轮探索入口，后续新发现话题会在结果区里单独推荐。</div>",
+            f"<div class='recursive-inline-note'>{t('recursive.seed_note', count=len(initial_keywords))}</div>",
             unsafe_allow_html=True,
         )
         keyword_runtime = render_keyword_library("recursive")
 
     if is_expert:
-        _render_section_header("EXPERT", "采集链路", "专家视角展示完整流程、节点与诊断入口，用于定位采集和递归中断原因。")
+        _render_section_header("EXPERT", t("recursive.expert_chain"), t("recursive.expert_chain_desc"))
         render_step_overview(
             [
-                ("01", "种子词", "#16a34a"),
-                ("02", "采集", "#0284c7"),
-                ("03", "提词", "#7c3aed"),
-                ("04", "递归", "#ea580c"),
-                ("05", "停止", "#dc2626"),
+                ("01", "种子词", "#5B9A6E"),
+                ("02", "采集", "#6B8BDB"),
+                ("03", "提词", "#9B7FD4"),
+                ("04", "递归", "#D4956B"),
+                ("05", "停止", "#E85D4A"),
             ]
         )
         render_recursive_crawl_flow()

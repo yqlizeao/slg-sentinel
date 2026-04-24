@@ -65,7 +65,7 @@ def render_recursive_crawl_flow() -> None:
                     <div style='font-size:12px; color:rgba(232,228,220,0.5); margin-top:6px; line-height:1.45;'>人工给定或关键词库维护</div>
                 </div>
                 <div style='border:1px solid rgba(107,139,219,0.2); background:rgba(107,139,219,0.06); border-radius:8px; padding:12px; min-height:106px;'>
-                    <div style='font-size:11px; color:#0284C7; font-weight:800;'>02 CRAWL</div>
+                    <div style='font-size:11px; color:#6B8BDB; font-weight:800;'>02 CRAWL</div>
                     <div style='font-size:14px; color:#E8E4DC; font-weight:750; margin-top:8px;'>平台采集</div>
                     <div style='font-size:12px; color:rgba(232,228,220,0.5); margin-top:6px; line-height:1.45;'>按平台、排序、限额获取视频与评论</div>
                 </div>

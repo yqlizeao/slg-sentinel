@@ -3,7 +3,9 @@ SLG Sentinel — 竞品舆情监控指挥台
 """
 
 import streamlit as st
+from urllib.parse import quote
 
+from ui.i18n import alternate_locale, current_locale, page_id_from_query, t
 from ui.pages.competitor import render_competitor_page
 from ui.pages.crawl import render_crawl_page
 from ui.pages.overview import render_overview_page
@@ -13,7 +15,7 @@ from ui.pages.report import render_report_page
 from ui.pages.settings import render_settings_page
 
 st.set_page_config(
-    page_title="SLG Sentinel | 竞品舆情指挥台",
+    page_title="SLG Sentinel | Competitive Intelligence Command",
     page_icon="cloudflare_pages/favicon.svg",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -71,9 +73,7 @@ footer { visibility: hidden !important; display: none !important; }
 
 /* ── 侧边栏 ─────────────────────────────────────── */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0d0f14 0%, var(--wa-bg) 100%) !important;
-    border-right: 1px solid var(--wa-border) !important;
-    width: 200px !important; min-width: 200px !important; max-width: 200px !important;
+    display: none !important;
 }
 section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
     color: var(--wa-text-3) !important; font-size: 12px !important;
@@ -83,12 +83,24 @@ section[data-testid="stSidebar"] div[role="radiogroup"] > label {
     color: var(--wa-text-2) !important; font-size: 12px !important;
     font-weight: 500 !important; transition: all 0.15s ease;
     border: 1px solid transparent;
+    margin: 2px 0 !important;
+    min-height: 38px;
+}
+section[data-testid="stSidebar"] div[role="radiogroup"] > label > div:first-child {
+    display: none !important;
+}
+section[data-testid="stSidebar"] div[role="radiogroup"] > label p {
+    color: inherit !important;
+    font-size: 12px !important;
+    letter-spacing: 0.5px;
 }
 section[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
     background: rgba(212,175,55,0.06) !important;
     color: var(--wa-text) !important; border-color: rgba(212,175,55,0.12);
 }
 section[data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"],
+section[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked),
+section[data-testid="stSidebar"] div[role="radiogroup"] > label:has([aria-checked="true"]),
 section[data-testid="stSidebar"] [aria-checked="true"] {
     background: rgba(212,175,55,0.1) !important;
     color: var(--wa-gold) !important; border-color: rgba(212,175,55,0.3) !important;
@@ -96,8 +108,8 @@ section[data-testid="stSidebar"] [aria-checked="true"] {
 
 /* ── 主区域间距 ──────────────────────────────────── */
 .block-container {
-    padding-top: 1.2rem !important; padding-left: 2rem !important;
-    padding-right: 2rem !important; max-width: 100% !important;
+    padding-top: 1.2rem !important; padding-left: 1.35rem !important;
+    padding-right: 1.35rem !important; max-width: 100% !important;
 }
 
 /* ── 标题 (Cinzel) ───────────────────────────────── */
@@ -217,6 +229,31 @@ button[kind="secondary"]:hover, button:not([kind]):hover {
     font-family: var(--wa-font-body) !important; font-size: 12px !important;
     transition: all 0.15s ease;
 }
+.stSelectbox [data-baseweb="select"] > div,
+.stMultiSelect [data-baseweb="select"] > div,
+[data-baseweb="select"] > div {
+    background: rgba(12,15,20,0.86) !important;
+    border-color: rgba(180,160,120,0.18) !important;
+    color: var(--wa-text) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03) !important;
+}
+.stSelectbox [data-baseweb="select"] span,
+.stMultiSelect [data-baseweb="select"] span,
+[data-baseweb="select"] span {
+    color: rgba(232,228,220,0.78) !important;
+}
+.stSelectbox [data-baseweb="select"] svg,
+.stMultiSelect [data-baseweb="select"] svg,
+[data-baseweb="select"] svg {
+    fill: rgba(232,228,220,0.72) !important;
+}
+.stTextInput input, .stTextArea textarea,
+.stNumberInput input, .stDateInput input {
+    background: rgba(12,15,20,0.86) !important;
+}
+.stTextInput input::placeholder, .stTextArea textarea::placeholder {
+    color: rgba(232,228,220,0.28) !important;
+}
 .stTextInput input:focus, .stTextArea textarea:focus,
 .stNumberInput input:focus, .stDateInput input:focus {
     border-color: var(--wa-border-accent) !important;
@@ -283,6 +320,543 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 /* ── Radio 修复 / 平台图标 ────────────────────────── */
 .stRadio [role="radiogroup"] { gap: 2px; }
 .platform-icon { width: 16px; height: 16px; vertical-align: text-bottom; margin-right: 6px; border-radius: 2px; opacity: 0.8; }
+
+/* ── Atlas 共享页面组件 ───────────────────────────── */
+.atlas-global-nav {
+    position: sticky;
+    top: 8px;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    margin: 0 0 18px 0;
+    padding: 10px 12px 10px 18px;
+    border: 1px solid rgba(180,160,120,0.16);
+    border-radius: 8px;
+    background: rgba(12,15,20,0.78);
+    box-shadow: 0 16px 44px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.03);
+    backdrop-filter: blur(16px);
+}
+.atlas-global-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 210px;
+}
+.atlas-global-mark {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #141820;
+    border: 1px solid rgba(212,175,55,0.22);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 0 18px rgba(212,175,55,0.08);
+}
+.atlas-global-title {
+    font-family: var(--wa-font-display);
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 1;
+    letter-spacing: 2.8px;
+    color: #f0eee8;
+}
+.atlas-global-sub {
+    margin-top: 4px;
+    font-family: var(--wa-font-mono);
+    font-size: 9px;
+    letter-spacing: 1.6px;
+    color: rgba(232,228,220,0.34);
+    text-transform: uppercase;
+}
+.atlas-global-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.atlas-global-links::-webkit-scrollbar { display: none; }
+.atlas-global-link {
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    white-space: nowrap;
+    padding: 0 14px;
+    border: 1px solid rgba(180,160,120,0.13);
+    border-radius: 5px;
+    background: rgba(10,12,16,0.38);
+    color: rgba(232,228,220,0.58);
+    text-decoration: none !important;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    transition: all .15s ease;
+}
+.atlas-global-link:visited,
+.atlas-global-link:active,
+.atlas-global-link:focus {
+    color: rgba(232,228,220,0.58);
+}
+.atlas-global-link:hover {
+    color: #e8e4dc;
+    border-color: rgba(212,175,55,0.35);
+    background: rgba(212,175,55,0.07);
+}
+.atlas-global-link.is-active {
+    color: var(--wa-gold);
+    border-color: rgba(212,175,55,0.55);
+    background: rgba(212,175,55,0.13);
+    box-shadow: 0 0 18px rgba(212,175,55,0.08);
+}
+.atlas-global-link.is-active:visited,
+.atlas-global-link.is-active:active,
+.atlas-global-link.is-active:focus {
+    color: var(--wa-gold);
+}
+.atlas-display-chip {
+    min-width: 178px;
+    padding: 9px 13px;
+    border: 1px solid rgba(180,160,120,0.13);
+    border-radius: 7px;
+    background: rgba(10,12,16,0.45);
+}
+.atlas-lang-link {
+    display: inline-flex;
+    justify-content: center;
+    margin-top: 6px;
+    color: rgba(232,228,220,0.48) !important;
+    text-decoration: none !important;
+    font-size: 10px;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+}
+.atlas-lang-link:hover { color: var(--wa-gold) !important; }
+.atlas-display-chip b {
+    display: block;
+    font-family: var(--wa-font-mono);
+    color: var(--wa-gold);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin-bottom: 3px;
+}
+.atlas-display-chip span {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: rgba(232,228,220,0.52);
+    font-size: 10px;
+    line-height: 1.45;
+}
+.atlas-display-chip em {
+    color: rgba(232,228,220,0.38);
+    font-style: normal;
+}
+.atlas-display-chip strong {
+    color: rgba(232,228,220,0.78);
+    font-weight: 500;
+    font-family: var(--wa-font-mono);
+}
+.atlas-page-header {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--wa-border);
+    border-radius: 8px;
+    min-height: 156px;
+    padding: 24px 26px;
+    margin-bottom: 22px;
+    background:
+        linear-gradient(rgba(212,175,55,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,175,55,0.035) 1px, transparent 1px),
+        radial-gradient(circle at 78% 34%, rgba(255,75,11,0.11), transparent 18%),
+        radial-gradient(circle at 38% 76%, rgba(212,175,55,0.09), transparent 24%),
+        rgba(10,12,16,0.88);
+    background-size: 72px 72px, 72px 72px, auto, auto, auto;
+    box-shadow: 0 18px 52px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.atlas-page-header:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(24deg, transparent 0 42%, rgba(212,175,55,0.12) 42.1%, transparent 42.4% 100%),
+        linear-gradient(-16deg, transparent 0 66%, rgba(212,175,55,0.10) 66.1%, transparent 66.4% 100%);
+    opacity: 0.55;
+}
+.atlas-header-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 22px;
+    align-items: start;
+}
+.atlas-eyebrow {
+    font-family: var(--wa-font-mono);
+    color: var(--wa-gold);
+    font-size: 10px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.atlas-title {
+    font-family: var(--wa-font-display);
+    color: #f0eee8;
+    font-size: 34px;
+    line-height: 0.98;
+    letter-spacing: 3px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.72);
+}
+.atlas-title-line {
+    width: 132px;
+    height: 1px;
+    margin: 10px 0 0;
+    background: linear-gradient(90deg, var(--wa-gold), transparent);
+}
+.atlas-subtitle {
+    max-width: 620px;
+    margin-top: 12px;
+    color: rgba(232,228,220,0.48);
+    font-size: 12px;
+    line-height: 1.75;
+    letter-spacing: 0.2px;
+}
+.atlas-header-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(104px, 1fr));
+    gap: 9px;
+    min-width: min(440px, 42vw);
+}
+.atlas-stat-chip {
+    border: 1px solid rgba(180,160,120,0.13);
+    border-radius: 6px;
+    background: rgba(12,15,20,0.72);
+    padding: 12px 13px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.atlas-stat-label {
+    font-family: var(--wa-font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(232,228,220,0.36);
+    text-transform: uppercase;
+}
+.atlas-stat-value {
+    font-family: var(--wa-font-display);
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: 1px;
+    color: #f0eee8;
+    margin-top: 8px;
+}
+.atlas-stat-value.is-gold { color: var(--wa-gold); }
+.atlas-header-controls {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
+.atlas-header-control {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 12px;
+    border: 1px solid rgba(180,160,120,0.13);
+    border-radius: 5px;
+    background: rgba(12,15,20,0.66);
+    color: rgba(232,228,220,0.56);
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.atlas-header-control b {
+    color: var(--wa-gold);
+    font-family: var(--wa-font-mono);
+    font-weight: 500;
+}
+.atlas-page-range {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 76px;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    max-width: 620px;
+    color: rgba(232,228,220,0.34);
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+    letter-spacing: 0.4px;
+}
+.atlas-page-range-track {
+    position: relative;
+    height: 10px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgba(212,175,55,0.20), rgba(212,175,55,0.70));
+}
+.atlas-page-range-track:before,
+.atlas-page-range-track:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(10,12,16,0.42);
+}
+.atlas-page-range-track:before { left: 54%; }
+.atlas-page-range-track:after { left: 82%; }
+.atlas-page-range-thumb {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    width: 14px;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: #f3dc6b;
+    box-shadow: 0 0 15px rgba(243,220,107,0.55);
+}
+.atlas-hud-panel {
+    border: 1px solid rgba(180,160,120,0.15);
+    border-radius: 8px;
+    background: rgba(12,15,20,0.84);
+    box-shadow: var(--wa-shadow);
+    backdrop-filter: blur(12px);
+}
+.atlas-callout {
+    border: 1px solid rgba(180,160,120,0.15);
+    border-left: 3px solid var(--wa-gold);
+    border-radius: 0 8px 8px 0;
+    background: rgba(12,15,20,0.82);
+    padding: 18px 22px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.atlas-mini-label {
+    font-family: var(--wa-font-mono);
+    color: rgba(232,228,220,0.36);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.atlas-body-copy {
+    color: rgba(232,228,220,0.58);
+    font-size: 12px;
+    line-height: 1.8;
+}
+.atlas-ops-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1.42fr) minmax(320px, .72fr);
+    gap: 14px;
+    margin: 0 0 22px 0;
+}
+.atlas-radar {
+    position: relative;
+    min-height: 260px;
+    overflow: hidden;
+    border: 1px solid rgba(180,160,120,0.15);
+    border-radius: 8px;
+    background:
+        linear-gradient(rgba(212,175,55,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,175,55,0.03) 1px, transparent 1px),
+        radial-gradient(circle at 52% 52%, rgba(212,175,55,0.09), transparent 16%),
+        radial-gradient(circle at 76% 36%, rgba(232,93,74,0.09), transparent 20%),
+        rgba(10,12,16,0.82);
+    background-size: 68px 68px, 68px 68px, auto, auto, auto;
+    box-shadow: var(--wa-shadow);
+}
+.atlas-radar:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 52% 52%, transparent 0 18%, rgba(212,175,55,0.16) 18.2%, transparent 18.7%),
+        radial-gradient(ellipse at 52% 52%, transparent 0 32%, rgba(212,175,55,0.11) 32.2%, transparent 32.7%),
+        linear-gradient(24deg, transparent 0 46%, rgba(212,175,55,0.11) 46.1%, transparent 46.4% 100%),
+        linear-gradient(-18deg, transparent 0 58%, rgba(212,175,55,0.10) 58.1%, transparent 58.4% 100%);
+    opacity: .58;
+}
+.atlas-radar-title {
+    position: absolute;
+    z-index: 2;
+    top: 22px;
+    left: 24px;
+    max-width: 420px;
+}
+.atlas-radar-title b {
+    display: block;
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    color: var(--wa-gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.atlas-radar-title strong {
+    display: block;
+    font-family: var(--wa-font-display);
+    font-size: 26px;
+    line-height: 1;
+    letter-spacing: 2px;
+    color: #f0eee8;
+}
+.atlas-radar-title span {
+    display: block;
+    margin-top: 10px;
+    max-width: 460px;
+    color: rgba(232,228,220,0.42);
+    font-size: 12px;
+    line-height: 1.6;
+}
+.atlas-radar-dot {
+    position: absolute;
+    z-index: 1;
+    left: var(--x);
+    top: var(--y);
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--c);
+    box-shadow: 0 0 14px var(--c);
+}
+.atlas-radar-dot:after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: inherit;
+    background: var(--c);
+    opacity: .13;
+}
+.atlas-radar-timeline {
+    position: absolute;
+    z-index: 2;
+    left: 24px;
+    right: 24px;
+    bottom: 22px;
+    display: grid;
+    grid-template-columns: 52px minmax(0,1fr) 68px;
+    gap: 10px;
+    align-items: center;
+    color: rgba(232,228,220,0.34);
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+}
+.atlas-radar-track {
+    position: relative;
+    height: 9px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.18), rgba(212,175,55,0.70));
+}
+.atlas-radar-track:after {
+    content: "";
+    position: absolute;
+    right: 7%;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: #f3dc6b;
+    box-shadow: 0 0 15px rgba(243,220,107,0.55);
+}
+.atlas-ops-side {
+    border: 1px solid rgba(180,160,120,0.15);
+    border-radius: 8px;
+    background: rgba(12,15,20,0.86);
+    box-shadow: var(--wa-shadow);
+    padding: 18px;
+}
+.atlas-ops-side-title {
+    font-family: var(--wa-font-mono);
+    color: var(--wa-gold);
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+.atlas-ops-row {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 0;
+    border-top: 1px solid rgba(180,160,120,0.08);
+}
+.atlas-ops-row:first-of-type {
+    border-top: 0;
+}
+.atlas-ops-row span {
+    color: rgba(232,228,220,0.46);
+    font-size: 12px;
+}
+.atlas-ops-row b {
+    font-family: var(--wa-font-display);
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: #f0eee8;
+    font-weight: 700;
+}
+.atlas-ops-row.is-accent b { color: var(--wa-gold); }
+.atlas-duel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+    gap: 14px;
+    align-items: stretch;
+    margin: 18px 0 18px;
+}
+.atlas-duel-card {
+    min-height: 150px;
+    border: 1px solid rgba(180,160,120,0.15);
+    border-radius: 8px;
+    background:
+        radial-gradient(circle at 82% 20%, rgba(212,175,55,0.08), transparent 24%),
+        rgba(12,15,20,0.9);
+    padding: 22px;
+    box-shadow: var(--wa-shadow);
+}
+.atlas-duel-card.red {
+    background:
+        radial-gradient(circle at 82% 20%, rgba(232,93,74,0.12), transparent 24%),
+        rgba(12,15,20,0.9);
+}
+.atlas-duel-vs {
+    display: grid;
+    place-items: center;
+    color: var(--wa-gold);
+    border: 1px solid rgba(180,160,120,0.12);
+    border-radius: 8px;
+    background: rgba(12,15,20,0.62);
+}
+@media (max-width: 900px) {
+    .atlas-global-nav {
+        grid-template-columns: 1fr;
+    }
+    .atlas-display-chip {
+        display: none;
+    }
+    .atlas-header-inner,
+    .atlas-ops-board,
+    .atlas-duel {
+        grid-template-columns: 1fr;
+    }
+    .atlas-header-stats {
+        min-width: 0;
+        grid-template-columns: 1fr;
+    }
+    .atlas-title {
+        font-size: 28px;
+    }
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -290,54 +864,73 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 
 
 # ---------------------------------------------------------------------------
-# 侧边栏
+# 顶部 Atlas 命令栏
 # ---------------------------------------------------------------------------
-def render_sidebar() -> str:
-    with st.sidebar:
-        st.markdown(
-            """
-        <div style='display:flex; align-items:center; margin-bottom:2rem; padding:1rem 0; border-bottom:1px solid rgba(180,160,120,0.1);'>
-            <div style='width:32px; height:32px; margin-right:12px; flex-shrink:0;'>
-                <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="256" cy="256" r="256" fill="#141820" stroke="rgba(212,175,55,0.3)" stroke-width="4"/>
-                    <g transform="scale(0.8) translate(64, 64)">
-                        <path d="M255.968 288.494L166.211 241.067L10.4062 158.753C10.2639 158.611 9.97951 158.611 9.83728 158.611C4.14838 155.909 -1.68275 161.596 0.450591 167.283L79.8393 369.685L79.8535 369.728C79.9388 369.927 80.0099 370.126 80.0953 370.325C83.3522 377.874 90.4633 382.537 98.2002 384.371C98.8544 384.513 99.3225 384.643 100.108 384.799C100.89 384.973 101.983 385.21 102.922 385.281C103.078 385.295 103.221 385.295 103.377 385.31H103.491C103.605 385.324 103.718 385.324 103.832 385.338H103.989C104.088 385.352 104.202 385.352 104.302 385.352H104.486C104.6 385.366 104.714 385.366 104.828 385.366L167.175 392.161C226.276 398.602 285.901 398.602 345.002 392.161L407.35 385.366C408.558 385.366 409.739 385.31 410.877 385.196C411.246 385.153 411.602 385.111 411.958 385.068C412 385.054 412.057 385.054 412.1 385.039C412.342 385.011 412.583 384.968 412.825 384.926C413.181 384.883 413.536 384.812 413.892 384.741C414.603 384.585 414.926 384.471 415.891 384.139C416.856 383.808 418.458 383.228 419.461 382.745C420.464 382.261 421.159 381.798 421.999 381.272C423.037 380.618 424.024 379.948 425.025 379.198C425.457 378.868 425.753 378.656 426.066 378.358L425.895 378.258L255.968 288.494Z" fill="#d4af37"/>
-                        <path d="M501.789 158.755H501.647L345.784 241.07L432.426 370.058L511.616 167.285V167.001C513.607 161.03 507.492 155.627 501.789 158.755" fill="#8C7A5E"/>
-                        <path d="M264.274 119.615C260.292 113.8 251.616 113.8 247.776 119.615L166.211 241.068L255.968 288.495L426.067 378.357C427.135 377.312 427.991 376.293 428.897 375.217C430.177 373.638 431.372 371.947 432.424 370.056L345.782 241.068L264.274 119.615Z" fill="#D4C9B0"/>
-                    </g>
-                </svg>
+PAGES = [
+    ("overview", "nav.overview"),
+    ("crawl", "nav.crawl"),
+    ("recursive", "nav.recursive"),
+    ("profile", "nav.profile"),
+    ("report", "nav.report"),
+    ("competitor", "nav.competitor"),
+    ("settings", "nav.settings"),
+]
+
+
+def render_top_nav() -> str:
+    locale = current_locale()
+    alt_locale = alternate_locale(locale)
+    page = page_id_from_query(st.query_params.get("page"))
+    links = "".join(
+        f"<a class='atlas-global-link {'is-active' if page_id == page else ''}' target='_self' href='?page={quote(page_id)}&lang={quote(locale)}'>{t(label_key)}</a>"
+        for page_id, label_key in PAGES
+    )
+    lang_url = f"?page={quote(page)}&lang={quote(alt_locale)}"
+    links += f"<a class='atlas-global-link atlas-language-pill' target='_self' href='{lang_url}'>{t('nav.switch_label')}</a>"
+    st.markdown(
+        f"""
+        <nav class="atlas-global-nav">
+            <div class="atlas-global-brand">
+                <div class="atlas-global-mark">
+                    <svg width="23" height="23" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M255.968 288.494L166.211 241.067L10.4062 158.753C4.14838 155.909 -1.68275 161.596 0.450591 167.283L79.8393 369.685C83.3522 377.874 90.4633 382.537 98.2002 384.371L167.175 392.161C226.276 398.602 285.901 398.602 345.002 392.161L407.35 385.366C415.891 384.139 421.999 381.272 426.067 378.358L255.968 288.494Z" fill="#d4af37"/>
+                        <path d="M501.789 158.755L345.784 241.07L432.426 370.058L511.616 167.285C513.607 161.03 507.492 155.627 501.789 158.755Z" fill="#8C7A5E"/>
+                        <path d="M264.274 119.615C260.292 113.8 251.616 113.8 247.776 119.615L166.211 241.068L426.067 378.357C428.897 375.217 430.177 373.638 432.424 370.056L345.782 241.068L264.274 119.615Z" fill="#D4C9B0"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="atlas-global-title">SLG SENTINEL</div>
+                    <div class="atlas-global-sub">{t("nav.brand_subtitle")}</div>
+                </div>
             </div>
-            <div>
-                <div style='font-family:Cinzel,serif; font-size:14px; font-weight:700; color:#E8E4DC; letter-spacing:2px;'>SLG SENTINEL</div>
-                <div style='font-size:9px; color:rgba(232,228,220,0.3); letter-spacing:2px; text-transform:uppercase; margin-top:2px; font-family:IBM Plex Sans,sans-serif;'>Intelligence Platform</div>
+            <div class="atlas-global-links">{links}</div>
+            <div class="atlas-display-chip">
+                <b>{t("nav.display")}</b>
+                <span><em>{t("nav.mode")}</em><strong>Atlas UI</strong></span>
+                <span><em>{t("nav.year")}</em><strong>2026 AD</strong></span>
+                <span><em>{t("nav.language")}</em><strong>{t("nav.lang_short")}</strong></span>
+                <a class="atlas-lang-link" target="_self" href="{lang_url}">{t("nav.switch_label")}</a>
             </div>
-        </div>
+        </nav>
         """,
-            unsafe_allow_html=True,
-        )
-
-        page = st.radio(
-            "应用导航",
-            ["总览", "采集", "递归采集", "画像", "智能报表", "竞品对比", "设置"],
-            label_visibility="collapsed",
-        )
-        st.markdown("<br/>", unsafe_allow_html=True)
-        return page
+        unsafe_allow_html=True,
+    )
+    return page
 
 
-page = render_sidebar()
+page = render_top_nav()
 
-if page == "总览":
+if page == "overview":
     render_overview_page()
-elif page == "采集":
+elif page == "crawl":
     render_crawl_page()
-elif page == "递归采集":
+elif page == "recursive":
     render_recursive_crawl_page()
-elif page == "画像":
+elif page == "profile":
     render_profile_page()
-elif page == "智能报表":
+elif page == "report":
     render_report_page()
-elif page == "竞品对比":
+elif page == "competitor":
     render_competitor_page()
-elif page == "设置":
+elif page == "settings":
     render_settings_page()

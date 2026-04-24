@@ -2,7 +2,8 @@
 from __future__ import annotations
 import streamlit as st
 from src.core.config import load_config
-from ui.components.common import render_empty_state, render_page_header, icon
+from ui.components.common import render_atlas_ops_board, render_empty_state, render_page_header, icon
+from ui.i18n import t
 from ui.services.app_services import load_targets_config
 
 def _get_taptap_game_options() -> list[dict]:
@@ -45,67 +46,78 @@ def _run_comparison(name_a: str, name_b: str) -> str | None:
     except Exception as e: return f"分析生成失败: {e}"
 
 def render_competitor_page() -> None:
-    render_page_header("竞品对比分析", "选择两个 SLG 竞品，AI 自动生成对比报告")
     games = _get_taptap_game_options()
     game_names = [g["name"] for g in games] if games else []
     config = load_config()
     has_llm = bool(config.deepseek_api_key or config.openai_api_key or config.qwen_api_key)
+    render_page_header(
+        t("competitor.title"),
+        t("competitor.subtitle"),
+        [("targets", str(len(game_names))), ("mode", "duel"), ("engine", "online" if has_llm else "local")],
+    )
+    render_atlas_ops_board(
+        t("competitor.ops.title"),
+        t("competitor.ops.subtitle"),
+        [("Targets", str(len(game_names))), ("Mode", "duel"), ("Engine", "online" if has_llm else "local"), ("Output", "brief")],
+        t("competitor.ops.eyebrow"),
+    )
 
-    st.markdown("<h3>选择对比目标</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3>{t('competitor.select_title')}</h3>", unsafe_allow_html=True)
     mode_col1, mode_col2 = st.columns(2)
     with mode_col1:
         if game_names:
-            idx_a = st.selectbox("竞品 A", range(len(game_names)), format_func=lambda i: game_names[i], key="comp_a")
+            idx_a = st.selectbox(t("competitor.a"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_a")
             name_a = game_names[idx_a]
         else:
-            name_a = st.text_input("竞品 A 名称", placeholder="输入游戏名称", key="comp_a_text")
+            name_a = st.text_input(t("competitor.a"), placeholder=t("competitor.placeholder"), key="comp_a_text")
     with mode_col2:
         if game_names:
-            idx_b = st.selectbox("竞品 B", range(len(game_names)), format_func=lambda i: game_names[i], key="comp_b", index=min(1, len(game_names)-1))
+            idx_b = st.selectbox(t("competitor.b"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_b", index=min(1, len(game_names)-1))
             name_b = game_names[idx_b]
         else:
-            name_b = st.text_input("竞品 B 名称", placeholder="输入游戏名称", key="comp_b_text")
+            name_b = st.text_input(t("competitor.b"), placeholder=t("competitor.placeholder"), key="comp_b_text")
 
     if not name_a or not name_b:
-        render_empty_state("swords", "请选择两个竞品", "从下拉列表中选择或直接输入游戏名称",
-                           "提示：在「设置」页面添加 TapTap 游戏后可在此直接选择")
+        render_empty_state("swords", t("competitor.empty_title"), t("competitor.empty_desc"), t("competitor.empty_hint"))
         return
     if name_a == name_b:
-        st.info("请选择两个不同的竞品进行对比。"); return
+        st.info(t("competitor.same_info")); return
 
-    # 对照卡片
     shield_svg = icon("shield", color="#6B8BDB")
     target_svg = icon("target", color="#E85D4A")
     swords_svg = icon("swords", color="#d4af37")
-    card_col1, card_vs, card_col2 = st.columns([1, 0.3, 1])
-    with card_col1:
-        st.markdown(f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25);' style='text-align:center; border-top:2px solid #6B8BDB;'>
-            <div style='font-size:10px; color:rgba(232,228,220,0.35); text-transform:uppercase; letter-spacing:1px;'>{shield_svg} 竞品 A</div>
-            <div style='font-family:Cinzel,serif; font-size:20px; font-weight:700; color:#E8E4DC; margin-top:12px; letter-spacing:1px;'>{name_a}</div>
-        </div>""", unsafe_allow_html=True)
-    with card_vs:
-        st.markdown(f"<div style='text-align:center; padding-top:30px;'>{swords_svg}</div>", unsafe_allow_html=True)
-    with card_col2:
-        st.markdown(f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25);' style='text-align:center; border-top:2px solid #E85D4A;'>
-            <div style='font-size:10px; color:rgba(232,228,220,0.35); text-transform:uppercase; letter-spacing:1px;'>{target_svg} 竞品 B</div>
-            <div style='font-family:Cinzel,serif; font-size:20px; font-weight:700; color:#E8E4DC; margin-top:12px; letter-spacing:1px;'>{name_b}</div>
-        </div>""", unsafe_allow_html=True)
+    st.markdown(
+        f"""<div class='atlas-duel'>
+            <div class='atlas-duel-card'>
+                <div class='atlas-mini-label'>{shield_svg} competitor a</div>
+                <div style='font-family:Cinzel,serif; font-size:30px; font-weight:700; color:#E8E4DC; margin-top:18px; letter-spacing:2px;'>{name_a}</div>
+                <div class='atlas-title-line'></div>
+            </div>
+            <div class='atlas-duel-vs'>{swords_svg}<div style='font-family:Cinzel,serif; font-size:18px; letter-spacing:2px; margin-left:8px;'>VS</div></div>
+            <div class='atlas-duel-card red'>
+                <div class='atlas-mini-label'>{target_svg} competitor b</div>
+                <div style='font-family:Cinzel,serif; font-size:30px; font-weight:700; color:#E8E4DC; margin-top:18px; letter-spacing:2px;'>{name_b}</div>
+                <div class='atlas-title-line'></div>
+            </div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
 
     st.markdown("<br>", unsafe_allow_html=True)
     if not has_llm:
-        st.warning("竞品对比需要配置 LLM API Key（DeepSeek / OpenAI / Qwen）。")
-    if st.button(f"生成对比报告：{name_a} vs {name_b}", type="primary", use_container_width=True, disabled=not has_llm):
-        with st.spinner("正在调用 AI 分析引擎..."):
+        st.warning(t("competitor.llm_warning"))
+    if st.button(t("competitor.generate", a=name_a, b=name_b), type="primary", use_container_width=True, disabled=not has_llm):
+        with st.spinner(t("competitor.generating")):
             result = _run_comparison(name_a, name_b)
         if result:
             st.session_state["competitor_last_result"] = result
             st.session_state["competitor_last_names"] = (name_a, name_b)
         else:
-            st.error("对比分析生成失败。")
+            st.error(t("competitor.failed"))
 
     if "competitor_last_result" in st.session_state:
         names = st.session_state.get("competitor_last_names", (name_a, name_b))
-        st.markdown("---")
+        st.markdown("<hr style='border:none; border-top:1px solid rgba(180,160,120,0.08); margin:2rem 0;'/>", unsafe_allow_html=True)
         compare_svg = icon("compare", color="#d4af37")
         st.markdown(f"<h3>{compare_svg} {names[0]} vs {names[1]}</h3>", unsafe_allow_html=True)
         st.markdown(st.session_state["competitor_last_result"])
