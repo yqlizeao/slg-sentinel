@@ -6,6 +6,7 @@ import streamlit as st
 import streamlit.components.v1 as st_components
 
 from src.core.config import load_config
+from ui.components.common import render_page_header
 from ui.components.crawl import (
     render_crawl_result_card,
     render_keyword_library,
@@ -203,6 +204,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
 
 
 def render_crawl_page() -> None:
+    render_page_header("采集", "配置采集参数并启动平台数据采集任务")
     left_col, right_col = st.columns([1.7, 1.05], gap="large")
     keyword_runtime = {}
 

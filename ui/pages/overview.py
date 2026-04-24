@@ -3,7 +3,7 @@ from __future__ import annotations
 import streamlit as st
 import streamlit.components.v1 as st_components
 
-from ui.components.common import render_section_title
+from ui.components.common import render_page_header, render_section_title, render_data_freshness
 from ui.services.app_services import (
     PLATFORM_BRAND_ICONS,
     build_trending_rows_html,
@@ -14,9 +14,118 @@ from ui.services.app_services import (
     get_trending_videos,
     list_loaded_csv_files,
 )
+from ui.services.overview_service import (
+    get_keyword_trends,
+    get_top_comments,
+    get_weekly_summary_text,
+)
+
+
+def _render_insights_hero() -> None:
+    """区块 1：本周核心发现（Hero 区域）"""
+    summaries = get_weekly_summary_text()
+
+    if summaries:
+        cards_html = ""
+        colors = ["#16a34a", "#2563eb", "#d97706", "#dc2626", "#7c3aed"]
+        for idx, text in enumerate(summaries[:5]):
+            color = colors[idx % len(colors)]
+            cards_html += f"""
+            <div style='padding:14px 16px; border-left:3px solid {color}; background:#FAFAFA;
+                         border-radius:0 8px 8px 0; margin-bottom:8px; font-size:14px; color:#111; line-height:1.6;'>
+                {text}
+            </div>"""
+        st.markdown(
+            f"""<div style='margin-bottom:24px;'>
+                <div style='font-size:18px; font-weight:700; color:#111; margin-bottom:12px;'>📋 本周核心发现</div>
+                {cards_html}
+            </div>""",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """<div style='padding:20px; border:1px dashed #D4D4D4; border-radius:8px; background:#FCFCFC; margin-bottom:24px;'>
+                <div style='font-size:15px; font-weight:600; color:#666;'>📋 暂无本周分析摘要</div>
+                <div style='font-size:13px; color:#999; margin-top:6px;'>请先前往「智能报表」页面生成一份周报，系统将自动提取核心发现。</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+
+def _render_trends_chart() -> None:
+    """区块 2：关键词搜索趋势（折线图）"""
+    trend_data = get_keyword_trends(days=14)
+    if not trend_data:
+        return
+
+    try:
+        import pandas as pd
+        import altair as alt
+
+        df = pd.DataFrame(trend_data)
+        df["date"] = pd.to_datetime(df["date"])
+
+        # 取搜索量最大的 Top 8 关键词
+        top_kws = df.groupby("keyword")["total_results"].sum().nlargest(8).index.tolist()
+        df_top = df[df["keyword"].isin(top_kws)]
+
+        if df_top.empty:
+            return
+
+        chart = (
+            alt.Chart(df_top)
+            .mark_line(point=True, strokeWidth=2)
+            .encode(
+                x=alt.X("date:T", title="日期", axis=alt.Axis(format="%m-%d")),
+                y=alt.Y("total_results:Q", title="搜索结果总量"),
+                color=alt.Color("keyword:N", title="关键词"),
+                tooltip=["date:T", "keyword:N", "total_results:Q"],
+            )
+            .properties(height=320)
+            .interactive()
+        )
+        st.markdown("<h3>关键词搜索趋势（近 14 天）</h3>", unsafe_allow_html=True)
+        st.altair_chart(chart, use_container_width=True)
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+
+def _render_top_comments() -> None:
+    """区块 3：高赞评论精选"""
+    comments = get_top_comments(limit=10)
+    if not comments:
+        return
+
+    st.markdown("<h3>高赞评论精选（近 7 天）</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:12px;'>跨平台高赞评论，展示玩家最强烈的声音。</p>", unsafe_allow_html=True)
+
+    for idx, c in enumerate(comments):
+        sentiment_badge = ""
+        if c.get("sentiment") == "positive":
+            sentiment_badge = "<span style='background:#DCFCE7; color:#16a34a; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;'>正面</span>"
+        elif c.get("sentiment") == "negative":
+            sentiment_badge = "<span style='background:#FEE2E2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;'>负面</span>"
+
+        st.markdown(
+            f"""<div style='padding:12px 16px; border:1px solid #EAEAEA; border-radius:8px; margin-bottom:8px; background:#FFFFFF;'>
+                <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;'>
+                    <span style='font-size:12px; color:#666;'>👤 {c.get('author', '匿名')} · {c.get('platform', '')} · 👍 {c.get('like_count', 0)}</span>
+                    {sentiment_badge}
+                </div>
+                <div style='font-size:14px; color:#111; line-height:1.6;'>{c.get('content', '')}</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
 
 
 def render_overview_page() -> None:
+    render_page_header("总览", "实时监控数据汇总与核心洞察")
+    # 区块 0：本周核心发现
+    _render_insights_hero()
+
+    # 系统运行概况 KPI
     st.markdown("<h3>系统运行概况</h3>", unsafe_allow_html=True)
     health = get_system_health()
     st.markdown(
@@ -46,6 +155,9 @@ def render_overview_page() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+    # 区块 1：关键词趋势图
+    _render_trends_chart()
 
     st.markdown("<br/>", unsafe_allow_html=True)
     st.markdown("<h3>平台数据概览</h3>", unsafe_allow_html=True)
@@ -77,6 +189,11 @@ def render_overview_page() -> None:
                     unsafe_allow_html=True,
                 )
 
+    # 区块 2：高赞评论精选
+    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:2rem 0;'/>", unsafe_allow_html=True)
+    _render_top_comments()
+
+    # 热点内容追踪
     st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
     render_section_title("热点内容追踪", "展示近期跨平台表现突出的内容，便于跟踪热点话题和高关注素材。")
     _, ctrl_col = st.columns([8, 2])
@@ -124,6 +241,7 @@ def render_overview_page() -> None:
     else:
         st.markdown("<p style='color:#666; font-size:14px;'>当前采集库中暂未发现内容，请先执行策略采集。</p>", unsafe_allow_html=True)
 
+    # 底层源文件管理
     st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:2rem 0;'/>", unsafe_allow_html=True)
     st.markdown("<h3>当前已加载采集数据 (底层源文件)</h3>", unsafe_allow_html=True)
 

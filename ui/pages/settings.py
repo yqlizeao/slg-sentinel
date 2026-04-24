@@ -4,11 +4,12 @@ import pandas as pd
 import streamlit as st
 
 from src.core.config import load_secrets
+from ui.components.common import render_page_header
 from ui.services.app_services import load_targets_config, save_secrets_config, save_targets_config
 
 
 def render_settings_page() -> None:
-    st.info("关键词库已经移动到「采集」页面右侧，可在采集过程中直接维护。")
+    render_page_header("系统设置", "维护监控目标、API 密钥和运行环境配置")
 
     targets_tab, secrets_tab = st.tabs(["追踪目标 (targets.yaml)", "运行环境变量"])
     with targets_tab:

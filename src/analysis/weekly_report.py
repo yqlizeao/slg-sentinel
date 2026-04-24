@@ -239,12 +239,28 @@ class WeeklyReportGenerator:
             report_lines.append("> ✅ 本周未监测到明显的高赞负面舆情。")
             report_lines.append("")
 
-        # 4. 深度语义分析（TODO: 接入 LLM 实时调用，当前为占位标注）
+        # 4. 深度语义聚类摘要（LLM 驱动）
         report_lines.append("## 4. 深度语义宏观洞察")
         report_lines.append("")
-        report_lines.append("> ⚠️ **待实现**：此模块计划接入 LLM（DeepSeek/GPT-4o）对本周高赞评论进行自动聚类摘要。")
-        report_lines.append("> 当前版本请结合上方情感分布与负面预警数据进行人工研判。")
-        report_lines.append("")
+
+        llm_insights = self._generate_llm_insights(platforms, date_str)
+        if llm_insights:
+            stats_payload["insights"] = llm_insights
+            report_lines.append("| 主题 | 情感 | 核心诉求 | 出现次数 | 代表性原文 |")
+            report_lines.append("| --- | --- | --- | --- | --- |")
+            for item in llm_insights:
+                topic = item.get("topic", "未知")
+                sentiment = item.get("sentiment", "mixed")
+                demand = item.get("core_demand", "").replace("|", "/")
+                count = item.get("count", 0)
+                quotes = item.get("representative_quotes", [])
+                quote_text = "；".join(q[:40].replace("|", "/").replace("\n", " ") for q in quotes[:2])
+                report_lines.append(f"| {topic} | {sentiment} | {demand} | {count} | {quote_text} |")
+            report_lines.append("")
+        else:
+            report_lines.append("> ℹ️ 未能生成 LLM 聚类摘要（可能缺少 API Key 或评论数据不足）。")
+            report_lines.append("> 请结合上方情感分布与负面预警数据进行人工研判。")
+            report_lines.append("")
 
         # 写入文件
         with open(file_path, "w", encoding="utf-8") as f:
@@ -256,3 +272,76 @@ class WeeklyReportGenerator:
 
         logger.info(f"周报已生成: {file_path}")
         return file_path
+
+    def _generate_llm_insights(self, platforms: list[str], date_str: str) -> list[dict]:
+        """
+        收集高赞评论并调用 LLM 进行主题聚类。
+
+        Returns:
+            聚类结果列表，每个元素: {topic, sentiment, core_demand, representative_quotes, count}
+            如果 LLM 不可用或无数据则返回空列表。
+        """
+        try:
+            from src.core.llm_client import LLMClient
+        except ImportError:
+            return []
+
+        llm = LLMClient(self.config)
+        provider = llm.get_available_provider()
+        if not provider:
+            logger.info("未配置任何 LLM API Key，跳过深度语义聚类")
+            return []
+
+        # 收集所有平台的评论
+        all_comments: list[Comment] = []
+        for platform in platforms:
+            try:
+                if platform == "taptap":
+                    reviews = self.store.load(TapTapReview, platform, "reviews", date_str=date_str)
+                    all_comments.extend(self._reviews_to_comments(reviews))
+                else:
+                    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+                    cat = "video_platforms" if platform in VIDEO_PLATFORMS else "community_platforms"
+                    dir_path = self.store.data_dir / cat / platform / "comments"
+                    if dir_path.exists():
+                        for f in dir_path.glob(f"{date_str}_*_comments.csv"):
+                            all_comments.extend(self.store._load_single_file(Comment, f))
+            except Exception:
+                continue
+
+        if len(all_comments) < 3:
+            logger.info(f"评论数量不足 ({len(all_comments)})，跳过 LLM 聚类")
+            return []
+
+        # 取高赞 Top 100
+        all_comments.sort(key=lambda c: c.like_count, reverse=True)
+        top_comments = all_comments[:100]
+
+        entries = []
+        for i, c in enumerate(top_comments):
+            text = c.content[:150].replace("\n", " ")
+            entries.append(f"[{i}] (赞{c.like_count}) {text}")
+
+        prompt = f"""以下是本周 SLG 手游玩家社区中获赞最高的 {len(entries)} 条评论。
+请按核心观点将它们聚类为 5-8 个主题组。
+
+{chr(10).join(entries)}
+
+返回 JSON 数组，每个元素：
+[{{"topic": "主题标签（4字以内）", "sentiment": "positive/negative/mixed", "core_demand": "一句话核心诉求", "representative_quotes": ["原文1", "原文2"], "count": 该主题下的评论条数}}]
+
+要求：
+- topic 简洁有力，如"氪金焦虑"、"玩法深度"、"画面表现"
+- core_demand 是该组玩家的真实诉求
+- representative_quotes 选 2 条最有代表性的原文（取前 60 字）
+- 只返回 JSON，不要其他内容"""
+
+        try:
+            result = llm.chat_json(prompt, provider=provider, temperature=0.3, timeout=120)
+            if isinstance(result, list):
+                logger.info(f"LLM 聚类成功，识别出 {len(result)} 个主题")
+                return result
+            return []
+        except Exception as e:
+            logger.warning(f"LLM 聚类摘要失败: {e}")
+            return []

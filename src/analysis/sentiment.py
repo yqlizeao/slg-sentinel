@@ -123,3 +123,91 @@ class SentimentAnalyzer:
             analyzed_count += 1
             
         logger.info(f"已完成 {analyzed_count} 条评论的情感分析和实体提取")
+
+
+class LLMSentimentAnalyzer:
+    """
+    LLM 驱动的情感分析器。
+
+    将评论批量发送给 LLM，返回更精准的情感极性、话题标签和核心洞察。
+    当 LLM 不可用时自动降级为字典匹配的 SentimentAnalyzer。
+    """
+
+    def __init__(self, llm_client=None):
+        """
+        Args:
+            llm_client: LLMClient 实例。传入 None 时自动降级为字典分析。
+        """
+        self._llm = llm_client
+        self._fallback = SentimentAnalyzer()
+
+    def batch_analyze(self, comments: List[Comment], batch_size: int = 20) -> None:
+        """
+        批量分析评论。优先使用 LLM，失败时降级为词典分析。
+
+        Args:
+            comments: Comment 对象列表
+            batch_size: 每批发送给 LLM 的评论数（控制 token 消耗）
+        """
+        if not self._llm or not comments:
+            self._fallback.batch_analyze(comments)
+            return
+
+        provider = self._llm.get_available_provider()
+        if not provider:
+            logger.info("未检测到可用的 LLM API Key，降级为字典分析模式")
+            self._fallback.batch_analyze(comments)
+            return
+
+        # 按批次发送
+        valid_comments = [c for c in comments if c.content]
+        analyzed = 0
+        for i in range(0, len(valid_comments), batch_size):
+            batch = valid_comments[i : i + batch_size]
+            try:
+                self._analyze_batch_llm(batch, provider)
+                analyzed += len(batch)
+            except Exception as e:
+                logger.warning(f"LLM 分析第 {i // batch_size + 1} 批失败，降级为词典分析: {e}")
+                self._fallback.batch_analyze(batch)
+                analyzed += len(batch)
+
+        # 处理无内容的评论
+        for c in comments:
+            if not c.content and not c.sentiment:
+                c.sentiment = "neutral"
+
+        logger.info(f"已完成 {analyzed} 条评论的 LLM 情感分析")
+
+    def _analyze_batch_llm(self, batch: List[Comment], provider: str) -> None:
+        """发送一批评论给 LLM 分析"""
+        entries = []
+        for idx, c in enumerate(batch):
+            text = c.content[:200]  # 截断过长评论
+            entries.append(f"[{idx}] {text}")
+
+        joined = "\n".join(entries)
+        prompt = f"""分析以下 {len(batch)} 条 SLG 手游玩家评论的情感和话题。
+
+{joined}
+
+请返回一个 JSON 数组，每个元素对应一条评论：
+[{{"id": 0, "sentiment": "positive/negative/neutral", "games": "提及的竞品游戏名,逗号分隔", "topic": "一句话核心观点"}}]
+
+注意：
+- sentiment 只能是 positive、negative、neutral 之一
+- games 字段仅填写评论中明确提到的 SLG 游戏名称（如 率土之滨、三战、万国觉醒等），没有则为空字符串
+- topic 用中文一句话概括评论的核心观点"""
+
+        result = self._llm.chat_json(prompt, provider=provider, temperature=0.2)
+        if not isinstance(result, list):
+            result = result.get("results", result.get("comments", []))
+
+        for item in result:
+            try:
+                idx = int(item.get("id", -1))
+                if 0 <= idx < len(batch):
+                    batch[idx].sentiment = item.get("sentiment", "neutral")
+                    batch[idx].mentioned_games = item.get("games", "")
+            except (ValueError, TypeError):
+                continue

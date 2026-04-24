@@ -4,6 +4,7 @@ SLG Sentinel — 企业级数据分析监控台
 
 import streamlit as st
 
+from ui.pages.competitor import render_competitor_page
 from ui.pages.crawl import render_crawl_page
 from ui.pages.overview import render_overview_page
 from ui.pages.profile import render_profile_page
@@ -254,7 +255,7 @@ def render_sidebar() -> str:
 
         page = st.radio(
             "应用导航",
-            ["总览", "采集", "递归采集", "画像", "智能报表", "设置"],
+            ["总览", "采集", "递归采集", "画像", "智能报表", "竞品对比", "设置"],
             label_visibility="collapsed",
         )
         st.markdown("<br/>", unsafe_allow_html=True)
@@ -273,5 +274,7 @@ elif page == "画像":
     render_profile_page()
 elif page == "智能报表":
     render_report_page()
+elif page == "竞品对比":
+    render_competitor_page()
 elif page == "设置":
     render_settings_page()
