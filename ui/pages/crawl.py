@@ -30,20 +30,20 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
     matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-        table { width:100%; border-collapse:collapse; font-size:13px; border:1px solid #EAEAEA; border-radius:6px; overflow:hidden; }
-        thead tr { background:#FAFAFA; border-bottom:1px solid #EAEAEA; }
-        th { padding:12px 14px; font-size:12px; font-weight:600; color:#666; text-align:left; }
-        td { padding:12px 14px; border-bottom:1px solid #F0F0F0; vertical-align:middle; font-size:13px; color:#333; }
-        tr:hover td { background:#FAFAFA; }
+        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; }
+        table { width:100%; border-collapse:collapse; font-size:12px; border:1px solid rgba(180,160,120,0.12); border-radius:8px; overflow:hidden; }
+        thead tr { background:rgba(180,160,120,0.06); border-bottom:1px solid rgba(180,160,120,0.12); }
+        th { padding:12px 14px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; text-transform:uppercase; letter-spacing:0.8px; }
+        td { padding:12px 14px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:12px; color:rgba(232,228,220,0.7); }
+        tr:hover td { background:rgba(180,160,120,0.04); }
         .status { display:inline-flex; align-items:center; gap:6px; }
-        .dot { display:inline-block; width:10px; height:10px; border-radius:50%; flex:0 0 10px; }
-        .dot-g { background:#16a34a; }
-        .dot-r { background:#dc2626; }
-        .g { color:#16a34a; font-weight:600; }
-        .r { color:#dc2626; font-weight:600; }
-        code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:'SF Mono',monospace; font-size:11px; color:#2563eb; }
-        .desc { font-size:12px; color:#666; }
+        .dot { display:inline-block; width:8px; height:8px; border-radius:50%; flex:0 0 8px; }
+        .dot-g { background:#5B9A6E; }
+        .dot-r { background:#E85D4A; }
+        .g { color:#5B9A6E; font-weight:600; }
+        .r { color:#E85D4A; font-weight:600; }
+        code { background:rgba(180,160,120,0.1); padding:2px 6px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#B4A078; }
+        .desc { font-size:11px; color:rgba(232,228,220,0.4); }
     </style></head><body>
     <table>
         <thead><tr>
@@ -58,7 +58,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
     red_status = lambda text: f"<span class='status'><span class='dot dot-r'></span><span class='r'>{text}</span></span>"
 
     if platform == "bilibili":
-        comp_title = "采集引擎：<a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>bilibili-api-python</a>"
+        comp_title = "采集引擎：<a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>bilibili-api-python</a>"
         iframe_height = 680
         is_simple = "基础" in depth
         is_basic = "免登录" in mode
@@ -85,7 +85,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">用于辅助判断用户偏好</td><td>{fav_status}</td></tr>
         <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">用于识别关联账号与兴趣重合</td><td>{follow_status}</td></tr>"""
     elif platform == "youtube":
-        comp_title = "采集引擎：<a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-dlp</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>scrapetube</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>yt-cmt-dl</a>"
+        comp_title = "采集引擎：<a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-dlp</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>scrapetube</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-cmt-dl</a>"
         iframe_height = 600
         ok_status = green_status("可获取")
         rows = f"""
@@ -103,7 +103,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>详细发送时间戳</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于判断讨论时效性</td><td>{ok_status}</td></tr>
         <tr><td>评论完整纯文本</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于情感与主题分析</td><td>{ok_status}</td></tr>"""
     elif platform == "taptap":
-        comp_title = "采集引擎：<span style='font-family:monospace; font-weight:600; color:#333; background:#e2e8f0; padding:4px 8px; border-radius:6px;'>自有协议解析引擎</span>"
+        comp_title = "采集引擎：<span style='font-family:IBM Plex Mono,monospace; font-weight:600; color:#B4A078; background:rgba(180,160,120,0.1); padding:4px 8px; border-radius:4px;'>自有协议解析引擎</span>"
         iframe_height = 420
         ok_status = green_status("可获取")
         rows = f"""
@@ -117,7 +117,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>玩家曾游玩游戏库</td><td><code>API /v2/game/games</code></td><td class="desc">用于识别用户偏好结构</td><td>{ok_status}</td></tr>
         <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">用于对比竞品体验路径</td><td>{ok_status}</td></tr>"""
     else:
-        comp_title = "采集引擎：<a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#2563eb; text-decoration:none; font-family:monospace; font-weight:600;'>MediaCrawler</a> 本地桥接"
+        comp_title = "采集引擎：<a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>MediaCrawler</a> 本地桥接"
         iframe_height = 560
         local_auth_status = green_status("本地授权后可获取")
         rows = f"""
@@ -134,28 +134,28 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>网民 IP 物理归属</td><td><code>MediaCrawler (ip_location)</code></td><td class="desc">用于观察地域分布</td><td>{local_auth_status}</td></tr>"""
 
     st.markdown(
-        f"<div style='margin-top:1.5rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end;'><div><p style='font-size:14px; color:#111; font-weight:600; margin:0;'>当前平台字段说明</p></div><div style='font-size:12px; color:#666;'>{comp_title}</div></div>",
+        f"<div style='margin-top:1.5rem; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end;'><div><p style='font-size:13px; color:#E8E4DC; font-weight:600; margin:0; letter-spacing:0.5px;'>当前平台字段说明</p></div><div style='font-size:11px; color:rgba(232,228,220,0.4);'>{comp_title}</div></div>",
         unsafe_allow_html=True,
     )
     st_components.html(matrix_html_base + rows + "</tbody></table></body></html>", height=iframe_height, scrolling=False)
 
-    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:1.5rem 0;'/>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:none; border-top:1px solid rgba(180,160,120,0.08); margin:1.5rem 0;'/>", unsafe_allow_html=True)
     st.markdown("<h3>用户数据可访问性说明</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:0.8rem;'>各平台用户维度数据的公开程度与采集可行性总览。</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:rgba(232,228,220,0.35); font-size:12px; margin-bottom:0.8rem;'>各平台用户维度数据的公开程度与采集可行性总览。</p>", unsafe_allow_html=True)
     privacy_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-        table { width:100%; border-collapse:collapse; font-size:13px; }
-        thead tr { background:#1a1a2e; }
-        th { padding:12px 14px; font-size:12px; font-weight:600; color:#ccc; text-align:left; white-space:nowrap; }
-        td { padding:12px 14px; border-bottom:1px solid #F0F0F0; vertical-align:middle; font-size:13px; color:#333; }
-        tr:hover td { background:#FAFAFA; }
-        td:first-child { font-weight:600; color:#111; white-space:nowrap; }
-        .r { color:#dc2626; } .y { color:#d97706; } .g { color:#16a34a; }
-        .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
-        .dot-r { background:#dc2626; } .dot-y { background:#d97706; } .dot-g { background:#16a34a; }
-        .na { color:#999; font-size:12px; }
+        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; }
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        thead tr { background:rgba(180,160,120,0.08); }
+        th { padding:12px 14px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; white-space:nowrap; text-transform:uppercase; letter-spacing:0.8px; }
+        td { padding:12px 14px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:12px; color:rgba(232,228,220,0.6); }
+        tr:hover td { background:rgba(180,160,120,0.04); }
+        td:first-child { font-weight:600; color:rgba(232,228,220,0.8); white-space:nowrap; }
+        .r { color:#E85D4A; } .y { color:#D4956B; } .g { color:#5B9A6E; }
+        .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+        .dot-r { background:#E85D4A; } .dot-y { background:#D4956B; } .dot-g { background:#5B9A6E; }
+        .na { color:rgba(232,228,220,0.2); font-size:11px; }
     </style></head><body>
     <table>
         <thead><tr><th>数据类型</th><th>B站</th><th>抖音</th><th>快手</th><th>小红书</th><th>TapTap</th><th>YouTube</th></tr></thead>
@@ -171,22 +171,22 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
     st_components.html(privacy_matrix_html, height=340, scrolling=False)
 
     st.markdown("<h3>视频指标可采集范围</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:0.8rem;'>各平台视频/内容维度指标的可用性与对应字段名。</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:rgba(232,228,220,0.35); font-size:12px; margin-bottom:0.8rem;'>各平台视频/内容维度指标的可用性与对应字段名。</p>", unsafe_allow_html=True)
     metrics_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-        table { width:100%; border-collapse:collapse; font-size:13px; }
-        thead tr { background:#1a1a2e; }
-        th { padding:12px 14px; font-size:12px; font-weight:600; color:#ccc; text-align:left; white-space:nowrap; }
-        td { padding:12px 14px; border-bottom:1px solid #F0F0F0; vertical-align:middle; font-size:13px; color:#333; }
-        tr:hover td { background:#FAFAFA; }
-        td:first-child { font-weight:600; color:#111; white-space:nowrap; }
-        .g { color:#16a34a; }
-        .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
-        .dot-g { background:#16a34a; }
-        .na { color:#999; font-size:12px; }
-        code { background:#e8f5e9; color:#16a34a; font-size:11px; padding:2px 6px; border-radius:3px; font-family:'SF Mono','Fira Code',monospace; font-weight:600; }
+        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; }
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        thead tr { background:rgba(180,160,120,0.08); }
+        th { padding:12px 14px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; white-space:nowrap; text-transform:uppercase; letter-spacing:0.8px; }
+        td { padding:12px 14px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:12px; color:rgba(232,228,220,0.6); }
+        tr:hover td { background:rgba(180,160,120,0.04); }
+        td:first-child { font-weight:600; color:rgba(232,228,220,0.8); white-space:nowrap; }
+        .g { color:#5B9A6E; }
+        .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+        .dot-g { background:#5B9A6E; }
+        .na { color:rgba(232,228,220,0.2); font-size:11px; }
+        code { background:rgba(91,154,110,0.12); color:#5B9A6E; font-size:10px; padding:2px 6px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-weight:600; }
     </style></head><body>
     <table>
         <thead><tr><th>指标</th><th>B站</th><th>抖音</th><th>快手</th><th>小红书</th><th>TapTap</th><th>YouTube</th></tr></thead>
@@ -233,7 +233,7 @@ def render_crawl_page() -> None:
         }
 
         with st.container(border=True):
-            st.markdown("<div style='font-size:18px; font-weight:700; color:#111; margin-bottom:6px;'>采集配置</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-family:Cinzel,serif; font-size:16px; font-weight:600; color:#E8E4DC; letter-spacing:1px;'>采集配置</div>", unsafe_allow_html=True)
 
             with st.container():
                 render_step_block_header("01", "选择平台", "#16a34a", "先确定本次采集要进入的平台。")
@@ -283,7 +283,7 @@ def render_crawl_page() -> None:
                 else:
                     render_step_block_header("04", "搜索策略", "#8b5cf6", "当前平台没有额外排序参数，将沿用适配器默认策略。")
                     order_label = "平台默认策略"
-                    st.markdown("<div style='padding:10px 12px; border:1px dashed #D4D4D4; border-radius:10px; background:#FCFCFC; font-size:13px; color:#475569;'>该平台使用默认搜索策略，无需单独设置。</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='padding:10px 12px; border:1px dashed rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.6); font-size:12px; color:rgba(232,228,220,0.45);'>该平台使用默认搜索策略，无需单独设置。</div>", unsafe_allow_html=True)
 
             st.divider()
             with st.container():
@@ -298,10 +298,10 @@ def render_crawl_page() -> None:
                     order_preview = "平台默认" if platform != "bilibili" else order_label.replace("平台搜索默认排序 ", "").replace("(", "").replace(")", "")
                     st.markdown(
                         f"""
-                        <div style='padding:10px 12px; border:1px dashed #D4D4D4; border-radius:10px; background:#FCFCFC;'>
-                            <div style='font-size:12px; color:#666;'>本次执行概览</div>
-                            <div style='font-size:13px; color:#111; margin-top:6px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {mode_preview} / {depth_preview} / {order_preview} / {limit_val} 条</div>
-                            <div style='font-size:13px; color:#2563EB; margin-top:6px; font-weight:600;'>预计关键词检索量：{limit_val} × {keyword_count} = {estimated_results} 条</div>
+                        <div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:12px 14px; box-shadow:0 4px 24px rgba(0,0,0,0.25);'>
+                            <div style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500; color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>本次执行概览</div>
+                            <div style='font-size:12px; color:rgba(232,228,220,0.65); margin-top:8px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {mode_preview} / {depth_preview} / {order_preview} / {limit_val} 条</div>
+                            <div style='font-size:12px; color:#B4A078; margin-top:6px; font-weight:600;'>预计检索量：{limit_val} × {keyword_count} = {estimated_results} 条</div>
                         </div>
                         """,
                         unsafe_allow_html=True,

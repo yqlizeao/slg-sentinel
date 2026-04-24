@@ -3,7 +3,7 @@ from __future__ import annotations
 import streamlit as st
 import streamlit.components.v1 as st_components
 
-from ui.components.common import render_page_header, render_section_title, render_data_freshness
+from ui.components.common import render_page_header, render_section_title, render_data_freshness, render_kpi_card, icon
 from ui.services.app_services import (
     PLATFORM_BRAND_ICONS,
     build_trending_rows_html,
@@ -24,29 +24,34 @@ from ui.services.overview_service import (
 def _render_insights_hero() -> None:
     """区块 1：本周核心发现（Hero 区域）"""
     summaries = get_weekly_summary_text()
+    report_icon = icon("report", color="#B4A078")
 
     if summaries:
         cards_html = ""
-        colors = ["#16a34a", "#2563eb", "#d97706", "#dc2626", "#7c3aed"]
+        colors = ["#B4A078", "#6B8BDB", "#D4956B", "#E85D4A", "#9B7FD4"]
         for idx, text in enumerate(summaries[:5]):
             color = colors[idx % len(colors)]
             cards_html += f"""
-            <div style='padding:14px 16px; border-left:3px solid {color}; background:#FAFAFA;
-                         border-radius:0 8px 8px 0; margin-bottom:8px; font-size:14px; color:#111; line-height:1.6;'>
+            <div style='padding:14px 18px; border-left:3px solid {color}; background:rgba(12,15,20,0.7);
+                         border-radius:0 8px 8px 0; margin-bottom:8px; font-size:13px; color:rgba(232,228,220,0.75); line-height:1.7;'>
                 {text}
             </div>"""
         st.markdown(
             f"""<div style='margin-bottom:24px;'>
-                <div style='font-size:18px; font-weight:700; color:#111; margin-bottom:12px;'>📋 本周核心发现</div>
+                <div style='font-family:Cinzel,serif; font-size:16px; font-weight:600; color:#E8E4DC;
+                            margin-bottom:14px; letter-spacing:1px;'>{report_icon} 本周核心发现</div>
                 {cards_html}
             </div>""",
             unsafe_allow_html=True,
         )
     else:
         st.markdown(
-            """<div style='padding:20px; border:1px dashed #D4D4D4; border-radius:8px; background:#FCFCFC; margin-bottom:24px;'>
-                <div style='font-size:15px; font-weight:600; color:#666;'>📋 暂无本周分析摘要</div>
-                <div style='font-size:13px; color:#999; margin-top:6px;'>请先前往「智能报表」页面生成一份周报，系统将自动提取核心发现。</div>
+            f"""<div style='padding:24px; border:1px dashed rgba(180,160,120,0.15); border-radius:8px;
+                        background:rgba(12,15,20,0.6); margin-bottom:24px;'>
+                <div style='font-family:Cinzel,serif; font-size:15px; font-weight:600; color:rgba(232,228,220,0.5);
+                            letter-spacing:1px;'>{report_icon} 暂无本周分析摘要</div>
+                <div style='font-size:12px; color:rgba(232,228,220,0.3); margin-top:8px;'>
+                    前往「智能报表」页面生成一份周报，系统将自动提取核心发现。</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -64,31 +69,30 @@ def _render_trends_chart() -> None:
 
         df = pd.DataFrame(trend_data)
         df["date"] = pd.to_datetime(df["date"])
-
-        # 取搜索量最大的 Top 8 关键词
         top_kws = df.groupby("keyword")["total_results"].sum().nlargest(8).index.tolist()
         df_top = df[df["keyword"].isin(top_kws)]
-
         if df_top.empty:
             return
 
+        trend_svg = icon("trend", color="#B4A078")
+        st.markdown(f"<h3>{trend_svg} 关键词搜索趋势（近 14 天）</h3>", unsafe_allow_html=True)
         chart = (
             alt.Chart(df_top)
-            .mark_line(point=True, strokeWidth=2)
+            .mark_line(point=alt.OverlayMarkDef(size=30), strokeWidth=1.8)
             .encode(
-                x=alt.X("date:T", title="日期", axis=alt.Axis(format="%m-%d")),
-                y=alt.Y("total_results:Q", title="搜索结果总量"),
-                color=alt.Color("keyword:N", title="关键词"),
+                x=alt.X("date:T", title="", axis=alt.Axis(format="%m-%d", labelColor="#555", gridColor="rgba(180,160,120,0.06)")),
+                y=alt.Y("total_results:Q", title="", axis=alt.Axis(labelColor="#555", gridColor="rgba(180,160,120,0.06)")),
+                color=alt.Color("keyword:N", title="关键词",
+                    scale=alt.Scale(range=["#B4A078", "#6B8BDB", "#E85D4A", "#5B9A6E", "#9B7FD4", "#D4956B", "#7FB5B0", "#C4845C"]),
+                    legend=alt.Legend(labelColor="#888", titleColor="#888")),
                 tooltip=["date:T", "keyword:N", "total_results:Q"],
             )
-            .properties(height=320)
+            .properties(height=320, background="transparent")
+            .configure_view(strokeWidth=0)
             .interactive()
         )
-        st.markdown("<h3>关键词搜索趋势（近 14 天）</h3>", unsafe_allow_html=True)
         st.altair_chart(chart, use_container_width=True)
-    except ImportError:
-        pass
-    except Exception:
+    except (ImportError, Exception):
         pass
 
 
@@ -98,23 +102,26 @@ def _render_top_comments() -> None:
     if not comments:
         return
 
-    st.markdown("<h3>高赞评论精选（近 7 天）</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#666; font-size:13px; margin-bottom:12px;'>跨平台高赞评论，展示玩家最强烈的声音。</p>", unsafe_allow_html=True)
+    search_svg = icon("search", color="#B4A078")
+    st.markdown(f"<h3>{search_svg} 高赞评论精选（近 7 天）</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color:rgba(232,228,220,0.35); font-size:12px; margin-bottom:14px;'>跨平台高赞评论，展示玩家最强烈的声音。</p>", unsafe_allow_html=True)
 
-    for idx, c in enumerate(comments):
+    for c in comments:
         sentiment_badge = ""
         if c.get("sentiment") == "positive":
-            sentiment_badge = "<span style='background:#DCFCE7; color:#16a34a; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;'>正面</span>"
+            sentiment_badge = "<span style='background:rgba(91,154,110,0.15); color:#5B9A6E; padding:2px 8px; border-radius:3px; font-size:10px; font-weight:600; letter-spacing:0.5px;'>POSITIVE</span>"
         elif c.get("sentiment") == "negative":
-            sentiment_badge = "<span style='background:#FEE2E2; color:#dc2626; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;'>负面</span>"
+            sentiment_badge = "<span style='background:rgba(232,93,74,0.15); color:#E85D4A; padding:2px 8px; border-radius:3px; font-size:10px; font-weight:600; letter-spacing:0.5px;'>NEGATIVE</span>"
 
+        profile_svg = icon("profile", color="rgba(232,228,220,0.3)")
         st.markdown(
-            f"""<div style='padding:12px 16px; border:1px solid #EAEAEA; border-radius:8px; margin-bottom:8px; background:#FFFFFF;'>
-                <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;'>
-                    <span style='font-size:12px; color:#666;'>👤 {c.get('author', '匿名')} · {c.get('platform', '')} · 👍 {c.get('like_count', 0)}</span>
+            f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25);' style='margin-bottom:8px; padding:14px 18px;'>
+                <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;'>
+                    <span style='font-size:11px; color:rgba(232,228,220,0.35);'>{profile_svg}
+                        {c.get('author', '匿名')} · {c.get('platform', '')} · {c.get('like_count', 0)} likes</span>
                     {sentiment_badge}
                 </div>
-                <div style='font-size:14px; color:#111; line-height:1.6;'>{c.get('content', '')}</div>
+                <div style='font-size:13px; color:rgba(232,228,220,0.75); line-height:1.7;'>{c.get('content', '')}</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -122,80 +129,66 @@ def _render_top_comments() -> None:
 
 def render_overview_page() -> None:
     render_page_header("总览", "实时监控数据汇总与核心洞察")
-    # 区块 0：本周核心发现
     _render_insights_hero()
 
     # 系统运行概况 KPI
-    st.markdown("<h3>系统运行概况</h3>", unsafe_allow_html=True)
+    target_svg = icon("target", color="#B4A078")
+    st.markdown(f"<h3>{target_svg} 系统运行概况</h3>", unsafe_allow_html=True)
     health = get_system_health()
+    api_color = "#5B9A6E" if health["api_health"] else "#E85D4A"
+    api_text = "在线" if health["api_health"] else "未配置"
     st.markdown(
-        f"""
-        <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;'>
-            <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-                <div style='font-size:12px; color:#666;'>监控目标数量</div>
-                <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['targets']}<span style='font-size:12px; font-weight:400; color:#666; margin:0 4px;'>频道，</span>{health['keywords']}<span style='font-size:12px; font-weight:400; color:#666; margin-left:4px;'>关键词</span></div>
-                <div style='font-size:11px; color:#999; margin-top:4px;'>覆盖当前已配置的重点监测对象</div>
-            </div>
-            <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-                <div style='font-size:12px; color:#666;'>本地总数据量</div>
-                <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['capacity']} <span style='font-size:12px; font-weight:400; color:#666;'>组</span></div>
-                <div style='font-size:11px; color:#999; margin-top:4px;'>包含全平台的视频与评论快照</div>
-            </div>
-            <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-                <div style='font-size:12px; color:#666;'>舆情分析组件 (LLM)</div>
-                <div style='font-size:24px; font-weight:700; color:{"#16a34a" if health["api_health"] else "#dc2626"}; margin-top:8px;'>{"连接正常" if health["api_health"] else "未配置"}</div>
-                <div style='font-size:11px; color:#999; margin-top:4px;'>用于支撑深度的语义总结与报告生成</div>
-            </div>
-            <div style='padding:16px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA;'>
-                <div style='font-size:12px; color:#666;'>最近一次采集</div>
-                <div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{health['last_sync']}</div>
-                <div style='font-size:11px; color:#999; margin-top:4px;'>系统最后一次成功抓取并落库的时间</div>
-            </div>
-        </div>
-        """,
+        f"""<div style='display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px;'>
+            {render_kpi_card("监控目标", f"{health['targets']}频道 · {health['keywords']}词")}
+            {render_kpi_card("本地数据量", f"{health['capacity']} 组", "#6B8BDB")}
+            {render_kpi_card("LLM 分析引擎", api_text, api_color)}
+            {render_kpi_card("最近采集", health['last_sync'], "#D4956B")}
+        </div>""",
         unsafe_allow_html=True,
     )
 
-    # 区块 1：关键词趋势图
     _render_trends_chart()
 
     st.markdown("<br/>", unsafe_allow_html=True)
-    st.markdown("<h3>平台数据概览</h3>", unsafe_allow_html=True)
+    db_svg = icon("database", color="#B4A078")
+    st.markdown(f"<h3>{db_svg} 平台数据概览</h3>", unsafe_allow_html=True)
 
     platform_data = [
-        ("bilibili", "哔哩哔哩"),
-        ("youtube", "YouTube"),
-        ("taptap", "TapTap"),
-        ("douyin", "抖音"),
-        ("kuaishou", "快手"),
-        ("xiaohongshu", "小红书"),
+        ("bilibili", "哔哩哔哩"), ("youtube", "YouTube"), ("taptap", "TapTap"),
+        ("douyin", "抖音"), ("kuaishou", "快手"), ("xiaohongshu", "小红书"),
     ]
     for row_idx in range(0, len(platform_data), 3):
         cols = st.columns(3)
         for col_idx, (platform_id, platform_label) in enumerate(platform_data[row_idx : row_idx + 3]):
             stats = get_platform_stats(platform_id)
             with cols[col_idx]:
+                delta_color = "#5B9A6E" if (stats["videos_today"] or stats["comments_today"]) else "rgba(232,228,220,0.25)"
                 st.markdown(
-                    f"""
-                    <div class="platform-stat-card">
-                        <div class="platform-stat-card__header">
-                            <img class="platform-icon" src="{PLATFORM_BRAND_ICONS.get(platform_id, '')}" alt="">
-                            <span class="platform-stat-card__label">{platform_label}</span>
+                    f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25);' style='min-height:140px; margin-bottom:14px;'>
+                        <div style='display:flex; align-items:center; margin-bottom:40px;'>
+                            <img style='width:16px; height:16px; margin-right:8px; border-radius:2px; opacity:0.7;'
+                                 src='{PLATFORM_BRAND_ICONS.get(platform_id, "")}' alt=''>
+                            <span style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500; color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>{platform_label}</span>
                         </div>
-                        <div class="platform-stat-card__value">{stats["videos_total"] if stats["videos_total"] else 0}</div>
-                        <div class="platform-stat-card__delta">↑ 今日新增: {stats["videos_today"]} 视频, {stats["comments_today"]} 评论</div>
-                    </div>
-                    """,
+                        <div style='font-family:IBM Plex Mono,monospace; font-size:28px; font-weight:500; color:#E8E4DC; line-height:1;'>{stats["videos_total"] if stats["videos_total"] else 0}</div>
+                        <div style='display:inline-flex; align-items:center; margin-top:18px; padding:6px 12px;
+                                    border-radius:999px; background:rgba(91,154,110,0.08); border:1px solid rgba(91,154,110,0.12);
+                                    color:{delta_color}; font-size:12px; font-weight:500;'>
+                            今日 +{stats["videos_today"]} 视频, +{stats["comments_today"]} 评论</div>
+                    </div>""",
                     unsafe_allow_html=True,
                 )
 
-    # 区块 2：高赞评论精选
-    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:2rem 0;'/>", unsafe_allow_html=True)
+    # 高赞评论
+    st.markdown("<hr style='border:none; border-top:1px solid rgba(180,160,120,0.08); margin:2rem 0;'/>", unsafe_allow_html=True)
     _render_top_comments()
 
+    render_data_freshness()
+
     # 热点内容追踪
-    st.markdown("<hr style='border: none; border-top: 1px solid #EAEAEA; margin: 2rem 0;'/>", unsafe_allow_html=True)
-    render_section_title("热点内容追踪", "展示近期跨平台表现突出的内容，便于跟踪热点话题和高关注素材。")
+    st.markdown("<hr style='border:none; border-top:1px solid rgba(180,160,120,0.08); margin:2rem 0;'/>", unsafe_allow_html=True)
+    trend_svg = icon("trend", color="#B4A078")
+    render_section_title(f"{trend_svg} 热点内容追踪", "近期跨平台表现突出的内容")
     _, ctrl_col = st.columns([8, 2])
     with ctrl_col:
         view_limit = st.selectbox("单屏显示限额", [10, 20, 50, 100, 300, 500], index=0, label_visibility="collapsed")
@@ -206,25 +199,28 @@ def render_overview_page() -> None:
         table_doc = f"""<!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
             * {{ margin:0; padding:0; box-sizing:border-box; }}
-            body {{ font-family: -apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; }}
-            table {{ width:100%; border-collapse:collapse; font-size:13px; }}
-            thead tr {{ background:#FAFAFA; border-bottom:2px solid #EAEAEA; }}
-            th {{ padding:10px 12px; font-size:12px; font-weight:600; color:#666; text-align:left; white-space:nowrap; }}
+            body {{ font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif; background:#0A0C10; color:#E8E4DC; }}
+            table {{ width:100%; border-collapse:collapse; font-size:12px; }}
+            thead tr {{ background:rgba(180,160,120,0.06); border-bottom:1px solid rgba(180,160,120,0.12); }}
+            th {{ padding:10px 12px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4);
+                  text-align:left; white-space:nowrap; text-transform:uppercase; letter-spacing:0.8px; }}
             th.right {{ text-align:right; }}
-            td {{ padding:12px 12px; border-bottom:1px solid #F0F0F0; vertical-align:middle; }}
-            tr:hover td {{ background:#FAFAFA; }}
-            td.num {{ color:#999; font-size:12px; text-align:center; width:28px; }}
+            td {{ padding:12px 12px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; color:rgba(232,228,220,0.7); }}
+            tr:hover td {{ background:rgba(180,160,120,0.04); }}
+            td.num {{ color:rgba(232,228,220,0.3); font-size:11px; text-align:center; width:28px; }}
             td.player-cell {{ width:172px; padding:10px 8px; vertical-align:middle; }}
             td.title-cell {{ min-width:180px; padding:10px 12px; }}
-            td.title-cell a {{ font-weight:600; color:#111; text-decoration:none; line-height:1.5; display:block; }}
-            td.title-cell a:hover {{ color:#1d4ed8; }}
-            td.stat {{ text-align:right; font-weight:500; white-space:nowrap; color:#333; }}
-            td.muted {{ color:#999; font-size:12px; }}
-            .author {{ display:block; font-size:11px; color:#888; margin-top:4px; }}
-            .pfav {{ width:12px; height:12px; vertical-align:middle; margin-right:4px; }}
+            td.title-cell a {{ font-weight:600; color:#E8E4DC; text-decoration:none; line-height:1.5; display:block; }}
+            td.title-cell a:hover {{ color:#B4A078; }}
+            td.stat {{ text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:500; white-space:nowrap; color:rgba(232,228,220,0.6); }}
+            td.muted {{ color:rgba(232,228,220,0.3); font-size:11px; }}
+            .author {{ display:block; font-size:10px; color:rgba(232,228,220,0.35); margin-top:4px; }}
+            .pfav {{ width:12px; height:12px; vertical-align:middle; margin-right:4px; opacity:0.6; }}
             .tags {{ display:flex; flex-wrap:wrap; gap:3px; margin-top:6px; }}
-            .tag {{ display:inline-block; padding:2px 6px; border-radius:3px; font-size:11px; background:#F5F5F5; color:#666; white-space:nowrap; }}
-            .tag-hit {{ background:#EEF2FF; color:#4338CA; font-weight:600; }}
+            .tag {{ display:inline-block; padding:2px 6px; border-radius:3px; font-size:10px;
+                    background:rgba(180,160,120,0.08); color:rgba(232,228,220,0.45); white-space:nowrap;
+                    border:1px solid rgba(180,160,120,0.08); }}
+            .tag-hit {{ background:rgba(180,160,120,0.15); color:#B4A078; font-weight:600; border-color:rgba(180,160,120,0.2); }}
         </style></head><body>
         <table>
             <thead><tr>
@@ -239,15 +235,15 @@ def render_overview_page() -> None:
         </body></html>"""
         st_components.html(table_doc, height=900, scrolling=True)
     else:
-        st.markdown("<p style='color:#666; font-size:14px;'>当前采集库中暂未发现内容，请先执行策略采集。</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:rgba(232,228,220,0.35); font-size:13px;'>当前采集库中暂未发现内容，请先执行采集。</p>", unsafe_allow_html=True)
 
     # 底层源文件管理
-    st.markdown("<hr style='border:none; border-top:1px solid #EAEAEA; margin:2rem 0;'/>", unsafe_allow_html=True)
-    st.markdown("<h3>当前已加载采集数据 (底层源文件)</h3>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:none; border-top:1px solid rgba(180,160,120,0.08); margin:2rem 0;'/>", unsafe_allow_html=True)
+    st.markdown("<h3>当前已加载采集数据</h3>", unsafe_allow_html=True)
 
     loaded_files = list_loaded_csv_files()
     if not loaded_files:
-        st.markdown("<p style='color:#999; font-size:13px;'>当前还没有已加载的数据文件，请先执行采集。</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:rgba(232,228,220,0.3); font-size:12px;'>当前还没有已加载的数据文件。</p>", unsafe_allow_html=True)
         return
 
     @st.dialog("危险操作确认")
@@ -265,13 +261,13 @@ def render_overview_page() -> None:
         if st.button("删除全部", type="primary", use_container_width=True):
             confirm_clear_all()
 
-    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
     for item in loaded_files:
         col1, col2, col3 = st.columns([6, 3, 2])
         with col1:
             st.markdown(item["display_html"], unsafe_allow_html=True)
         with col2:
-            st.markdown(f"<div style='font-size:12px; color:#64748b; padding-top:10px;'>{item['size_kb']:.1f} KB</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:11px; color:rgba(232,228,220,0.3); padding-top:10px;'>{item['size_kb']:.1f} KB</div>", unsafe_allow_html=True)
         with col3:
             if st.button("删除", key=f"del_{item['path']}"):
                 try:
