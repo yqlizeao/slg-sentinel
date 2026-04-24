@@ -17,7 +17,7 @@ from ui.services.app_services import (
 def render_step_overview(items: list[tuple[str, str, str]]) -> None:
     with st.container(border=True):
         st.markdown(
-            "<div style='font-size:12px; color:#475569; font-weight:700; letter-spacing:0.5px; margin-bottom:12px;'>采集流程</div>",
+            "<div style='font-size:12px; color:rgba(232,228,220,0.5); font-weight:700; letter-spacing:0.5px; margin-bottom:12px;'>采集流程</div>",
             unsafe_allow_html=True,
         )
 
@@ -31,7 +31,7 @@ def render_step_overview(items: list[tuple[str, str, str]]) -> None:
                     f"""
                     <div style='padding:10px 12px; border:1px solid {color}22; border-radius:10px; background:{color}10; min-height:76px;'>
                         <div style='font-size:11px; color:{color}; font-weight:800; letter-spacing:0.5px;'>{step}</div>
-                        <div style='font-size:15px; color:#111; font-weight:700; margin-top:6px;'>{title}</div>
+                        <div style='font-size:15px; color:#E8E4DC; font-weight:700; margin-top:6px;'>{title}</div>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -41,7 +41,7 @@ def render_step_overview(items: list[tuple[str, str, str]]) -> None:
             if item_idx < len(items) - 1:
                 with cols[col_idx]:
                     st.markdown(
-                        "<div style='text-align:center; font-size:22px; color:#CBD5E1; font-weight:700; padding-top:22px;'>→</div>",
+                        "<div style='text-align:center; font-size:22px; color:rgba(180,160,120,0.15); font-weight:700; padding-top:22px;'>→</div>",
                         unsafe_allow_html=True,
                     )
                 col_idx += 1
@@ -50,39 +50,39 @@ def render_step_overview(items: list[tuple[str, str, str]]) -> None:
 def render_recursive_crawl_flow() -> None:
     st.markdown(
         """
-        <div style='border:1px solid #EAEAEA; border-radius:8px; background:#FFFFFF; padding:16px; margin-bottom:16px;'>
+        <div style='border:1px solid rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.92); padding:16px; margin-bottom:16px;'>
             <div style='display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:14px;'>
                 <div>
-                    <div style='font-size:17px; font-weight:800; color:#111;'>AI 递归采集链路</div>
-                    <div style='font-size:12px; color:#666; margin-top:4px; line-height:1.6;'>从种子关键词启动，采集后用标题、标签和高赞评论提炼下一轮关键词，并由上限与停止规则控制递归深度。</div>
+                    <div style='font-size:17px; font-weight:800; color:#E8E4DC;'>AI 递归采集链路</div>
+                    <div style='font-size:12px; color:rgba(232,228,220,0.4); margin-top:4px; line-height:1.6;'>从种子关键词启动，采集后用标题、标签和高赞评论提炼下一轮关键词，并由上限与停止规则控制递归深度。</div>
                 </div>
-                <div style='font-size:12px; color:#2563EB; font-weight:700; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px; padding:6px 10px; white-space:nowrap;'>Local NLP / jieba-ready</div>
+                <div style='font-size:12px; color:#6B8BDB; font-weight:700; background:rgba(107,139,219,0.08); border:1px solid rgba(107,139,219,0.2); border-radius:8px; padding:6px 10px; white-space:nowrap;'>Local NLP / jieba-ready</div>
             </div>
             <div style='display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; align-items:stretch;'>
-                <div style='border:1px solid #BBF7D0; background:#F0FDF4; border-radius:8px; padding:12px; min-height:106px;'>
-                    <div style='font-size:11px; color:#16A34A; font-weight:800;'>01 SEED</div>
-                    <div style='font-size:14px; color:#111; font-weight:750; margin-top:8px;'>种子关键词</div>
-                    <div style='font-size:12px; color:#475569; margin-top:6px; line-height:1.45;'>人工给定或关键词库维护</div>
+                <div style='border:1px solid rgba(91,154,110,0.2); background:rgba(91,154,110,0.06); border-radius:8px; padding:12px; min-height:106px;'>
+                    <div style='font-size:11px; color:#5B9A6E; font-weight:800;'>01 SEED</div>
+                    <div style='font-size:14px; color:#E8E4DC; font-weight:750; margin-top:8px;'>种子关键词</div>
+                    <div style='font-size:12px; color:rgba(232,228,220,0.5); margin-top:6px; line-height:1.45;'>人工给定或关键词库维护</div>
                 </div>
-                <div style='border:1px solid #BAE6FD; background:#F0F9FF; border-radius:8px; padding:12px; min-height:106px;'>
+                <div style='border:1px solid rgba(107,139,219,0.2); background:rgba(107,139,219,0.06); border-radius:8px; padding:12px; min-height:106px;'>
                     <div style='font-size:11px; color:#0284C7; font-weight:800;'>02 CRAWL</div>
-                    <div style='font-size:14px; color:#111; font-weight:750; margin-top:8px;'>平台采集</div>
-                    <div style='font-size:12px; color:#475569; margin-top:6px; line-height:1.45;'>按平台、排序、限额获取视频与评论</div>
+                    <div style='font-size:14px; color:#E8E4DC; font-weight:750; margin-top:8px;'>平台采集</div>
+                    <div style='font-size:12px; color:rgba(232,228,220,0.5); margin-top:6px; line-height:1.45;'>按平台、排序、限额获取视频与评论</div>
                 </div>
-                <div style='border:1px solid #DDD6FE; background:#F5F3FF; border-radius:8px; padding:12px; min-height:106px;'>
-                    <div style='font-size:11px; color:#7C3AED; font-weight:800;'>03 MINE</div>
-                    <div style='font-size:14px; color:#111; font-weight:750; margin-top:8px;'>语义提词</div>
-                    <div style='font-size:12px; color:#475569; margin-top:6px; line-height:1.45;'>标题、标签、高赞评论加权排序</div>
+                <div style='border:1px solid rgba(155,127,212,0.2); background:rgba(155,127,212,0.08); border-radius:8px; padding:12px; min-height:106px;'>
+                    <div style='font-size:11px; color:#9B7FD4; font-weight:800;'>03 MINE</div>
+                    <div style='font-size:14px; color:#E8E4DC; font-weight:750; margin-top:8px;'>语义提词</div>
+                    <div style='font-size:12px; color:rgba(232,228,220,0.5); margin-top:6px; line-height:1.45;'>标题、标签、高赞评论加权排序</div>
                 </div>
-                <div style='border:1px solid #FED7AA; background:#FFF7ED; border-radius:8px; padding:12px; min-height:106px;'>
-                    <div style='font-size:11px; color:#EA580C; font-weight:800;'>04 RECURSE</div>
-                    <div style='font-size:14px; color:#111; font-weight:750; margin-top:8px;'>二次采集</div>
-                    <div style='font-size:12px; color:#475569; margin-top:6px; line-height:1.45;'>候选词进入下一轮临时词表</div>
+                <div style='border:1px solid rgba(212,175,55,0.2); background:rgba(212,175,55,0.06); border-radius:8px; padding:12px; min-height:106px;'>
+                    <div style='font-size:11px; color:#D4956B; font-weight:800;'>04 RECURSE</div>
+                    <div style='font-size:14px; color:#E8E4DC; font-weight:750; margin-top:8px;'>二次采集</div>
+                    <div style='font-size:12px; color:rgba(232,228,220,0.5); margin-top:6px; line-height:1.45;'>候选词进入下一轮临时词表</div>
                 </div>
-                <div style='border:1px solid #FECACA; background:#FEF2F2; border-radius:8px; padding:12px; min-height:106px;'>
-                    <div style='font-size:11px; color:#DC2626; font-weight:800;'>05 STOP</div>
-                    <div style='font-size:14px; color:#111; font-weight:750; margin-top:8px;'>停止规则</div>
-                    <div style='font-size:12px; color:#475569; margin-top:6px; line-height:1.45;'>深度、增量、候选词分数触发停止</div>
+                <div style='border:1px solid rgba(232,93,74,0.2); background:rgba(232,93,74,0.06); border-radius:8px; padding:12px; min-height:106px;'>
+                    <div style='font-size:11px; color:#E85D4A; font-weight:800;'>05 STOP</div>
+                    <div style='font-size:14px; color:#E8E4DC; font-weight:750; margin-top:8px;'>停止规则</div>
+                    <div style='font-size:12px; color:rgba(232,228,220,0.5); margin-top:6px; line-height:1.45;'>深度、增量、候选词分数触发停止</div>
                 </div>
             </div>
         </div>
@@ -114,9 +114,9 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
 
     branch_html = []
     colors = {
-        "标题": ("#2563EB", "#EFF6FF", "#BFDBFE"),
-        "标签": ("#7C3AED", "#F5F3FF", "#DDD6FE"),
-        "高赞评论": ("#EA580C", "#FFF7ED", "#FED7AA"),
+        "标题": ("#6B8BDB", "rgba(107,139,219,0.08)", "rgba(107,139,219,0.2)"),
+        "标签": ("#9B7FD4", "rgba(155,127,212,0.08)", "rgba(155,127,212,0.2)"),
+        "高赞评论": ("#D4956B", "rgba(212,175,55,0.06)", "rgba(212,175,55,0.2)"),
     }
     for branch_name, items in branches.items():
         if not items:
@@ -150,9 +150,9 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
     html = f"""
     <style>
         .mindmap {{
-            border: 1px solid #EAEAEA;
+            border: 1px solid rgba(180,160,120,0.12);
             border-radius: 8px;
-            background: #FFFFFF;
+            background: rgba(12,15,20,0.92);
             padding: 16px;
             overflow-x: auto;
         }}
@@ -164,8 +164,8 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
             min-width: 760px;
         }}
         .mind-root {{
-            border: 1px solid #CBD5E1;
-            background: #F8FAFC;
+            border: 1px solid rgba(180,160,120,0.15);
+            background: rgba(12,15,20,0.7);
             border-radius: 8px;
             min-height: 92px;
             display: flex;
@@ -175,7 +175,7 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
             padding: 14px;
             font-size: 15px;
             font-weight: 800;
-            color: #111827;
+            color: rgba(232,228,220,0.8);
             position: relative;
         }}
         .mind-root:after {{
@@ -184,7 +184,7 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
             right: -18px;
             width: 18px;
             height: 1px;
-            background: #CBD5E1;
+            background: rgba(180,160,120,0.15);
         }}
         .mind-branch {{
             position: relative;
@@ -197,7 +197,7 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
             font-size: 12px;
             font-weight: 800;
             color: var(--branch-color);
-            background: #FFFFFF;
+            background: rgba(12,15,20,0.92);
             border: 1px solid currentColor;
             border-radius: 999px;
             padding: 4px 10px;
@@ -224,7 +224,7 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
             display: inline-flex;
             gap: 7px;
             align-items: baseline;
-            color: #111827;
+            color: rgba(232,228,220,0.8);
             max-width: 190px;
         }}
         .kw-node span {{
@@ -234,14 +234,14 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
         }}
         .kw-node b {{
             font-size: 10px;
-            color: #64748B;
+            color: rgba(232,228,220,0.4);
             font-weight: 700;
             white-space: nowrap;
         }}
         .kw-node b:before {{
             content: "热度 ";
             font-weight: 600;
-            color: #94A3B8;
+            color: rgba(232,228,220,0.35);
         }}
     </style>
     <div class="mindmap">
@@ -256,7 +256,7 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
 
 def render_step_block_header(step: str, title: str, color: str, description: str | None = None) -> None:
     desc_html = (
-        f"<div style='font-size:12px; color:#666; margin-top:2px; line-height:1.5;'>{description}</div>"
+        f"<div style='font-size:12px; color:rgba(232,228,220,0.4); margin-top:2px; line-height:1.5;'>{description}</div>"
         if description
         else ""
     )
@@ -267,7 +267,7 @@ def render_step_block_header(step: str, title: str, color: str, description: str
                 {step}
             </div>
             <div>
-                <div style='font-size:16px; font-weight:700; color:#111;'>{title}</div>
+                <div style='font-size:16px; font-weight:700; color:#E8E4DC;'>{title}</div>
                 {desc_html}
             </div>
         </div>
@@ -281,7 +281,7 @@ def render_crawl_result_card(result: dict) -> None:
         return
 
     status_text = "成功" if result["status"] == "success" else "失败"
-    status_color = "#16A34A" if result["status"] == "success" else "#DC2626"
+    status_color = "#5B9A6E" if result["status"] == "success" else "#E85D4A"
 
     st.markdown("##### 本次执行结果")
     metric_cols = st.columns(4)
@@ -295,7 +295,7 @@ def render_crawl_result_card(result: dict) -> None:
         st.metric("写入文件", str(len(result["touched_files"])))
 
     st.markdown(
-        f"<div style='font-size:13px; color:#475569; margin:8px 0 12px 0;'>当前平台：<span style='color:{status_color}; font-weight:700;'>{_html.escape(result['platform_label'])}</span></div>",
+        f"<div style='font-size:13px; color:rgba(232,228,220,0.5); margin:8px 0 12px 0;'>当前平台：<span style='color:{status_color}; font-weight:700;'>{_html.escape(result['platform_label'])}</span></div>",
         unsafe_allow_html=True,
     )
 
@@ -341,8 +341,8 @@ def render_keyword_library(editor_prefix: str = "crawl") -> dict:
         st.markdown(
             """
             <div style='padding:4px 2px 10px 2px;'>
-                <div style='font-size:18px; font-weight:700; color:#111;'>关键词库</div>
-                <div style='font-size:13px; color:#666; margin-top:6px; line-height:1.6;'>在这里统一维护采集关键词，并在同一处完成扩词与保存。</div>
+                <div style='font-size:18px; font-weight:700; color:#E8E4DC;'>关键词库</div>
+                <div style='font-size:13px; color:rgba(232,228,220,0.4); margin-top:6px; line-height:1.6;'>在这里统一维护采集关键词，并在同一处完成扩词与保存。</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -351,7 +351,7 @@ def render_keyword_library(editor_prefix: str = "crawl") -> dict:
         meta_col1, meta_col2 = st.columns(2)
         with meta_col1:
             st.markdown(
-                f"<div style='padding:12px 14px; border:1px solid #EAEAEA; border-radius:10px; background:#FFFFFF; min-height:92px;'><div style='font-size:12px; color:#666;'>当前关键词数</div><div style='font-size:24px; font-weight:700; color:#111; margin-top:8px;'>{len(merged_keywords)}</div></div>",
+                f"<div style='padding:12px 14px; border:1px solid rgba(180,160,120,0.12); border-radius:10px; background:rgba(12,15,20,0.92); min-height:92px;'><div style='font-size:12px; color:rgba(232,228,220,0.4);'>当前关键词数</div><div style='font-size:24px; font-weight:700; color:#E8E4DC; margin-top:8px;'>{len(merged_keywords)}</div></div>",
                 unsafe_allow_html=True,
             )
         with meta_col2:
@@ -359,7 +359,7 @@ def render_keyword_library(editor_prefix: str = "crawl") -> dict:
 
         def render_last_saved_card() -> None:
             last_saved_placeholder.markdown(
-                f"<div style='padding:12px 14px; border:1px solid #EAEAEA; border-radius:10px; background:#FFFFFF; min-height:92px;'><div style='font-size:12px; color:#666;'>最近保存时间</div><div style='font-size:16px; font-weight:700; color:#111; margin-top:12px;'>{get_keyword_library_last_saved_at()}</div></div>",
+                f"<div style='padding:12px 14px; border:1px solid rgba(180,160,120,0.12); border-radius:10px; background:rgba(12,15,20,0.92); min-height:92px;'><div style='font-size:12px; color:rgba(232,228,220,0.4);'>最近保存时间</div><div style='font-size:16px; font-weight:700; color:#E8E4DC; margin-top:12px;'>{get_keyword_library_last_saved_at()}</div></div>",
                 unsafe_allow_html=True,
             )
 
@@ -403,7 +403,7 @@ def render_keyword_library(editor_prefix: str = "crawl") -> dict:
                         st.error(f"添加失败：{e}")
             with add_cols[1]:
                 st.markdown(
-                    f"<div style='padding:10px 12px; border:1px solid #EAEAEA; border-radius:8px; background:#FAFAFA; font-size:13px; color:#475569;'>粘贴后不会自动保存，需要点击左侧按钮。</div>",
+                    f"<div style='padding:10px 12px; border:1px solid rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.6); font-size:13px; color:rgba(232,228,220,0.5);'>粘贴后不会自动保存，需要点击左侧按钮。</div>",
                     unsafe_allow_html=True,
                 )
 
@@ -587,9 +587,9 @@ def render_keyword_library(editor_prefix: str = "crawl") -> dict:
 
             action_cols = st.columns([1, 1])
             with action_cols[0]:
-                tone_color = {"success": "#16A34A", "error": "#DC2626", "normal": "#475569"}.get(save_status["tone"], "#475569")
+                tone_color = {"success": "#5B9A6E", "error": "#E85D4A", "normal": "rgba(232,228,220,0.5)"}.get(save_status["tone"], "rgba(232,228,220,0.5)")
                 st.markdown(
-                    f"<div style='padding:10px 12px; border:1px dashed #D4D4D4; border-radius:10px; background:#FCFCFC; font-size:13px; color:{tone_color}; font-weight:600;'>{save_status['text']}</div>",
+                    f"<div style='padding:10px 12px; border:1px dashed rgba(180,160,120,0.12); border-radius:10px; background:rgba(12,15,20,0.7); font-size:13px; color:{tone_color}; font-weight:600;'>{save_status['text']}</div>",
                     unsafe_allow_html=True,
                 )
 

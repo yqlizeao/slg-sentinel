@@ -1,0 +1,4036 @@
+{
+  "run_id": "20260424_235247_bilibili_9223c9e3",
+  "status": "success",
+  "platform": "bilibili",
+  "created_at": "2026-04-24T23:52:47",
+  "started_at": "2026-04-24T23:52:47",
+  "ended_at": "2026-04-24T23:53:28",
+  "updated_at": "2026-04-24T23:53:28",
+  "config": {
+    "platform": "bilibili",
+    "mode": "免登录",
+    "depth": "基础采集",
+    "order_val": "totalrank",
+    "limit_val": 20,
+    "max_depth": 2,
+    "per_round_keywords": 8,
+    "min_score": 3.0,
+    "stop_new_keywords": 3,
+    "can_execute": true,
+    "keyword_count": 16,
+    "strategy": "标准探索"
+  },
+  "seed_keywords": [
+    "三国志战略版",
+    "率土之滨",
+    "三国谋定天下",
+    "世界启元",
+    "鸿图之下",
+    "汉末霸业",
+    "三国群英传",
+    "同人圣三国蜀汉传",
+    "策马三国志",
+    "九州劫",
+    "秦皇汉武",
+    "全战三国",
+    "三国志",
+    "三国SLG",
+    "沙盘战略",
+    "率土like"
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "keywords": [
+        "三国志战略版",
+        "率土之滨",
+        "三国谋定天下",
+        "世界启元",
+        "鸿图之下",
+        "汉末霸业",
+        "三国群英传",
+        "同人圣三国蜀汉传",
+        "策马三国志",
+        "九州劫",
+        "秦皇汉武",
+        "全战三国",
+        "三国志",
+        "三国SLG",
+        "沙盘战略",
+        "率土like"
+      ],
+      "started_at": "2026-04-24T23:52:47",
+      "ended_at": "2026-04-24T23:53:15",
+      "status": "success",
+      "stop_reason": ""
+    },
+    {
+      "round": 2,
+      "keywords": [
+        "三战创作者计划",
+        "三战",
+        "平民",
+        "教程攻略",
+        "零氪",
+        "游戏知识分享官",
+        "三国志战略版攻略",
+        "有啥配啥打天下"
+      ],
+      "started_at": "2026-04-24T23:53:15",
+      "ended_at": "2026-04-24T23:53:28",
+      "status": "success",
+      "stop_reason": ""
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "r1_三国志战略版_2d9c07",
+      "keyword": "三国志战略版",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三国志战略版",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:52:48"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 39.03,
+        "candidates": [
+          {
+            "keyword": "三战创作者计划",
+            "score": 39.03,
+            "frequency": 10,
+            "title_score": 12.8,
+            "tag_score": 26.23,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 12.8 + 标签 26.23 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三战创作者计划；功勋换错，赛季白干！平民霸业兑换T0避坑指南！#三国志战略版攻略 #三国志战略版 #"
+          },
+          {
+            "keyword": "三战",
+            "score": 19.73,
+            "frequency": 5,
+            "title_score": 10.93,
+            "tag_score": 8.8,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 10.93 + 标签 8.8 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【重新开始玩】零氪怎么玩？ 单纯不充钱  三国志战略版 平民 三战 攻略 解析；三国志战略版-新手篇之【现版本养号攻略】-带你少踩一些坑~-三战"
+          },
+          {
+            "keyword": "平民",
+            "score": 17.29,
+            "frequency": 4,
+            "title_score": 3.4,
+            "tag_score": 13.89,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.4 + 标签 13.89 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【重新开始玩】零氪怎么玩？ 单纯不充钱  三国志战略版 平民 三战 攻略 解析；平民"
+          },
+          {
+            "keyword": "教程攻略",
+            "score": 15.1,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.1,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.1 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "教程攻略"
+          },
+          {
+            "keyword": "零氪",
+            "score": 13.51,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 13.51,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 13.51 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "零氪"
+          },
+          {
+            "keyword": "游戏知识分享官",
+            "score": 12.02,
+            "frequency": 2,
+            "title_score": 0.0,
+            "tag_score": 12.02,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 12.02 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏知识分享官"
+          },
+          {
+            "keyword": "三国志战略版攻略",
+            "score": 11.08,
+            "frequency": 3,
+            "title_score": 6.44,
+            "tag_score": 4.64,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 6.44 + 标签 4.64 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三国志战略版攻略；功勋换错，赛季白干！平民霸业兑换T0避坑指南！#三国志战略版攻略 #三国志战略版 #"
+          },
+          {
+            "keyword": "有啥配啥打天下",
+            "score": 10.8,
+            "frequency": 2,
+            "title_score": 4.75,
+            "tag_score": 6.05,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.75 + 标签 6.05 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "新手开荒奥义攻略，包教包会【三国志战略版-有啥配啥打天下】07；有啥配啥打天下"
+          }
+        ]
+      },
+      "evidence": [
+        "三战创作者计划: 三战创作者计划；功勋换错，赛季白干！平民霸业兑换T0避坑指南！#三国志战略版攻略 #三国志战略版 #",
+        "三战: 【重新开始玩】零氪怎么玩？ 单纯不充钱  三国志战略版 平民 三战 攻略 解析；三国志战略版-新手篇之【现版本养号攻略】-带你少踩一些坑~-三战",
+        "平民: 【重新开始玩】零氪怎么玩？ 单纯不充钱  三国志战略版 平民 三战 攻略 解析；平民",
+        "教程攻略: 教程攻略",
+        "零氪: 零氪"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:52:47",
+      "ended_at": "2026-04-24T23:52:49"
+    },
+    {
+      "node_id": "r1_率土之滨_55eabd",
+      "keyword": "率土之滨",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "率土之滨",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:52:50"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 46.16,
+        "candidates": [
+          {
+            "keyword": "率土星推计划",
+            "score": 46.16,
+            "frequency": 15,
+            "title_score": 11.79,
+            "tag_score": 34.36,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 11.79 + 标签 34.36 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "#率土星推计划；gpt image2的生图能力太逼真了，有种栩栩如生的感觉了#率土之滨 #率土星推计"
+          },
+          {
+            "keyword": "率批同盟故事会",
+            "score": 41.57,
+            "frequency": 14,
+            "title_score": 11.79,
+            "tag_score": 29.78,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 11.79 + 标签 29.78 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "#率批同盟故事会；gpt image2的生图能力太逼真了，有种栩栩如生的感觉了#率土之滨 #率土星推计"
+          },
+          {
+            "keyword": "三国",
+            "score": 31.37,
+            "frequency": 8,
+            "title_score": 0.0,
+            "tag_score": 31.37,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 31.37 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三国"
+          },
+          {
+            "keyword": "率批同盟图鉴",
+            "score": 17.16,
+            "frequency": 6,
+            "title_score": 4.4,
+            "tag_score": 12.76,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.4 + 标签 12.76 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "#率批同盟图鉴；gpt image2的生图能力太逼真了，有种栩栩如生的感觉了#率土之滨 #率土星推计"
+          },
+          {
+            "keyword": "策略",
+            "score": 13.02,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 13.02,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 13.02 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "策略"
+          },
+          {
+            "keyword": "抽卡",
+            "score": 12.93,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 12.93,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 12.93 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "抽卡"
+          },
+          {
+            "keyword": "策略游戏",
+            "score": 11.23,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 11.23,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 11.23 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "策略游戏"
+          },
+          {
+            "keyword": "开局号",
+            "score": 9.68,
+            "frequency": 2,
+            "title_score": 0.0,
+            "tag_score": 9.68,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 9.68 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "开局号"
+          }
+        ]
+      },
+      "evidence": [
+        "率土星推计划: #率土星推计划；gpt image2的生图能力太逼真了，有种栩栩如生的感觉了#率土之滨 #率土星推计",
+        "率批同盟故事会: #率批同盟故事会；gpt image2的生图能力太逼真了，有种栩栩如生的感觉了#率土之滨 #率土星推计",
+        "三国: 三国",
+        "率批同盟图鉴: #率批同盟图鉴；gpt image2的生图能力太逼真了，有种栩栩如生的感觉了#率土之滨 #率土星推计",
+        "策略: 策略"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:52:49",
+      "ended_at": "2026-04-24T23:52:51"
+    },
+    {
+      "node_id": "r1_三国谋定天下_0691e1",
+      "keyword": "三国谋定天下",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三国谋定天下",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:52:52"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 87.62,
+        "candidates": [
+          {
+            "keyword": "谋定天下",
+            "score": 87.62,
+            "frequency": 18,
+            "title_score": 20.26,
+            "tag_score": 67.37,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 20.26 + 标签 67.37 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "一不注意听泉直播干回老本行？【三国：谋定天下】；三国：谋定天下"
+          },
+          {
+            "keyword": "三谋",
+            "score": 58.08,
+            "frequency": 11,
+            "title_score": 0.0,
+            "tag_score": 58.08,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 58.08 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "#三谋1115新剧本四海归心；三谋"
+          },
+          {
+            "keyword": "slg",
+            "score": 23.39,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 23.39,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 23.39 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "SLG；slg"
+          },
+          {
+            "keyword": "三谋玩家故事",
+            "score": 21.93,
+            "frequency": 5,
+            "title_score": 11.89,
+            "tag_score": 10.05,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 11.89 + 标签 10.05 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三谋玩家故事；义子又又又开发出新队伍了，这次开发的队伍你给他打几分？#三国谋定天下 #三国谋定天下"
+          },
+          {
+            "keyword": "三谋游戏日常",
+            "score": 21.04,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 21.04,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 21.04 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三谋游戏日常"
+          },
+          {
+            "keyword": "三谋诚意拉满",
+            "score": 20.41,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 20.41,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 20.41 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三谋诚意拉满"
+          },
+          {
+            "keyword": "搞笑",
+            "score": 20.37,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 20.37,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 20.37 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "搞笑"
+          },
+          {
+            "keyword": "必剪创作",
+            "score": 19.94,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.94,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.94 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "必剪创作"
+          }
+        ]
+      },
+      "evidence": [
+        "谋定天下: 一不注意听泉直播干回老本行？【三国：谋定天下】；三国：谋定天下",
+        "三谋: #三谋1115新剧本四海归心；三谋",
+        "slg: SLG；slg",
+        "三谋玩家故事: 三谋玩家故事；义子又又又开发出新队伍了，这次开发的队伍你给他打几分？#三国谋定天下 #三国谋定天下",
+        "三谋游戏日常: 三谋游戏日常"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:52:51",
+      "ended_at": "2026-04-24T23:52:53"
+    },
+    {
+      "node_id": "r1_世界启元_2b78a2",
+      "keyword": "世界启元",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "世界启元",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:52:54"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 61.68,
+        "candidates": [
+          {
+            "keyword": "文明",
+            "score": 61.68,
+            "frequency": 11,
+            "title_score": 0.0,
+            "tag_score": 61.68,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 61.68 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "文明；文明6"
+          },
+          {
+            "keyword": "手游",
+            "score": 40.65,
+            "frequency": 8,
+            "title_score": 0.0,
+            "tag_score": 40.65,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 40.65 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "SLG手游；taptap手游"
+          },
+          {
+            "keyword": "游戏暑期狂欢节",
+            "score": 26.13,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 26.13,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 26.13 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "2024游戏暑期狂欢节；游戏暑期狂欢节"
+          },
+          {
+            "keyword": "文明手游",
+            "score": 21.88,
+            "frequency": 4,
+            "title_score": 4.65,
+            "tag_score": 17.22,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.65 + 标签 17.22 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "文明手游；文明手游？评价为吃粑粑都赶不上热乎的玩意！【狗哥锐评《世界启元》】"
+          },
+          {
+            "keyword": "氪金",
+            "score": 21.11,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 21.11,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 21.11 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "氪金"
+          },
+          {
+            "keyword": "游戏解说",
+            "score": 20.2,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 20.2,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 20.2 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏解说"
+          },
+          {
+            "keyword": "三国谋定天下赏金计划",
+            "score": 17.82,
+            "frequency": 4,
+            "title_score": 12.31,
+            "tag_score": 5.51,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 12.31 + 标签 5.51 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三国谋定天下赏金计划；义子又又又开发出新队伍了，这次开发的队伍你给他打几分？#三国谋定天下 #三国谋定天下"
+          },
+          {
+            "keyword": "战争",
+            "score": 16.58,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 16.58,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.58 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "战争"
+          }
+        ]
+      },
+      "evidence": [
+        "文明: 文明；文明6",
+        "手游: SLG手游；taptap手游",
+        "游戏暑期狂欢节: 2024游戏暑期狂欢节；游戏暑期狂欢节",
+        "文明手游: 文明手游；文明手游？评价为吃粑粑都赶不上热乎的玩意！【狗哥锐评《世界启元》】",
+        "氪金: 氪金"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:52:53",
+      "ended_at": "2026-04-24T23:52:54"
+    },
+    {
+      "node_id": "r1_鸿图之下_ecb380",
+      "keyword": "鸿图之下",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "鸿图之下",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:52:56"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 15.83,
+        "candidates": [
+          {
+            "keyword": "腾讯游戏",
+            "score": 15.83,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.83,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.83 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "腾讯游戏"
+          },
+          {
+            "keyword": "桌游棋牌",
+            "score": 15.19,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.19,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.19 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "桌游棋牌"
+          },
+          {
+            "keyword": "义结金兰",
+            "score": 14.92,
+            "frequency": 4,
+            "title_score": 6.56,
+            "tag_score": 8.35,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 6.56 + 标签 8.35 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "义结金兰；鸿图之下3132-义结金兰 开区15日司州关口记录"
+          },
+          {
+            "keyword": "手游情报",
+            "score": 14.7,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.7,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.7 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "手游情报"
+          },
+          {
+            "keyword": "宇宙杯",
+            "score": 14.54,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.54,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.54 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "宇宙杯"
+          },
+          {
+            "keyword": "cg",
+            "score": 13.94,
+            "frequency": 3,
+            "title_score": 3.93,
+            "tag_score": 10.01,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.93 + 标签 10.01 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "CG动画；【初色出品】《鸿图之下》宣传CG"
+          },
+          {
+            "keyword": "vs",
+            "score": 13.26,
+            "frequency": 3,
+            "title_score": 4.19,
+            "tag_score": 9.06,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.19 + 标签 9.06 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "前进之鹰VS阿尔克马；斯图加特VS弗赖堡"
+          },
+          {
+            "keyword": "游戏推荐",
+            "score": 13.08,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 13.08,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 13.08 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏推荐"
+          }
+        ]
+      },
+      "evidence": [
+        "腾讯游戏: 腾讯游戏",
+        "桌游棋牌: 桌游棋牌",
+        "义结金兰: 义结金兰；鸿图之下3132-义结金兰 开区15日司州关口记录",
+        "手游情报: 手游情报",
+        "宇宙杯: 宇宙杯"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:52:54",
+      "ended_at": "2026-04-24T23:52:56"
+    },
+    {
+      "node_id": "r1_汉末霸业_19449a",
+      "keyword": "汉末霸业",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "汉末霸业",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:52:58"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 54.04,
+        "candidates": [
+          {
+            "keyword": "三国志汉末霸业",
+            "score": 54.04,
+            "frequency": 14,
+            "title_score": 37.64,
+            "tag_score": 16.41,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 37.64 + 标签 16.41 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "《三国志汉末霸业》免安装中文版｜内置修改器+全武将解锁｜招兵买马/逐鹿中原｜体验最真；《三国志汉末霸业》新人上手详细教程，游戏内容全面覆盖，看完秒懂，成就霸业！"
+          },
+          {
+            "keyword": "dlc",
+            "score": 30.76,
+            "frequency": 8,
+            "title_score": 25.45,
+            "tag_score": 5.31,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 25.45 + 标签 5.31 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "DLC；《三国志汉末霸业》最新DLC（龙腾虎啸）初步介绍，大量增强了水战系统，喜欢水多的有福"
+          },
+          {
+            "keyword": "推荐宝藏游戏",
+            "score": 26.62,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 26.62,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 26.62 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "推荐宝藏游戏"
+          },
+          {
+            "keyword": "三国游戏",
+            "score": 23.2,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 23.2,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 23.2 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三国游戏"
+          },
+          {
+            "keyword": "整合",
+            "score": 17.54,
+            "frequency": 5,
+            "title_score": 17.54,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 17.54 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "【三国志8重制版 REMAKE 威力加强版】V1.1.3 中字-国语版+全DLC整合；【三国志汉末霸业】V1.1.10.4 豪华中文版+全DLC整合 学习版免安装教程丨资"
+          },
+          {
+            "keyword": "解说",
+            "score": 15.54,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.54,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.54 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "解说"
+          },
+          {
+            "keyword": "娱乐",
+            "score": 14.71,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.71,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.71 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "娱乐"
+          },
+          {
+            "keyword": "steam",
+            "score": 14.41,
+            "frequency": 4,
+            "title_score": 6.34,
+            "tag_score": 8.07,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 6.34 + 标签 8.07 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "steam；steam游戏"
+          }
+        ]
+      },
+      "evidence": [
+        "三国志汉末霸业: 《三国志汉末霸业》免安装中文版｜内置修改器+全武将解锁｜招兵买马/逐鹿中原｜体验最真；《三国志汉末霸业》新人上手详细教程，游戏内容全面覆盖，看完秒懂，成就霸业！",
+        "dlc: DLC；《三国志汉末霸业》最新DLC（龙腾虎啸）初步介绍，大量增强了水战系统，喜欢水多的有福",
+        "推荐宝藏游戏: 推荐宝藏游戏",
+        "三国游戏: 三国游戏",
+        "整合: 【三国志8重制版 REMAKE 威力加强版】V1.1.3 中字-国语版+全DLC整合；【三国志汉末霸业】V1.1.10.4 豪华中文版+全DLC整合 学习版免安装教程丨资"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:52:56",
+      "ended_at": "2026-04-24T23:52:58"
+    },
+    {
+      "node_id": "r1_三国群英传_0dca6d",
+      "keyword": "三国群英传",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三国群英传",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:52:59"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 26.49,
+        "candidates": [
+          {
+            "keyword": "单机游戏",
+            "score": 26.49,
+            "frequency": 6,
+            "title_score": 3.77,
+            "tag_score": 22.73,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.77 + 标签 22.73 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "单机游戏；经典再现！单机游戏《三国群英传》1-8全系列大合集！好好学习！天天向上！"
+          },
+          {
+            "keyword": "演示",
+            "score": 22.48,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 22.48,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 22.48 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "演示"
+          },
+          {
+            "keyword": "即时战略",
+            "score": 22.03,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 22.03,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 22.03 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "即时战略"
+          },
+          {
+            "keyword": "策定九州",
+            "score": 19.59,
+            "frequency": 5,
+            "title_score": 6.89,
+            "tag_score": 12.7,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 6.89 + 标签 12.7 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【三国群英传：策定九州】8级城防守；【三国群英传：策定九州】圣火VS糖心"
+          },
+          {
+            "keyword": "游戏杂谈",
+            "score": 16.08,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.08,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.08 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏杂谈"
+          },
+          {
+            "keyword": "游戏视频",
+            "score": 15.31,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.31,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.31 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏视频"
+          },
+          {
+            "keyword": "童年回忆",
+            "score": 14.8,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.8,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.8 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "童年回忆"
+          },
+          {
+            "keyword": "游戏实况",
+            "score": 14.56,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.56,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.56 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏实况"
+          }
+        ]
+      },
+      "evidence": [
+        "单机游戏: 单机游戏；经典再现！单机游戏《三国群英传》1-8全系列大合集！好好学习！天天向上！",
+        "演示: 演示",
+        "即时战略: 即时战略",
+        "策定九州: 【三国群英传：策定九州】8级城防守；【三国群英传：策定九州】圣火VS糖心",
+        "游戏杂谈: 游戏杂谈"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:52:58",
+      "ended_at": "2026-04-24T23:53:00"
+    },
+    {
+      "node_id": "r1_同人圣三国蜀汉传_958169",
+      "keyword": "同人圣三国蜀汉传",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "同人圣三国蜀汉传",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:01"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 46.37,
+        "candidates": [
+          {
+            "keyword": "mod",
+            "score": 46.37,
+            "frequency": 11,
+            "title_score": 10.39,
+            "tag_score": 35.97,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 10.39 + 标签 35.97 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "MOD；mod游戏"
+          },
+          {
+            "keyword": "一键三连",
+            "score": 28.57,
+            "frequency": 7,
+            "title_score": 2.76,
+            "tag_score": 25.81,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 2.76 + 标签 25.81 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "一键三连；三国群英传，无限内购，无限代金，一键三连"
+          },
+          {
+            "keyword": "公益版",
+            "score": 23.8,
+            "frequency": 7,
+            "title_score": 23.8,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 23.8 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "【同人圣三国蜀汉传】（公益版）无限内购+内置GM后台菜单，任你爽，无偿免费分享速拿～；世界启元   公益版    无限内购  无限资源分享   最新"
+          },
+          {
+            "keyword": "圣三国蜀汉传",
+            "score": 22.54,
+            "frequency": 5,
+            "title_score": 7.75,
+            "tag_score": 14.79,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 7.75 + 标签 14.79 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "圣三国蜀汉传；圣三国蜀汉传 历史线流程攻略"
+          },
+          {
+            "keyword": "三国演义",
+            "score": 20.37,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 20.37,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 20.37 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三国演义"
+          },
+          {
+            "keyword": "怀旧",
+            "score": 20.16,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 20.16,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 20.16 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "怀旧"
+          },
+          {
+            "keyword": "后台",
+            "score": 20.02,
+            "frequency": 5,
+            "title_score": 6.47,
+            "tag_score": 13.55,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 6.47 + 标签 13.55 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "《世界启元》+无限代金+GM后台任刷，★（99亿代金）★（无限代金）★（无限内购） ；【同人圣三国蜀汉传】GM后台（破解） 无限内置随 便唰一建三连免费分享啦"
+          },
+          {
+            "keyword": "曹操传",
+            "score": 19.31,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.31,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.31 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "曹操传mod"
+          }
+        ]
+      },
+      "evidence": [
+        "mod: MOD；mod游戏",
+        "一键三连: 一键三连；三国群英传，无限内购，无限代金，一键三连",
+        "公益版: 【同人圣三国蜀汉传】（公益版）无限内购+内置GM后台菜单，任你爽，无偿免费分享速拿～；世界启元   公益版    无限内购  无限资源分享   最新",
+        "圣三国蜀汉传: 圣三国蜀汉传；圣三国蜀汉传 历史线流程攻略",
+        "三国演义: 三国演义"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:00",
+      "ended_at": "2026-04-24T23:53:02"
+    },
+    {
+      "node_id": "r1_策马三国志_1fee4d",
+      "keyword": "策马三国志",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "策马三国志",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:03"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 19.24,
+        "candidates": [
+          {
+            "keyword": "历史",
+            "score": 19.24,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.24,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.24 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "历史"
+          },
+          {
+            "keyword": "原创",
+            "score": 18.32,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 18.32,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.32 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "原创"
+          },
+          {
+            "keyword": "三国志幻想大陆",
+            "score": 17.22,
+            "frequency": 4,
+            "title_score": 7.58,
+            "tag_score": 9.64,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 7.58 + 标签 9.64 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【三国志幻想大陆】奇境之旅白嫖魂将到马超，氪金细节及商店兑换建议；【三国志幻想大陆】紫苑破阵70万阵容解析，明天开马良直接起飞"
+          },
+          {
+            "keyword": "打卡挑战",
+            "score": 16.43,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.43,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.43 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "打卡挑战"
+          },
+          {
+            "keyword": "rpg",
+            "score": 16.35,
+            "frequency": 4,
+            "title_score": 3.05,
+            "tag_score": 13.3,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.05 + 标签 13.3 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "RPG；三国版的英雄无敌，Xinline Games出品：真战棋！真策略！可竞技的深度战棋R"
+          },
+          {
+            "keyword": "万物皆可游戏",
+            "score": 15.97,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.97,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.97 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "万物皆可游戏"
+          },
+          {
+            "keyword": "三国志英杰传",
+            "score": 15.37,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 15.37,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.37 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三国志英杰传"
+          },
+          {
+            "keyword": "三国志曹操传",
+            "score": 15.06,
+            "frequency": 4,
+            "title_score": 3.14,
+            "tag_score": 11.92,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.14 + 标签 11.92 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三国志曹操传；豪华道具版  同人圣三国蜀汉传 （无敌版）天火同人战棋游戏 三国志曹操传Mod"
+          }
+        ]
+      },
+      "evidence": [
+        "历史: 历史",
+        "原创: 原创",
+        "三国志幻想大陆: 【三国志幻想大陆】奇境之旅白嫖魂将到马超，氪金细节及商店兑换建议；【三国志幻想大陆】紫苑破阵70万阵容解析，明天开马良直接起飞",
+        "打卡挑战: 打卡挑战",
+        "rpg: RPG；三国版的英雄无敌，Xinline Games出品：真战棋！真策略！可竞技的深度战棋R"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:02",
+      "ended_at": "2026-04-24T23:53:03"
+    },
+    {
+      "node_id": "r1_九州劫_719cf6",
+      "keyword": "九州劫",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "九州劫",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:04"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 17.8,
+        "candidates": [
+          {
+            "keyword": "九州",
+            "score": 17.8,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 17.8,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 17.8 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "九州"
+          },
+          {
+            "keyword": "武侠",
+            "score": 17.72,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 17.72,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 17.72 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "武侠"
+          },
+          {
+            "keyword": "新手",
+            "score": 15.06,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.06,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.06 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "新手"
+          },
+          {
+            "keyword": "无限内购",
+            "score": 14.53,
+            "frequency": 5,
+            "title_score": 14.53,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 14.53 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "《世界启元》+无限代金+GM后台任刷，★（99亿代金）★（无限代金）★（无限内购） ；【同人圣三国蜀汉传】（公益版）无限内购+内置GM后台菜单，任你爽，无偿免费分享速拿～"
+          },
+          {
+            "keyword": "吕布",
+            "score": 14.33,
+            "frequency": 3,
+            "title_score": 4.39,
+            "tag_score": 9.94,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.39 + 标签 9.94 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【三国志11 威力加强版】吕布30分钟灭刘备、陶谦  超级难度《群雄割据》剧本；吕布"
+          },
+          {
+            "keyword": "卡牌游戏",
+            "score": 14.27,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.27,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.27 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "卡牌游戏"
+          },
+          {
+            "keyword": "豪华中文版",
+            "score": 14.2,
+            "frequency": 4,
+            "title_score": 14.2,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 14.2 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "【三国志汉末霸业】V1.1.10.4 豪华中文版+全DLC整合 学习版免安装教程丨资；【三国志汉末霸业】V1.1.8 豪华中文版+全DLC整合 学习版免安装教程丨资源丨下"
+          },
+          {
+            "keyword": "ai",
+            "score": 14.19,
+            "frequency": 4,
+            "title_score": 3.17,
+            "tag_score": 11.01,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.17 + 标签 11.01 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "AI；ai绘画"
+          }
+        ]
+      },
+      "evidence": [
+        "九州: 九州",
+        "武侠: 武侠",
+        "新手: 新手",
+        "无限内购: 《世界启元》+无限代金+GM后台任刷，★（99亿代金）★（无限代金）★（无限内购） ；【同人圣三国蜀汉传】（公益版）无限内购+内置GM后台菜单，任你爽，无偿免费分享速拿～",
+        "吕布: 【三国志11 威力加强版】吕布30分钟灭刘备、陶谦  超级难度《群雄割据》剧本；吕布"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:03",
+      "ended_at": "2026-04-24T23:53:05"
+    },
+    {
+      "node_id": "r1_秦皇汉武_cfd23f",
+      "keyword": "秦皇汉武",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "秦皇汉武",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:06"
+      },
+      "crawl_metrics": {
+        "videos": 19,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 19
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 19
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 22.32,
+        "candidates": [
+          {
+            "keyword": "休闲益智",
+            "score": 22.32,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 22.32,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 22.32 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "休闲益智"
+          },
+          {
+            "keyword": "魔改内置后台道具全解锁后",
+            "score": 17.38,
+            "frequency": 5,
+            "title_score": 17.38,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 17.38 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "同人圣三国蜀汉传(公益版)魔改内置后台道具全解锁后台持续更新一键三连关注免费获取-】；同人圣三国蜀汉传最新(公益版)魔改内置后台道具全解锁后台持续更新一键三连免费获取"
+          },
+          {
+            "keyword": "教员",
+            "score": 16.6,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.6,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.6 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "教员"
+          },
+          {
+            "keyword": "gm",
+            "score": 15.39,
+            "frequency": 5,
+            "title_score": 15.39,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 15.39 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "《世界启元》+无限代金+GM后台任刷，★（99亿代金）★（无限代金）★（无限内购） ；【同人圣三国蜀汉传】GM后台（破解） 无限内置随 便唰一建三连免费分享啦"
+          },
+          {
+            "keyword": "无限代金",
+            "score": 14.34,
+            "frequency": 5,
+            "title_score": 14.34,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 14.34 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "《世界启元》+无限代金+GM后台任刷，★（99亿代金）★（无限代金）★（无限内购） ；三国群英传，无限内购，无限代金，一键三连"
+          },
+          {
+            "keyword": "学习版免安装教程丨资源丨",
+            "score": 14.17,
+            "frequency": 4,
+            "title_score": 14.17,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 14.17 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "【三国志8重制版 REMAKE 威力加强版】V1.1.3 中字-国语版+全DLC整合；【三国志汉末霸业】V1.1.10.4 豪华中文版+全DLC整合 学习版免安装教程丨资"
+          },
+          {
+            "keyword": "下载",
+            "score": 14.17,
+            "frequency": 4,
+            "title_score": 14.17,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 14.17 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "【三国志8重制版 REMAKE 威力加强版】V1.1.3 中字-国语版+全DLC整合；【三国志汉末霸业】V1.1.10.4 豪华中文版+全DLC整合 学习版免安装教程丨资"
+          },
+          {
+            "keyword": "测评",
+            "score": 14.12,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.12,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.12 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "测评"
+          }
+        ]
+      },
+      "evidence": [
+        "休闲益智: 休闲益智",
+        "魔改内置后台道具全解锁后: 同人圣三国蜀汉传(公益版)魔改内置后台道具全解锁后台持续更新一键三连关注免费获取-】；同人圣三国蜀汉传最新(公益版)魔改内置后台道具全解锁后台持续更新一键三连免费获取",
+        "教员: 教员",
+        "gm: 《世界启元》+无限代金+GM后台任刷，★（99亿代金）★（无限代金）★（无限内购） ；【同人圣三国蜀汉传】GM后台（破解） 无限内置随 便唰一建三连免费分享啦",
+        "无限代金: 《世界启元》+无限代金+GM后台任刷，★（99亿代金）★（无限代金）★（无限内购） ；三国群英传，无限内购，无限代金，一键三连"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:05",
+      "ended_at": "2026-04-24T23:53:06"
+    },
+    {
+      "node_id": "r1_全战三国_ec1f87",
+      "keyword": "全战三国",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "全战三国",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:08"
+      },
+      "crawl_metrics": {
+        "videos": 19,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 19
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 19
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 63.53,
+        "candidates": [
+          {
+            "keyword": "全面战争",
+            "score": 63.53,
+            "frequency": 12,
+            "title_score": 13.76,
+            "tag_score": 49.77,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 13.76 + 标签 49.77 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【全面战争:三国】皇叔失败cg；【整理】全面战争：三国最全中文CG宣传片"
+          },
+          {
+            "keyword": "全面战争三国",
+            "score": 27.53,
+            "frequency": 5,
+            "title_score": 4.84,
+            "tag_score": 22.69,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.84 + 标签 22.69 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【完结】【全面战争三国】从零开始丨硬核实况全流程；全面战争三国"
+          },
+          {
+            "keyword": "全战",
+            "score": 26.92,
+            "frequency": 5,
+            "title_score": 3.9,
+            "tag_score": 23.01,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.9 + 标签 23.01 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "全战；全战：三国 阵型小讲堂  混合射击  长矛盾墙"
+          },
+          {
+            "keyword": "单机联机",
+            "score": 21.74,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 21.74,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 21.74 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "单机联机"
+          },
+          {
+            "keyword": "三国全面战争",
+            "score": 21.41,
+            "frequency": 4,
+            "title_score": 4.12,
+            "tag_score": 17.29,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.12 + 标签 17.29 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三国全面战争；三国全面战争1.9C吕布速推曹操第一期"
+          },
+          {
+            "keyword": "整点电子榨菜",
+            "score": 21.22,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 21.22,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 21.22 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "整点电子榨菜"
+          },
+          {
+            "keyword": "实况解说",
+            "score": 19.33,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.33,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.33 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "实况解说"
+          },
+          {
+            "keyword": "直播录像",
+            "score": 18.72,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 18.72,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.72 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "直播录像"
+          }
+        ]
+      },
+      "evidence": [
+        "全面战争: 【全面战争:三国】皇叔失败cg；【整理】全面战争：三国最全中文CG宣传片",
+        "全面战争三国: 【完结】【全面战争三国】从零开始丨硬核实况全流程；全面战争三国",
+        "全战: 全战；全战：三国 阵型小讲堂  混合射击  长矛盾墙",
+        "单机联机: 单机联机",
+        "三国全面战争: 三国全面战争；三国全面战争1.9C吕布速推曹操第一期"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:06",
+      "ended_at": "2026-04-24T23:53:08"
+    },
+    {
+      "node_id": "r1_三国志_5b0664",
+      "keyword": "三国志",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三国志",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:09"
+      },
+      "crawl_metrics": {
+        "videos": 18,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 18
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 18
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 24.51,
+        "candidates": [
+          {
+            "keyword": "游戏集锦",
+            "score": 24.51,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 24.51,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 24.51 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏集锦"
+          },
+          {
+            "keyword": "单机",
+            "score": 22.9,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 22.9,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 22.9 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "单机"
+          },
+          {
+            "keyword": "怀旧游戏",
+            "score": 19.93,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.93,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.93 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "怀旧游戏"
+          },
+          {
+            "keyword": "三幻",
+            "score": 19.55,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.55,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.55 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三幻"
+          },
+          {
+            "keyword": "记录",
+            "score": 18.28,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 18.28,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.28 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "记录"
+          },
+          {
+            "keyword": "up",
+            "score": 18.21,
+            "frequency": 4,
+            "title_score": 4.0,
+            "tag_score": 14.22,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.0 + 标签 14.22 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三国志战略版零氪到底能不能玩？！曾经一毛不氪的UP为什么在新区氪金1万？零氪微氪S1；绝区零UP主激励计划"
+          },
+          {
+            "keyword": "pk",
+            "score": 15.48,
+            "frequency": 4,
+            "title_score": 6.81,
+            "tag_score": 8.67,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 6.81 + 标签 8.67 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "PK；三国志11PK 英雄集结『零陵-刘度』势力武将全身造型"
+          },
+          {
+            "keyword": "骑马与砍杀",
+            "score": 15.27,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.27,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.27 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "骑马与砍杀"
+          }
+        ]
+      },
+      "evidence": [
+        "游戏集锦: 游戏集锦",
+        "单机: 单机",
+        "怀旧游戏: 怀旧游戏",
+        "三幻: 三幻",
+        "记录: 记录"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:08",
+      "ended_at": "2026-04-24T23:53:09"
+    },
+    {
+      "node_id": "r1_三国SLG_0cc9cc",
+      "keyword": "三国SLG",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三国SLG",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:11"
+      },
+      "crawl_metrics": {
+        "videos": 19,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 19
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 19
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 35.25,
+        "candidates": [
+          {
+            "keyword": "从夯到拉",
+            "score": 35.25,
+            "frequency": 7,
+            "title_score": 17.67,
+            "tag_score": 17.59,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 17.67 + 标签 17.59 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【从夯到拉】盘点9款SLG绅游，哪款是你的菜😋；【从夯到拉】盘点9款绅游，SLG、RPG、3D、旮旯给木多个类型"
+          },
+          {
+            "keyword": "沙盒游戏",
+            "score": 32.8,
+            "frequency": 7,
+            "title_score": 8.5,
+            "tag_score": 24.3,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 8.5 + 标签 24.3 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "沙盒游戏；谁是最强沙盒SLG? #单机游戏 #单机游戏推荐 #沙盒游戏 #沙盒SLG #游戏"
+          },
+          {
+            "keyword": "王道天下",
+            "score": 17.19,
+            "frequency": 4,
+            "title_score": 8.23,
+            "tag_score": 8.96,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 8.23 + 标签 8.96 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "B站新SLG《三国志：王道天下》首测锐评建议&amp;PV解读；《三国志：王道天下》隔壁最大的对手来了，隔壁连夜加强老武将"
+          },
+          {
+            "keyword": "绅游",
+            "score": 16.66,
+            "frequency": 3,
+            "title_score": 4.67,
+            "tag_score": 12.0,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.67 + 标签 12.0 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【从夯到拉】盘点9款SLG绅游，哪款是你的菜😋；绅游"
+          },
+          {
+            "keyword": "游戏区周年庆创作者激励计",
+            "score": 16.45,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.45,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.45 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三谋x游戏区周年庆创作者激励计划"
+          },
+          {
+            "keyword": "三谋周年庆新服",
+            "score": 16.16,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.16,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.16 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "614三谋周年庆新服"
+          },
+          {
+            "keyword": "谋女郎掀起瓦",
+            "score": 16.16,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.16,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.16 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "谋女郎掀起瓦GO之争"
+          },
+          {
+            "keyword": "go",
+            "score": 16.16,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.16,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.16 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "谋女郎掀起瓦GO之争"
+          }
+        ]
+      },
+      "evidence": [
+        "从夯到拉: 【从夯到拉】盘点9款SLG绅游，哪款是你的菜😋；【从夯到拉】盘点9款绅游，SLG、RPG、3D、旮旯给木多个类型",
+        "沙盒游戏: 沙盒游戏；谁是最强沙盒SLG? #单机游戏 #单机游戏推荐 #沙盒游戏 #沙盒SLG #游戏",
+        "王道天下: B站新SLG《三国志：王道天下》首测锐评建议&amp;PV解读；《三国志：王道天下》隔壁最大的对手来了，隔壁连夜加强老武将",
+        "绅游: 【从夯到拉】盘点9款SLG绅游，哪款是你的菜😋；绅游",
+        "游戏区周年庆创作者激励计: 三谋x游戏区周年庆创作者激励计划"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:09",
+      "ended_at": "2026-04-24T23:53:11"
+    },
+    {
+      "node_id": "r1_沙盘战略_dfc604",
+      "keyword": "沙盘战略",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "沙盘战略",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:13"
+      },
+      "crawl_metrics": {
+        "videos": 19,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 19
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 19
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 52.65,
+        "candidates": [
+          {
+            "keyword": "沙盘",
+            "score": 52.65,
+            "frequency": 10,
+            "title_score": 3.93,
+            "tag_score": 48.72,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.93 + 标签 48.72 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "沙盘；沙盘多次学习梦幻西游手游的方法-沙盘Sanboxie 2024.03.06.@梦幻西"
+          },
+          {
+            "keyword": "光影迷局",
+            "score": 23.36,
+            "frequency": 5,
+            "title_score": 3.87,
+            "tag_score": 19.49,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.87 + 标签 19.49 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "AFK2光影迷局；【光影迷局】第2轮沙盘密蕈郁林BOSS打法配队一图流汇总"
+          },
+          {
+            "keyword": "重返未来",
+            "score": 22.7,
+            "frequency": 5,
+            "title_score": 3.73,
+            "tag_score": 18.97,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.73 + 标签 18.97 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "{重返未来1999}沙盘解构 完结；重返未来1999"
+          },
+          {
+            "keyword": "沙盘战争",
+            "score": 19.18,
+            "frequency": 5,
+            "title_score": 14.74,
+            "tag_score": 4.44,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 14.74 + 标签 4.44 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【水子哥】【沙盘战争：三国】：三国时期的战略模拟游戏；三国战略 steam新游《沙盘战争：三国》等你来！"
+          },
+          {
+            "keyword": "美国",
+            "score": 19.09,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.09,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.09 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "美国"
+          },
+          {
+            "keyword": "军事",
+            "score": 16.8,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.8,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.8 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "军事"
+          },
+          {
+            "keyword": "沙雕",
+            "score": 16.55,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.55,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.55 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "沙雕"
+          },
+          {
+            "keyword": "人物",
+            "score": 16.39,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.39,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.39 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "人物"
+          }
+        ]
+      },
+      "evidence": [
+        "沙盘: 沙盘；沙盘多次学习梦幻西游手游的方法-沙盘Sanboxie 2024.03.06.@梦幻西",
+        "光影迷局: AFK2光影迷局；【光影迷局】第2轮沙盘密蕈郁林BOSS打法配队一图流汇总",
+        "重返未来: {重返未来1999}沙盘解构 完结；重返未来1999",
+        "沙盘战争: 【水子哥】【沙盘战争：三国】：三国时期的战略模拟游戏；三国战略 steam新游《沙盘战争：三国》等你来！",
+        "美国: 美国"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:11",
+      "ended_at": "2026-04-24T23:53:13"
+    },
+    {
+      "node_id": "r1_率土like_b34c18",
+      "keyword": "率土like",
+      "parent_id": "",
+      "round": 1,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "率土like",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:14"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 35.21,
+        "candidates": [
+          {
+            "keyword": "率土",
+            "score": 35.21,
+            "frequency": 8,
+            "title_score": 24.71,
+            "tag_score": 10.5,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 24.71 + 标签 10.5 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "《三谋》万字测评： 变革之路，率土like的破局与新生；【深度】从页游到手游，率土like为什么能重启辉煌？"
+          },
+          {
+            "keyword": "like",
+            "score": 22.73,
+            "frequency": 6,
+            "title_score": 22.73,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 22.73 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "4月30日的bro Be like；《三谋》万字测评： 变革之路，率土like的破局与新生"
+          },
+          {
+            "keyword": "我在",
+            "score": 16.51,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 16.51,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.51 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "我在B站做游戏；我在B站直播率土之滨"
+          },
+          {
+            "keyword": "之争",
+            "score": 16.16,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.16,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.16 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "谋女郎掀起瓦GO之争"
+          },
+          {
+            "keyword": "非酋",
+            "score": 15.7,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.7,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.7 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "非酋"
+          },
+          {
+            "keyword": "分享游戏故事",
+            "score": 15.68,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.68,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.68 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "分享游戏故事"
+          },
+          {
+            "keyword": "热门游戏推荐",
+            "score": 15.34,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.34,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.34 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "热门游戏推荐"
+          },
+          {
+            "keyword": "游戏单机",
+            "score": 15.34,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.34,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.34 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏单机"
+          }
+        ]
+      },
+      "evidence": [
+        "率土: 《三谋》万字测评： 变革之路，率土like的破局与新生；【深度】从页游到手游，率土like为什么能重启辉煌？",
+        "like: 4月30日的bro Be like；《三谋》万字测评： 变革之路，率土like的破局与新生",
+        "我在: 我在B站做游戏；我在B站直播率土之滨",
+        "之争: 谋女郎掀起瓦GO之争",
+        "非酋: 非酋"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:13",
+      "ended_at": "2026-04-24T23:53:15"
+    },
+    {
+      "node_id": "r2_三战创作者计划_afef2e",
+      "keyword": "三战创作者计划",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三战创作者计划",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:16"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 19.44,
+        "candidates": [
+          {
+            "keyword": "学习",
+            "score": 19.44,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 19.44,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.44 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "学习"
+          },
+          {
+            "keyword": "lpl",
+            "score": 16.38,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.38,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.38 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "2023LPL激励计划第一期；LPL"
+          },
+          {
+            "keyword": "新人",
+            "score": 15.81,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.81,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.81 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "新人"
+          },
+          {
+            "keyword": "sp",
+            "score": 15.44,
+            "frequency": 4,
+            "title_score": 11.45,
+            "tag_score": 3.99,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 11.45 + 标签 3.99 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "SP貂蝉彻底无敌！史上最变态的队伍诞生#三国志战略版#三战创作者计划；sp貂蝉"
+          },
+          {
+            "keyword": "曹操",
+            "score": 15.37,
+            "frequency": 3,
+            "title_score": 3.73,
+            "tag_score": 11.64,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.73 + 标签 11.64 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三战5+1稀有卡最新版本（到SP曹操）；曹操"
+          },
+          {
+            "keyword": "宣传片",
+            "score": 15.21,
+            "frequency": 3,
+            "title_score": 4.49,
+            "tag_score": 10.72,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.49 + 标签 10.72 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【整理】全面战争：三国最全中文CG宣传片；宣传片"
+          },
+          {
+            "keyword": "美女",
+            "score": 15.07,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.07,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.07 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "美女"
+          },
+          {
+            "keyword": "甄姬",
+            "score": 15.06,
+            "frequency": 3,
+            "title_score": 4.15,
+            "tag_score": 10.91,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.15 + 标签 10.91 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "三国群英传8貂蝉vs甄姬 单挑三百回合；甄姬"
+          }
+        ]
+      },
+      "evidence": [
+        "学习: 学习",
+        "lpl: 2023LPL激励计划第一期；LPL",
+        "新人: 新人",
+        "sp: SP貂蝉彻底无敌！史上最变态的队伍诞生#三国志战略版#三战创作者计划；sp貂蝉",
+        "曹操: 三战5+1稀有卡最新版本（到SP曹操）；曹操"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:15",
+      "ended_at": "2026-04-24T23:53:16"
+    },
+    {
+      "node_id": "r2_三战_b99917",
+      "keyword": "三战",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三战",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:17"
+      },
+      "crawl_metrics": {
+        "videos": 18,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 18
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 18
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 22.85,
+        "candidates": [
+          {
+            "keyword": "星穹铁道",
+            "score": 22.85,
+            "frequency": 5,
+            "title_score": 7.76,
+            "tag_score": 15.08,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 7.76 + 标签 15.08 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【星穹铁道】2.1匹诺康尼·朝露公馆Part.1沙盘模型区域战利品宝箱全收集；【星穹铁道】海原电视塔三个战狸品位置"
+          },
+          {
+            "keyword": "合集",
+            "score": 20.38,
+            "frequency": 4,
+            "title_score": 9.68,
+            "tag_score": 10.7,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 9.68 + 标签 10.7 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【4K】三国志14汉室复兴计（已完结）（合集）；合集"
+          },
+          {
+            "keyword": "中东",
+            "score": 20.31,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 20.31,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 20.31 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "中东"
+          },
+          {
+            "keyword": "三英战吕布",
+            "score": 19.79,
+            "frequency": 5,
+            "title_score": 6.13,
+            "tag_score": 13.66,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 6.13 + 标签 13.66 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "《一百元租个精神小妹》第3集-三英战吕布；三英战吕布"
+          },
+          {
+            "keyword": "站做游戏",
+            "score": 18.34,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 18.34,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.34 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "我在B站做游戏"
+          },
+          {
+            "keyword": "tf",
+            "score": 16.92,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.92,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.92 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "TF三代；TF四代"
+          },
+          {
+            "keyword": "伊朗",
+            "score": 16.12,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.12,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.12 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "伊朗"
+          },
+          {
+            "keyword": "生活记录",
+            "score": 15.02,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.02,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.02 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "生活记录"
+          }
+        ]
+      },
+      "evidence": [
+        "星穹铁道: 【星穹铁道】2.1匹诺康尼·朝露公馆Part.1沙盘模型区域战利品宝箱全收集；【星穹铁道】海原电视塔三个战狸品位置",
+        "合集: 【4K】三国志14汉室复兴计（已完结）（合集）；合集",
+        "中东: 中东",
+        "三英战吕布: 《一百元租个精神小妹》第3集-三英战吕布；三英战吕布",
+        "站做游戏: 我在B站做游戏"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:16",
+      "ended_at": "2026-04-24T23:53:18"
+    },
+    {
+      "node_id": "r2_平民_99742a",
+      "keyword": "平民",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "平民",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:19"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 29.09,
+        "candidates": [
+          {
+            "keyword": "boss",
+            "score": 29.09,
+            "frequency": 7,
+            "title_score": 10.98,
+            "tag_score": 18.1,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 10.98 + 标签 18.1 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "BOSS；BOSS战进入第三阶段"
+          },
+          {
+            "keyword": "奥拉星",
+            "score": 25.38,
+            "frequency": 6,
+            "title_score": 7.02,
+            "tag_score": 18.36,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 7.02 + 标签 18.36 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【鸽】奥拉星：须臾平民阵容稳定速推打法！；奥拉星"
+          },
+          {
+            "keyword": "植物大战僵尸",
+            "score": 22.05,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 22.05,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 22.05 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "植物大战僵尸；植物大战僵尸2"
+          },
+          {
+            "keyword": "崩坏",
+            "score": 19.55,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 19.55,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.55 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "崩坏：星穹铁道创作者激励计划"
+          },
+          {
+            "keyword": "星穹铁道创作者激励计划",
+            "score": 19.55,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 19.55,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 19.55 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "崩坏：星穹铁道创作者激励计划"
+          },
+          {
+            "keyword": "动作游戏",
+            "score": 18.01,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 18.01,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.01 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "动作游戏"
+          },
+          {
+            "keyword": "欧皇",
+            "score": 14.87,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.87,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.87 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "欧皇"
+          },
+          {
+            "keyword": "游戏测评",
+            "score": 14.85,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.85,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.85 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏测评"
+          }
+        ]
+      },
+      "evidence": [
+        "boss: BOSS；BOSS战进入第三阶段",
+        "奥拉星: 【鸽】奥拉星：须臾平民阵容稳定速推打法！；奥拉星",
+        "植物大战僵尸: 植物大战僵尸；植物大战僵尸2",
+        "崩坏: 崩坏：星穹铁道创作者激励计划",
+        "星穹铁道创作者激励计划: 崩坏：星穹铁道创作者激励计划"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:18",
+      "ended_at": "2026-04-24T23:53:20"
+    },
+    {
+      "node_id": "r2_教程攻略_9cedf1",
+      "keyword": "教程攻略",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "教程攻略",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:21"
+      },
+      "crawl_metrics": {
+        "videos": 17,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 17
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 17
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 16.48,
+        "candidates": [
+          {
+            "keyword": "模拟经营",
+            "score": 16.48,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 16.48,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.48 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "模拟经营"
+          },
+          {
+            "keyword": "新手教学",
+            "score": 14.8,
+            "frequency": 3,
+            "title_score": 4.2,
+            "tag_score": 10.6,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.2 + 标签 10.6 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【三国群英传2新手教学】操作篇；新手教学"
+          },
+          {
+            "keyword": "创作者激励计划",
+            "score": 14.69,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.69,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.69 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "崩坏星穹铁道2.1创作者激励计划；重返未来1999创作者激励计划"
+          },
+          {
+            "keyword": "新手攻略",
+            "score": 14.67,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.67,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.67 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "新手攻略"
+          },
+          {
+            "keyword": "be",
+            "score": 14.61,
+            "frequency": 4,
+            "title_score": 14.61,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 14.61 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "4月30日的bro Be like；【跑团TV】平均TRPG体验Be like：Pt.0 试播集"
+          },
+          {
+            "keyword": "赵云",
+            "score": 14.37,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.37,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.37 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "赵云"
+          },
+          {
+            "keyword": "实战",
+            "score": 14.35,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.35,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.35 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "实战"
+          },
+          {
+            "keyword": "小说",
+            "score": 14.32,
+            "frequency": 3,
+            "title_score": 4.35,
+            "tag_score": 9.97,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.35 + 标签 9.97 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【沙盘演示】尧山之战（上）——娄室火力大侦察，赵玖宜佑门托孤——小说《绍宋》沙盘系列；小说"
+          }
+        ]
+      },
+      "evidence": [
+        "模拟经营: 模拟经营",
+        "新手教学: 【三国群英传2新手教学】操作篇；新手教学",
+        "创作者激励计划: 崩坏星穹铁道2.1创作者激励计划；重返未来1999创作者激励计划",
+        "新手攻略: 新手攻略",
+        "be: 4月30日的bro Be like；【跑团TV】平均TRPG体验Be like：Pt.0 试播集"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:20",
+      "ended_at": "2026-04-24T23:53:21"
+    },
+    {
+      "node_id": "r2_零氪_336cc0",
+      "keyword": "零氪",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "零氪",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:22"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 33.53,
+        "candidates": [
+          {
+            "keyword": "第五人格",
+            "score": 33.53,
+            "frequency": 9,
+            "title_score": 13.52,
+            "tag_score": 20.01,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 13.52 + 标签 20.01 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【第五人格】全角色签名动作获取时间表来啦！今天上线活动还可领碎片4888＋3888灵；【第五人格】周四更新大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋1"
+          },
+          {
+            "keyword": "灵感",
+            "score": 30.73,
+            "frequency": 8,
+            "title_score": 13.52,
+            "tag_score": 17.21,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 13.52 + 标签 17.21 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【第五人格】全角色签名动作获取时间表来啦！今天上线活动还可领碎片4888＋3888灵；【第五人格】周四更新大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋1"
+          },
+          {
+            "keyword": "紫薯",
+            "score": 22.64,
+            "frequency": 6,
+            "title_score": 9.82,
+            "tag_score": 12.82,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 9.82 + 标签 12.82 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【第五人格】周四更新大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋1；【第五人格】新赛季大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋19"
+          },
+          {
+            "keyword": "赛季",
+            "score": 14.18,
+            "frequency": 3,
+            "title_score": 4.22,
+            "tag_score": 9.96,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.22 + 标签 9.96 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "看看小学生发的法令啊“PK赛季”啊？？；赛季"
+          },
+          {
+            "keyword": "电子竞技",
+            "score": 14.17,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 14.17,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.17 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "电子竞技"
+          },
+          {
+            "keyword": "宝箱",
+            "score": 14.16,
+            "frequency": 3,
+            "title_score": 3.94,
+            "tag_score": 10.22,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.94 + 标签 10.22 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "宝箱；崩铁4.2海原市三个战狸品一条龙陪跑攻略/海原市/海原电视塔/宝箱/全收集"
+          },
+          {
+            "keyword": "剑与远征启程",
+            "score": 14.13,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.13,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.13 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "剑与远征启程"
+          },
+          {
+            "keyword": "魔法家园",
+            "score": 14.13,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.13,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.13 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "魔法家园"
+          }
+        ]
+      },
+      "evidence": [
+        "第五人格: 【第五人格】全角色签名动作获取时间表来啦！今天上线活动还可领碎片4888＋3888灵；【第五人格】周四更新大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋1",
+        "灵感: 【第五人格】全角色签名动作获取时间表来啦！今天上线活动还可领碎片4888＋3888灵；【第五人格】周四更新大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋1",
+        "紫薯: 【第五人格】周四更新大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋1；【第五人格】新赛季大揭秘+八周年庆所有白嫖福利汇总！今日上新线就送5688紫薯＋19",
+        "赛季: 看看小学生发的法令啊“PK赛季”啊？？；赛季",
+        "电子竞技: 电子竞技"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:21",
+      "ended_at": "2026-04-24T23:53:23"
+    },
+    {
+      "node_id": "r2_游戏知识分享官_bf7b08",
+      "keyword": "游戏知识分享官",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "游戏知识分享官",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:24"
+      },
+      "crawl_metrics": {
+        "videos": 20,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 20
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 20
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 26.96,
+        "candidates": [
+          {
+            "keyword": "游戏鉴赏家",
+            "score": 26.96,
+            "frequency": 5,
+            "title_score": 0.0,
+            "tag_score": 26.96,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 26.96 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "游戏鉴赏家"
+          },
+          {
+            "keyword": "独立游戏",
+            "score": 23.81,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 23.81,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 23.81 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "独立游戏"
+          },
+          {
+            "keyword": "恐怖游戏",
+            "score": 23.79,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 23.79,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 23.79 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "恐怖游戏"
+          },
+          {
+            "keyword": "生化危机",
+            "score": 23.32,
+            "frequency": 4,
+            "title_score": 4.84,
+            "tag_score": 18.48,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.84 + 标签 18.48 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【生化危机9：安魂曲】4K 最高难度 全收集 全结局 全流程无伤通关攻略 生存恐怖动；生化危机"
+          },
+          {
+            "keyword": "完结",
+            "score": 22.75,
+            "frequency": 5,
+            "title_score": 22.75,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 22.75 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "{重返未来1999}沙盘解构 完结；【完结】【全面战争三国】从零开始丨硬核实况全流程"
+          },
+          {
+            "keyword": "ps",
+            "score": 18.94,
+            "frequency": 4,
+            "title_score": 3.25,
+            "tag_score": 15.68,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.25 + 标签 15.68 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "PS1；PS5"
+          },
+          {
+            "keyword": "mmorpg",
+            "score": 18.11,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 18.11,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.11 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "MMORPG"
+          },
+          {
+            "keyword": "小游戏",
+            "score": 18.07,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 18.07,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.07 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "小游戏"
+          }
+        ]
+      },
+      "evidence": [
+        "游戏鉴赏家: 游戏鉴赏家",
+        "独立游戏: 独立游戏",
+        "恐怖游戏: 恐怖游戏",
+        "生化危机: 【生化危机9：安魂曲】4K 最高难度 全收集 全结局 全流程无伤通关攻略 生存恐怖动；生化危机",
+        "完结: {重返未来1999}沙盘解构 完结；【完结】【全面战争三国】从零开始丨硬核实况全流程"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:23",
+      "ended_at": "2026-04-24T23:53:25"
+    },
+    {
+      "node_id": "r2_三国志战略版攻略_df2323",
+      "keyword": "三国志战略版攻略",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "三国志战略版攻略",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:26"
+      },
+      "crawl_metrics": {
+        "videos": 11,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 11
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 11
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 18.04,
+        "candidates": [
+          {
+            "keyword": "黄油",
+            "score": 18.04,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 18.04,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.04 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "黄油"
+          },
+          {
+            "keyword": "貂蝉",
+            "score": 17.58,
+            "frequency": 4,
+            "title_score": 8.31,
+            "tag_score": 9.28,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 8.31 + 标签 9.28 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "sp貂蝉；三国群英传8貂蝉vs甄姬 单挑三百回合"
+          },
+          {
+            "keyword": "教学",
+            "score": 17.3,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 17.3,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 17.3 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "教学"
+          },
+          {
+            "keyword": "童年",
+            "score": 17.29,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 17.29,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 17.29 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "童年"
+          },
+          {
+            "keyword": "安魂曲",
+            "score": 17.16,
+            "frequency": 3,
+            "title_score": 4.84,
+            "tag_score": 12.32,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.84 + 标签 12.32 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【生化危机9：安魂曲】4K 最高难度 全收集 全结局 全流程无伤通关攻略 生存恐怖动；安魂曲"
+          },
+          {
+            "keyword": "死亡岛",
+            "score": 17.16,
+            "frequency": 3,
+            "title_score": 4.84,
+            "tag_score": 12.32,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.84 + 标签 12.32 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【死亡岛2】4K 最高画质 全任务 全剧情流程通关攻略 丧尸动作冒险游戏 - Dea；死亡岛"
+          },
+          {
+            "keyword": "武将",
+            "score": 17.1,
+            "frequency": 4,
+            "title_score": 3.41,
+            "tag_score": 13.69,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 3.41 + 标签 13.69 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "【三国志战略版】PK1开荒攻略第三期：武将&amp;战法的搭配；武将"
+          },
+          {
+            "keyword": "游戏剧情",
+            "score": 16.08,
+            "frequency": 3,
+            "title_score": 4.61,
+            "tag_score": 11.47,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.61 + 标签 11.47 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "《我能进来吗》游戏剧情；游戏剧情"
+          }
+        ]
+      },
+      "evidence": [
+        "黄油: 黄油",
+        "貂蝉: sp貂蝉；三国群英传8貂蝉vs甄姬 单挑三百回合",
+        "教学: 教学",
+        "童年: 童年",
+        "安魂曲: 【生化危机9：安魂曲】4K 最高难度 全收集 全结局 全流程无伤通关攻略 生存恐怖动；安魂曲"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:25",
+      "ended_at": "2026-04-24T23:53:26"
+    },
+    {
+      "node_id": "r2_有啥配啥打天下_b2fb17",
+      "keyword": "有啥配啥打天下",
+      "parent_id": "r1_三国志战略版_2d9c07",
+      "round": 2,
+      "status": "success",
+      "search_metrics": {
+        "snapshot_date": "2026-04-24",
+        "platform": "bilibili",
+        "keyword": "有啥配啥打天下",
+        "order": "totalrank",
+        "limit": 20,
+        "total_results": 1000,
+        "total_results_display": ">=1000",
+        "is_capped": true,
+        "num_pages": 24,
+        "page_size": 42,
+        "fetched_count": 20,
+        "pages": 1,
+        "error": "",
+        "created_at": "2026-04-24T23:53:27"
+      },
+      "crawl_metrics": {
+        "videos": 19,
+        "comments": 0,
+        "touched_files": [
+          {
+            "path": "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+            "row_delta": 1
+          },
+          {
+            "path": "data/summary/daily/2026-04-24_summary.csv",
+            "row_delta": 19
+          },
+          {
+            "path": "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv",
+            "row_delta": 19
+          }
+        ]
+      },
+      "candidate_metrics": {
+        "count": 8,
+        "top_score": 20.28,
+        "candidates": [
+          {
+            "keyword": "eve",
+            "score": 20.28,
+            "frequency": 4,
+            "title_score": 4.21,
+            "tag_score": 16.07,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.21 + 标签 16.07 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "EVE；EVE星战前夜"
+          },
+          {
+            "keyword": "fps",
+            "score": 18.55,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 18.55,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.55 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "FPS"
+          },
+          {
+            "keyword": "三国杀",
+            "score": 18.38,
+            "frequency": 4,
+            "title_score": 0.0,
+            "tag_score": 18.38,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 18.38 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "三国杀；三国杀OL"
+          },
+          {
+            "keyword": "amp",
+            "score": 17.49,
+            "frequency": 5,
+            "title_score": 17.49,
+            "tag_score": 0.0,
+            "comment_score": 0.0,
+            "sources": "标题",
+            "formula": "标题 17.49 + 标签 0.0 + 高赞评论 0.0",
+            "reason": "来自标题，可作为下一轮搜索触点",
+            "evidence": "B站新SLG《三国志：王道天下》首测锐评建议&amp;PV解读；【三国志战略版】PK1开荒攻略第三期：武将&amp;战法的搭配"
+          },
+          {
+            "keyword": "网络游戏",
+            "score": 16.1,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 16.1,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 16.1 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "网络游戏"
+          },
+          {
+            "keyword": "经典游戏",
+            "score": 15.38,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 15.38,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 15.38 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "经典游戏"
+          },
+          {
+            "keyword": "arpg",
+            "score": 15.27,
+            "frequency": 3,
+            "title_score": 4.54,
+            "tag_score": 10.73,
+            "comment_score": 0.0,
+            "sources": "标签 / 标题",
+            "formula": "标题 4.54 + 标签 10.73 + 高赞评论 0.0",
+            "reason": "来自标签、标题，可作为下一轮搜索触点",
+            "evidence": "ARPG；究竟是神作还是粪作？韩国最新开放世界ARPG《红色沙漠》游戏测评！"
+          },
+          {
+            "keyword": "生存",
+            "score": 14.82,
+            "frequency": 3,
+            "title_score": 0.0,
+            "tag_score": 14.82,
+            "comment_score": 0.0,
+            "sources": "标签",
+            "formula": "标题 0.0 + 标签 14.82 + 高赞评论 0.0",
+            "reason": "来自标签，可作为下一轮搜索触点",
+            "evidence": "生存"
+          }
+        ]
+      },
+      "evidence": [
+        "eve: EVE；EVE星战前夜",
+        "fps: FPS",
+        "三国杀: 三国杀；三国杀OL",
+        "amp: B站新SLG《三国志：王道天下》首测锐评建议&amp;PV解读；【三国志战略版】PK1开荒攻略第三期：武将&amp;战法的搭配",
+        "网络游戏: 网络游戏"
+      ],
+      "stop_reason": "",
+      "started_at": "2026-04-24T23:53:26",
+      "ended_at": "2026-04-24T23:53:28"
+    }
+  ],
+  "edges": [
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_三战创作者计划_afef2e",
+      "keyword": "三战创作者计划"
+    },
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_三战_b99917",
+      "keyword": "三战"
+    },
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_平民_99742a",
+      "keyword": "平民"
+    },
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_教程攻略_9cedf1",
+      "keyword": "教程攻略"
+    },
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_零氪_336cc0",
+      "keyword": "零氪"
+    },
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_游戏知识分享官_bf7b08",
+      "keyword": "游戏知识分享官"
+    },
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_三国志战略版攻略_df2323",
+      "keyword": "三国志战略版攻略"
+    },
+    {
+      "from": "r1_三国志战略版_2d9c07",
+      "to": "r2_有啥配啥打天下_b2fb17",
+      "keyword": "有啥配啥打天下"
+    }
+  ],
+  "events": [
+    {
+      "time": "2026-04-24T23:52:47",
+      "type": "start",
+      "message": "递归采集任务启动",
+      "payload": {
+        "seed_keywords": [
+          "三国志战略版",
+          "率土之滨",
+          "三国谋定天下",
+          "世界启元",
+          "鸿图之下",
+          "汉末霸业",
+          "三国群英传",
+          "同人圣三国蜀汉传",
+          "策马三国志",
+          "九州劫",
+          "秦皇汉武",
+          "全战三国",
+          "三国志",
+          "三国SLG",
+          "沙盘战略",
+          "率土like"
+        ]
+      }
+    },
+    {
+      "time": "2026-04-24T23:52:47",
+      "type": "node_start",
+      "message": "开始采集关键词：三国志战略版",
+      "payload": {
+        "node_id": "r1_三国志战略版_2d9c07"
+      }
+    },
+    {
+      "time": "2026-04-24T23:52:49",
+      "type": "node_start",
+      "message": "开始采集关键词：率土之滨",
+      "payload": {
+        "node_id": "r1_率土之滨_55eabd"
+      }
+    },
+    {
+      "time": "2026-04-24T23:52:51",
+      "type": "node_start",
+      "message": "开始采集关键词：三国谋定天下",
+      "payload": {
+        "node_id": "r1_三国谋定天下_0691e1"
+      }
+    },
+    {
+      "time": "2026-04-24T23:52:53",
+      "type": "node_start",
+      "message": "开始采集关键词：世界启元",
+      "payload": {
+        "node_id": "r1_世界启元_2b78a2"
+      }
+    },
+    {
+      "time": "2026-04-24T23:52:54",
+      "type": "node_start",
+      "message": "开始采集关键词：鸿图之下",
+      "payload": {
+        "node_id": "r1_鸿图之下_ecb380"
+      }
+    },
+    {
+      "time": "2026-04-24T23:52:56",
+      "type": "node_start",
+      "message": "开始采集关键词：汉末霸业",
+      "payload": {
+        "node_id": "r1_汉末霸业_19449a"
+      }
+    },
+    {
+      "time": "2026-04-24T23:52:58",
+      "type": "node_start",
+      "message": "开始采集关键词：三国群英传",
+      "payload": {
+        "node_id": "r1_三国群英传_0dca6d"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:00",
+      "type": "node_start",
+      "message": "开始采集关键词：同人圣三国蜀汉传",
+      "payload": {
+        "node_id": "r1_同人圣三国蜀汉传_958169"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:02",
+      "type": "node_start",
+      "message": "开始采集关键词：策马三国志",
+      "payload": {
+        "node_id": "r1_策马三国志_1fee4d"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:03",
+      "type": "node_start",
+      "message": "开始采集关键词：九州劫",
+      "payload": {
+        "node_id": "r1_九州劫_719cf6"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:05",
+      "type": "node_start",
+      "message": "开始采集关键词：秦皇汉武",
+      "payload": {
+        "node_id": "r1_秦皇汉武_cfd23f"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:06",
+      "type": "node_start",
+      "message": "开始采集关键词：全战三国",
+      "payload": {
+        "node_id": "r1_全战三国_ec1f87"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:08",
+      "type": "node_start",
+      "message": "开始采集关键词：三国志",
+      "payload": {
+        "node_id": "r1_三国志_5b0664"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:09",
+      "type": "node_start",
+      "message": "开始采集关键词：三国SLG",
+      "payload": {
+        "node_id": "r1_三国SLG_0cc9cc"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:11",
+      "type": "node_start",
+      "message": "开始采集关键词：沙盘战略",
+      "payload": {
+        "node_id": "r1_沙盘战略_dfc604"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:13",
+      "type": "node_start",
+      "message": "开始采集关键词：率土like",
+      "payload": {
+        "node_id": "r1_率土like_b34c18"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:15",
+      "type": "node_start",
+      "message": "开始采集关键词：三战创作者计划",
+      "payload": {
+        "node_id": "r2_三战创作者计划_afef2e"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:16",
+      "type": "node_start",
+      "message": "开始采集关键词：三战",
+      "payload": {
+        "node_id": "r2_三战_b99917"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:18",
+      "type": "node_start",
+      "message": "开始采集关键词：平民",
+      "payload": {
+        "node_id": "r2_平民_99742a"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:20",
+      "type": "node_start",
+      "message": "开始采集关键词：教程攻略",
+      "payload": {
+        "node_id": "r2_教程攻略_9cedf1"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:21",
+      "type": "node_start",
+      "message": "开始采集关键词：零氪",
+      "payload": {
+        "node_id": "r2_零氪_336cc0"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:23",
+      "type": "node_start",
+      "message": "开始采集关键词：游戏知识分享官",
+      "payload": {
+        "node_id": "r2_游戏知识分享官_bf7b08"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:25",
+      "type": "node_start",
+      "message": "开始采集关键词：三国志战略版攻略",
+      "payload": {
+        "node_id": "r2_三国志战略版攻略_df2323"
+      }
+    },
+    {
+      "time": "2026-04-24T23:53:26",
+      "type": "node_start",
+      "message": "开始采集关键词：有啥配啥打天下",
+      "payload": {
+        "node_id": "r2_有啥配啥打天下_b2fb17"
+      }
+    }
+  ],
+  "output_files": [
+    "data/search_metrics/bilibili/2026-04-24_search_metrics.csv",
+    "data/summary/daily/2026-04-24_summary.csv",
+    "data/video_platforms/bilibili/videos/2026-04-24_videos_哔哩哔哩_免登陆_基础_TotalRank_20结果_1关键词.csv"
+  ],
+  "pending_queue": [],
+  "paused_node_id": "",
+  "summary": {
+    "total_nodes": 24,
+    "success_nodes": 24,
+    "paused_nodes": 0,
+    "error_nodes": 0,
+    "total_videos": 459,
+    "total_comments": 0
+  },
+  "stop_reason": "达到最大轮数"
+}

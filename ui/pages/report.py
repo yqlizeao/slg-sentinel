@@ -11,7 +11,7 @@ def _render_insights_summary(insights: list[dict]) -> None:
     if not insights: return
     st.markdown("<h3>本期核心洞察</h3>", unsafe_allow_html=True)
     cols = st.columns(min(len(insights), 4))
-    accent_colors = ["#B4A078", "#E85D4A", "#6B8BDB", "#5B9A6E", "#9B7FD4", "#D4956B"]
+    accent_colors = ["#d4af37", "#E85D4A", "#6B8BDB", "#5B9A6E", "#9B7FD4", "#D4956B"]
     sentiment_map = {"positive": ("trend", "#5B9A6E"), "negative": ("alert", "#E85D4A"), "mixed": ("search", "#6B8BDB")}
     for idx, item in enumerate(insights[:4]):
         with cols[idx]:
@@ -104,7 +104,7 @@ def render_report_page() -> None:
                 try:
                     import altair as alt
                     m_df = pd.DataFrame(list(mentions_data.items()), columns=["游戏", "提及次数"]).sort_values("提及次数").tail(10)
-                    chart = alt.Chart(m_df).mark_bar(cornerRadiusEnd=3, color="#B4A078").encode(
+                    chart = alt.Chart(m_df).mark_bar(cornerRadiusEnd=3, color="#d4af37").encode(
                         x=alt.X("提及次数:Q", title="", axis=alt.Axis(labelColor="#555", gridColor="rgba(180,160,120,0.06)")),
                         y=alt.Y("游戏:N", sort="-x", title="", axis=alt.Axis(labelColor="#888")),
                         tooltip=["游戏", "提及次数"],

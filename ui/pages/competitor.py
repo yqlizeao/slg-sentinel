@@ -76,7 +76,7 @@ def render_competitor_page() -> None:
     # 对照卡片
     shield_svg = icon("shield", color="#6B8BDB")
     target_svg = icon("target", color="#E85D4A")
-    swords_svg = icon("swords", color="#B4A078")
+    swords_svg = icon("swords", color="#d4af37")
     card_col1, card_vs, card_col2 = st.columns([1, 0.3, 1])
     with card_col1:
         st.markdown(f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25);' style='text-align:center; border-top:2px solid #6B8BDB;'>
@@ -106,6 +106,6 @@ def render_competitor_page() -> None:
     if "competitor_last_result" in st.session_state:
         names = st.session_state.get("competitor_last_names", (name_a, name_b))
         st.markdown("---")
-        compare_svg = icon("compare", color="#B4A078")
+        compare_svg = icon("compare", color="#d4af37")
         st.markdown(f"<h3>{compare_svg} {names[0]} vs {names[1]}</h3>", unsafe_allow_html=True)
         st.markdown(st.session_state["competitor_last_result"])

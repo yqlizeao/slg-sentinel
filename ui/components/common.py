@@ -31,7 +31,7 @@ ICONS = {
 }
 
 
-def icon(name: str, size: int = 16, color: str = "#B4A078") -> str:
+def icon(name: str, size: int = 16, color: str = "#d4af37") -> str:
     """返回指定名称的 SVG 图标 HTML 字符串"""
     svg = ICONS.get(name, ICONS["overview"])
     return f"<span style='display:inline-flex; align-items:center; color:{color}; vertical-align:middle;'>{svg}</span>"
@@ -64,7 +64,7 @@ def render_page_header(title: str, subtitle: str = "") -> None:
 def render_empty_state(icon_name: str, title: str, description: str, action_hint: str = "") -> None:
     """通用空状态占位组件，暗色主题。icon_name 引用 ICONS 字典。"""
     svg = icon(icon_name, color="rgba(180,160,120,0.5)")
-    action_html = f"<div style='margin-top:12px; font-size:11px; color:#B4A078; letter-spacing:0.3px;'>{action_hint}</div>" if action_hint else ""
+    action_html = f"<div style='margin-top:12px; font-size:11px; color:#d4af37; letter-spacing:0.3px;'>{action_hint}</div>" if action_hint else ""
     st.markdown(
         f"""<div style='padding:48px 24px; border:1px dashed rgba(180,160,120,0.15); border-radius:8px;
                     background:rgba(12,15,20,0.6); text-align:center; margin:24px 0;'>
@@ -90,15 +90,17 @@ def render_data_freshness(label: str = "数据截至") -> None:
     )
 
 
-def render_kpi_card(label: str, value: str, accent: str = "#B4A078", sub: str = "") -> str:
-    """返回单个 KPI 卡片的 HTML 字符串（不直接渲染，供 grid 拼接）。"""
-    sub_html = f"<div style='font-size:11px; color:rgba(232,228,220,0.3); margin-top:8px;'>{sub}</div>" if sub else ""
-    return f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15);
-                     border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25); min-height:110px;'>
-        <div style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500;
-                     color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>{label}</div>
-        <div style='font-family:IBM Plex Mono,monospace; font-size:28px; font-weight:500;
-                     color:{accent}; line-height:1; margin-top:10px;'>{value}</div>
-        {sub_html}
-    </div>"""
+def render_kpi_card(label: str, value: str, accent: str = "#d4af37", sub: str = "") -> str:
+    """返回单个 KPI 卡片的 HTML 字符串（War Atlas Stats 面板风格）。"""
+    sub_html = f"<div style='font-size:10px;color:rgba(232,228,220,0.25);margin-top:10px;letter-spacing:0.5px;'>{sub}</div>" if sub else ""
+    return (
+        f"<div style='background:rgba(12,15,20,0.92);border:1px solid rgba(180,160,120,0.15);"
+        f"border-radius:8px;padding:20px 22px;min-height:100px;"
+        f"box-shadow:0 4px 24px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.03);'>"
+        f"<div style='font-family:IBM Plex Sans,sans-serif;font-size:10px;font-weight:600;"
+        f"color:rgba(232,228,220,0.4);text-transform:uppercase;letter-spacing:1.2px;'>{label}</div>"
+        f"<div style='font-family:IBM Plex Mono,monospace;font-size:26px;font-weight:500;"
+        f"color:{accent};line-height:1;margin-top:12px;'>{value}</div>"
+        f"{sub_html}</div>"
+    )
 

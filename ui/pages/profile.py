@@ -28,9 +28,9 @@ def render_profile_page() -> None:
     </div>""", unsafe_allow_html=True)
 
     # 业务洞察
-    bulb = icon("lightbulb", color="#B4A078")
+    bulb = icon("lightbulb", color="#d4af37")
     st.markdown(f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15);
-        border-left:3px solid #B4A078; border-radius:0 8px 8px 0; padding:18px 22px;
+        border-left:3px solid #d4af37; border-radius:0 8px 8px 0; padding:18px 22px;
         box-shadow:0 4px 24px rgba(0,0,0,0.25); margin-bottom:24px;'>
         <div style='font-size:13px; font-weight:600; color:#E8E4DC; margin-bottom:8px;'>{bulb} 画像解读</div>
         <div style='font-size:12px; color:rgba(232,228,220,0.55); line-height:1.8;'>
@@ -52,7 +52,7 @@ def render_profile_page() -> None:
             try:
                 import altair as alt
                 tag_df = pd.DataFrame(list(tag_counts.items()), columns=["标签", "人数"]).sort_values("人数").tail(12)
-                chart = alt.Chart(tag_df).mark_bar(cornerRadiusEnd=3, color="#B4A078").encode(
+                chart = alt.Chart(tag_df).mark_bar(cornerRadiusEnd=3, color="#d4af37").encode(
                     x=alt.X("人数:Q", title="", axis=alt.Axis(labelColor="#555", gridColor="rgba(180,160,120,0.06)")),
                     y=alt.Y("标签:N", sort="-x", title="", axis=alt.Axis(labelColor="#888")),
                     tooltip=["标签", "人数"],
@@ -73,7 +73,7 @@ def render_profile_page() -> None:
                 theta=alt.Theta("人数:Q"),
                 color=alt.Color("类型:N", scale=alt.Scale(
                     domain=["免费玩家", "中度付费", "重度付费"],
-                    range=["#555", "#6B8BDB", "#B4A078"]
+                    range=["#555", "#6B8BDB", "#d4af37"]
                 ), legend=alt.Legend(labelColor="#888", titleColor="#888")),
                 tooltip=["类型", "人数"],
             ).properties(height=380, background="transparent").configure_view(strokeWidth=0)

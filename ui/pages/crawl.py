@@ -42,7 +42,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         .dot-r { background:#E85D4A; }
         .g { color:#5B9A6E; font-weight:600; }
         .r { color:#E85D4A; font-weight:600; }
-        code { background:rgba(180,160,120,0.1); padding:2px 6px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#B4A078; }
+        code { background:rgba(180,160,120,0.1); padding:2px 6px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#d4af37; }
         .desc { font-size:11px; color:rgba(232,228,220,0.4); }
     </style></head><body>
     <table>
@@ -58,7 +58,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
     red_status = lambda text: f"<span class='status'><span class='dot dot-r'></span><span class='r'>{text}</span></span>"
 
     if platform == "bilibili":
-        comp_title = "采集引擎：<a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>bilibili-api-python</a>"
+        comp_title = "采集引擎：<a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>bilibili-api-python</a>"
         iframe_height = 680
         is_simple = "基础" in depth
         is_basic = "免登录" in mode
@@ -85,7 +85,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>公开收藏夹</td><td><code>get_video_favorite_list(uid)</code></td><td class="desc">用于辅助判断用户偏好</td><td>{fav_status}</td></tr>
         <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">用于识别关联账号与兴趣重合</td><td>{follow_status}</td></tr>"""
     elif platform == "youtube":
-        comp_title = "采集引擎：<a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-dlp</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>scrapetube</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-cmt-dl</a>"
+        comp_title = "采集引擎：<a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-dlp</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>scrapetube</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-cmt-dl</a>"
         iframe_height = 600
         ok_status = green_status("可获取")
         rows = f"""
@@ -103,7 +103,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>详细发送时间戳</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于判断讨论时效性</td><td>{ok_status}</td></tr>
         <tr><td>评论完整纯文本</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于情感与主题分析</td><td>{ok_status}</td></tr>"""
     elif platform == "taptap":
-        comp_title = "采集引擎：<span style='font-family:IBM Plex Mono,monospace; font-weight:600; color:#B4A078; background:rgba(180,160,120,0.1); padding:4px 8px; border-radius:4px;'>自有协议解析引擎</span>"
+        comp_title = "采集引擎：<span style='font-family:IBM Plex Mono,monospace; font-weight:600; color:#d4af37; background:rgba(180,160,120,0.1); padding:4px 8px; border-radius:4px;'>自有协议解析引擎</span>"
         iframe_height = 420
         ok_status = green_status("可获取")
         rows = f"""
@@ -117,7 +117,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>玩家曾游玩游戏库</td><td><code>API /v2/game/games</code></td><td class="desc">用于识别用户偏好结构</td><td>{ok_status}</td></tr>
         <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">用于对比竞品体验路径</td><td>{ok_status}</td></tr>"""
     else:
-        comp_title = "采集引擎：<a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#B4A078; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>MediaCrawler</a> 本地桥接"
+        comp_title = "采集引擎：<a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>MediaCrawler</a> 本地桥接"
         iframe_height = 560
         local_auth_status = green_status("本地授权后可获取")
         rows = f"""
@@ -266,7 +266,7 @@ def render_crawl_page() -> None:
                     depth = st.radio("采集深度", ["受限单体深度遍历"], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
                 else:
                     depth = st.radio("采集深度", ["基础采集", "深度采集"], key="crawl_depth_general", label_visibility="collapsed")
-                st.markdown("<p style='font-size:12px; color:#666; margin:2px 0 0 0;'>字段覆盖情况请参考下方字段说明。</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size:12px; color:rgba(232,228,220,0.4); margin:2px 0 0 0;'>字段覆盖情况请参考下方字段说明。</p>", unsafe_allow_html=True)
 
             st.divider()
             with st.container():
@@ -301,7 +301,7 @@ def render_crawl_page() -> None:
                         <div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:12px 14px; box-shadow:0 4px 24px rgba(0,0,0,0.25);'>
                             <div style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500; color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>本次执行概览</div>
                             <div style='font-size:12px; color:rgba(232,228,220,0.65); margin-top:8px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {mode_preview} / {depth_preview} / {order_preview} / {limit_val} 条</div>
-                            <div style='font-size:12px; color:#B4A078; margin-top:6px; font-weight:600;'>预计检索量：{limit_val} × {keyword_count} = {estimated_results} 条</div>
+                            <div style='font-size:12px; color:#d4af37; margin-top:6px; font-weight:600;'>预计检索量：{limit_val} × {keyword_count} = {estimated_results} 条</div>
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -334,7 +334,7 @@ def render_crawl_page() -> None:
                     def refresh_progress_ui() -> None:
                         eta_seconds = estimate_remaining_seconds(progress_state)
                         progress_percent = 100 if progress_state["progress"] >= 1.0 else max(min(int(progress_state["progress"] * 100), 99), 1)
-                        progress_title.markdown(f"<div style='font-size:13px; color:#111; font-weight:700;'>采集进度：{progress_percent}%</div>", unsafe_allow_html=True)
+                        progress_title.markdown(f"<div style='font-size:13px; color:#E8E4DC; font-weight:700;'>采集进度：{progress_percent}%</div>", unsafe_allow_html=True)
                         progress_bar.progress(progress_percent)
                         if progress_percent >= 100:
                             progress_eta.caption(f"当前阶段：{progress_state['stage']}")

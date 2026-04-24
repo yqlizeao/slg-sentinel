@@ -24,11 +24,11 @@ from ui.services.overview_service import (
 def _render_insights_hero() -> None:
     """区块 1：本周核心发现（Hero 区域）"""
     summaries = get_weekly_summary_text()
-    report_icon = icon("report", color="#B4A078")
+    report_icon = icon("report", color="#d4af37")
 
     if summaries:
         cards_html = ""
-        colors = ["#B4A078", "#6B8BDB", "#D4956B", "#E85D4A", "#9B7FD4"]
+        colors = ["#d4af37", "#6B8BDB", "#D4956B", "#E85D4A", "#9B7FD4"]
         for idx, text in enumerate(summaries[:5]):
             color = colors[idx % len(colors)]
             cards_html += f"""
@@ -74,7 +74,7 @@ def _render_trends_chart() -> None:
         if df_top.empty:
             return
 
-        trend_svg = icon("trend", color="#B4A078")
+        trend_svg = icon("trend", color="#d4af37")
         st.markdown(f"<h3>{trend_svg} 关键词搜索趋势（近 14 天）</h3>", unsafe_allow_html=True)
         chart = (
             alt.Chart(df_top)
@@ -83,7 +83,7 @@ def _render_trends_chart() -> None:
                 x=alt.X("date:T", title="", axis=alt.Axis(format="%m-%d", labelColor="#555", gridColor="rgba(180,160,120,0.06)")),
                 y=alt.Y("total_results:Q", title="", axis=alt.Axis(labelColor="#555", gridColor="rgba(180,160,120,0.06)")),
                 color=alt.Color("keyword:N", title="关键词",
-                    scale=alt.Scale(range=["#B4A078", "#6B8BDB", "#E85D4A", "#5B9A6E", "#9B7FD4", "#D4956B", "#7FB5B0", "#C4845C"]),
+                    scale=alt.Scale(range=["#d4af37", "#6B8BDB", "#E85D4A", "#5B9A6E", "#9B7FD4", "#D4956B", "#7FB5B0", "#C4845C"]),
                     legend=alt.Legend(labelColor="#888", titleColor="#888")),
                 tooltip=["date:T", "keyword:N", "total_results:Q"],
             )
@@ -102,7 +102,7 @@ def _render_top_comments() -> None:
     if not comments:
         return
 
-    search_svg = icon("search", color="#B4A078")
+    search_svg = icon("search", color="#d4af37")
     st.markdown(f"<h3>{search_svg} 高赞评论精选（近 7 天）</h3>", unsafe_allow_html=True)
     st.markdown("<p style='color:rgba(232,228,220,0.35); font-size:12px; margin-bottom:14px;'>跨平台高赞评论，展示玩家最强烈的声音。</p>", unsafe_allow_html=True)
 
@@ -115,13 +115,13 @@ def _render_top_comments() -> None:
 
         profile_svg = icon("profile", color="rgba(232,228,220,0.3)")
         st.markdown(
-            f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25);' style='margin-bottom:8px; padding:14px 18px;'>
-                <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;'>
-                    <span style='font-size:11px; color:rgba(232,228,220,0.35);'>{profile_svg}
+            f"""<div style='background:rgba(12,15,20,0.92);border:1px solid rgba(180,160,120,0.1);border-radius:8px;padding:16px 18px;margin-bottom:8px;box-shadow:0 4px 24px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.02);'>
+                <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>
+                    <span style='font-size:10px;color:rgba(232,228,220,0.3);letter-spacing:0.5px;'>{profile_svg}
                         {c.get('author', '匿名')} · {c.get('platform', '')} · {c.get('like_count', 0)} likes</span>
                     {sentiment_badge}
                 </div>
-                <div style='font-size:13px; color:rgba(232,228,220,0.75); line-height:1.7;'>{c.get('content', '')}</div>
+                <div style='font-size:12px;color:rgba(232,228,220,0.7);line-height:1.7;'>{c.get('content', '')}</div>
             </div>""",
             unsafe_allow_html=True,
         )
@@ -132,25 +132,25 @@ def render_overview_page() -> None:
     _render_insights_hero()
 
     # 系统运行概况 KPI
-    target_svg = icon("target", color="#B4A078")
+    target_svg = icon("target", color="#d4af37")
     st.markdown(f"<h3>{target_svg} 系统运行概况</h3>", unsafe_allow_html=True)
     health = get_system_health()
     api_color = "#5B9A6E" if health["api_health"] else "#E85D4A"
     api_text = "在线" if health["api_health"] else "未配置"
-    st.markdown(
-        f"""<div style='display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px;'>
-            {render_kpi_card("监控目标", f"{health['targets']}频道 · {health['keywords']}词")}
-            {render_kpi_card("本地数据量", f"{health['capacity']} 组", "#6B8BDB")}
-            {render_kpi_card("LLM 分析引擎", api_text, api_color)}
-            {render_kpi_card("最近采集", health['last_sync'], "#D4956B")}
-        </div>""",
-        unsafe_allow_html=True,
-    )
+    kpi_cols = st.columns(4)
+    with kpi_cols[0]:
+        st.markdown(render_kpi_card("监控目标", f"{health['targets']}频道 · {health['keywords']}词"), unsafe_allow_html=True)
+    with kpi_cols[1]:
+        st.markdown(render_kpi_card("本地数据量", f"{health['capacity']} 组", "#6B8BDB"), unsafe_allow_html=True)
+    with kpi_cols[2]:
+        st.markdown(render_kpi_card("LLM 分析引擎", api_text, api_color), unsafe_allow_html=True)
+    with kpi_cols[3]:
+        st.markdown(render_kpi_card("最近采集", health['last_sync'], "#D4956B"), unsafe_allow_html=True)
 
     _render_trends_chart()
 
     st.markdown("<br/>", unsafe_allow_html=True)
-    db_svg = icon("database", color="#B4A078")
+    db_svg = icon("database", color="#d4af37")
     st.markdown(f"<h3>{db_svg} 平台数据概览</h3>", unsafe_allow_html=True)
 
     platform_data = [
@@ -164,17 +164,17 @@ def render_overview_page() -> None:
             with cols[col_idx]:
                 delta_color = "#5B9A6E" if (stats["videos_today"] or stats["comments_today"]) else "rgba(232,228,220,0.25)"
                 st.markdown(
-                    f"""<div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:20px; box-shadow:0 4px 24px rgba(0,0,0,0.25);' style='min-height:140px; margin-bottom:14px;'>
-                        <div style='display:flex; align-items:center; margin-bottom:40px;'>
-                            <img style='width:16px; height:16px; margin-right:8px; border-radius:2px; opacity:0.7;'
+                    f"""<div style='background:rgba(12,15,20,0.92);border:1px solid rgba(180,160,120,0.15);border-radius:8px;padding:20px;min-height:140px;margin-bottom:14px;box-shadow:0 4px 24px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.03);'>
+                        <div style='display:flex;align-items:center;margin-bottom:40px;'>
+                            <img style='width:16px;height:16px;margin-right:8px;border-radius:2px;opacity:0.7;'
                                  src='{PLATFORM_BRAND_ICONS.get(platform_id, "")}' alt=''>
-                            <span style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500; color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>{platform_label}</span>
+                            <span style='font-family:IBM Plex Sans,sans-serif;font-size:10px;font-weight:600;color:rgba(232,228,220,0.4);text-transform:uppercase;letter-spacing:1.2px;'>{platform_label}</span>
                         </div>
-                        <div style='font-family:IBM Plex Mono,monospace; font-size:28px; font-weight:500; color:#E8E4DC; line-height:1;'>{stats["videos_total"] if stats["videos_total"] else 0}</div>
-                        <div style='display:inline-flex; align-items:center; margin-top:18px; padding:6px 12px;
-                                    border-radius:999px; background:rgba(91,154,110,0.08); border:1px solid rgba(91,154,110,0.12);
-                                    color:{delta_color}; font-size:12px; font-weight:500;'>
-                            今日 +{stats["videos_today"]} 视频, +{stats["comments_today"]} 评论</div>
+                        <div style='font-family:IBM Plex Mono,monospace;font-size:28px;font-weight:500;color:#E8E4DC;line-height:1;'>{stats["videos_total"] if stats["videos_total"] else 0}</div>
+                        <div style='display:inline-flex;align-items:center;margin-top:18px;padding:5px 10px;
+                                    border-radius:999px;background:rgba(91,154,110,0.06);border:1px solid rgba(91,154,110,0.1);
+                                    color:{delta_color};font-size:11px;font-weight:500;'>
+                            今日 +{stats["videos_today"]} 视频,+{stats["comments_today"]} 评论</div>
                     </div>""",
                     unsafe_allow_html=True,
                 )
@@ -187,7 +187,7 @@ def render_overview_page() -> None:
 
     # 热点内容追踪
     st.markdown("<hr style='border:none; border-top:1px solid rgba(180,160,120,0.08); margin:2rem 0;'/>", unsafe_allow_html=True)
-    trend_svg = icon("trend", color="#B4A078")
+    trend_svg = icon("trend", color="#d4af37")
     render_section_title(f"{trend_svg} 热点内容追踪", "近期跨平台表现突出的内容")
     _, ctrl_col = st.columns([8, 2])
     with ctrl_col:
@@ -211,7 +211,7 @@ def render_overview_page() -> None:
             td.player-cell {{ width:172px; padding:10px 8px; vertical-align:middle; }}
             td.title-cell {{ min-width:180px; padding:10px 12px; }}
             td.title-cell a {{ font-weight:600; color:#E8E4DC; text-decoration:none; line-height:1.5; display:block; }}
-            td.title-cell a:hover {{ color:#B4A078; }}
+            td.title-cell a:hover {{ color:#d4af37; }}
             td.stat {{ text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:500; white-space:nowrap; color:rgba(232,228,220,0.6); }}
             td.muted {{ color:rgba(232,228,220,0.3); font-size:11px; }}
             .author {{ display:block; font-size:10px; color:rgba(232,228,220,0.35); margin-top:4px; }}
@@ -220,7 +220,7 @@ def render_overview_page() -> None:
             .tag {{ display:inline-block; padding:2px 6px; border-radius:3px; font-size:10px;
                     background:rgba(180,160,120,0.08); color:rgba(232,228,220,0.45); white-space:nowrap;
                     border:1px solid rgba(180,160,120,0.08); }}
-            .tag-hit {{ background:rgba(180,160,120,0.15); color:#B4A078; font-weight:600; border-color:rgba(180,160,120,0.2); }}
+            .tag-hit {{ background:rgba(180,160,120,0.15); color:#d4af37; font-weight:600; border-color:rgba(180,160,120,0.2); }}
         </style></head><body>
         <table>
             <thead><tr>

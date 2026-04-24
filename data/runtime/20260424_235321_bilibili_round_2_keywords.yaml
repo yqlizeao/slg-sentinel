@@ -1,0 +1,8 @@
+seed_keywords:
+  games:
+  - 零氪
+  categories: []
+expansion:
+  enabled: false
+  llm_provider: local-keyword-miner
+  max_expanded_keywords: 1

@@ -62,9 +62,9 @@ def _inject_recursive_page_styles() -> None:
             max-width: 1320px;
           }
           .recursive-hero {
-            border: 1px solid #D9E2EC;
+            border: 1px solid rgba(180,160,120,0.15);
             border-radius: 14px;
-            background: linear-gradient(135deg, #F7FAFC 0%, #EEF6F3 52%, #F6F8FB 100%);
+            background: linear-gradient(135deg, rgba(12,15,20,0.92) 0%, rgba(15,20,25,0.9) 52%, rgba(12,15,20,0.92) 100%);
             padding: 24px 26px;
             margin-bottom: 18px;
             box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
@@ -83,25 +83,25 @@ def _inject_recursive_page_styles() -> None:
             margin-bottom: 8px;
           }
           .recursive-title {
-            color: #111827;
+            color: rgba(232,228,220,0.8);
             font-size: 34px;
             line-height: 1.15;
             font-weight: 850;
             margin: 0;
           }
           .recursive-subtitle {
-            color: #475569;
+            color: rgba(232,228,220,0.5);
             font-size: 15px;
             line-height: 1.75;
             max-width: 760px;
             margin-top: 10px;
           }
           .recursive-mode-pill {
-            border: 1px solid #CBD5E1;
+            border: 1px solid rgba(180,160,120,0.15);
             border-radius: 999px;
             padding: 7px 12px;
-            color: #334155;
-            background: rgba(255,255,255,0.72);
+            color: rgba(232,228,220,0.7);
+            background: rgba(12,15,20,0.8);
             font-size: 12px;
             font-weight: 750;
             white-space: nowrap;
@@ -113,13 +113,13 @@ def _inject_recursive_page_styles() -> None:
             margin-top: 20px;
           }
           .recursive-kpi {
-            border: 1px solid #E2E8F0;
+            border: 1px solid rgba(180,160,120,0.1);
             border-radius: 10px;
-            background: rgba(255,255,255,0.82);
+            background: rgba(12,15,20,0.92);
             padding: 12px 14px;
           }
           .recursive-kpi-label {
-            color: #64748B;
+            color: rgba(232,228,220,0.4);
             font-size: 12px;
             font-weight: 650;
           }
@@ -134,42 +134,42 @@ def _inject_recursive_page_styles() -> None:
             padding-top: 2px;
           }
           .recursive-section-label {
-            color: #2563EB;
+            color: #6B8BDB;
             font-size: 12px;
             font-weight: 850;
             margin-bottom: 5px;
           }
           .recursive-section-title {
-            color: #111827;
+            color: rgba(232,228,220,0.8);
             font-size: 22px;
             line-height: 1.25;
             font-weight: 850;
           }
           .recursive-section-desc {
-            color: #64748B;
+            color: rgba(232,228,220,0.4);
             font-size: 13px;
             line-height: 1.65;
             margin-top: 5px;
           }
           .recursive-inline-note {
-            border: 1px solid #E2E8F0;
+            border: 1px solid rgba(180,160,120,0.1);
             border-left: 4px solid #0F766E;
             border-radius: 10px;
-            background: #F8FAFC;
-            color: #334155;
+            background: rgba(12,15,20,0.7);
+            color: rgba(232,228,220,0.7);
             padding: 12px 14px;
             margin-bottom: 12px;
             font-size: 13px;
             line-height: 1.65;
           }
           div[data-testid="stExpander"] {
-            border-color: #E2E8F0;
+            border-color: rgba(180,160,120,0.1);
             border-radius: 12px;
-            background: #FFFFFF;
+            background: rgba(12,15,20,0.92);
           }
           div[data-testid="stMetric"] {
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
+            background: rgba(12,15,20,0.92);
+            border: 1px solid rgba(180,160,120,0.1);
             border-radius: 10px;
             padding: 10px 12px;
           }
@@ -314,10 +314,10 @@ def _render_recursive_config(keyword_runtime: dict, is_expert: bool) -> dict:
         depth_preview = "深度采集" if "深度" in depth else "基础采集"
         st.markdown(
             f"""
-            <div style='padding:10px 12px; border:1px dashed #D4D4D4; border-radius:8px; background:#FCFCFC; margin-top:8px;'>
-                <div style='font-size:12px; color:#666;'>本次探索概览</div>
-                <div style='font-size:13px; color:#111; margin-top:6px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {selected_strategy} / {mode_preview} / {depth_preview} / {order_label} / 每个话题 {limit_val} 条</div>
-                <div style='font-size:13px; color:#2563EB; margin-top:6px; font-weight:600;'>起始话题：{keyword_count} 个 · 最大轮数：{int(max_depth)} · 每轮新话题上限：{int(per_round_keywords)}</div>
+            <div style='padding:10px 12px; border:1px dashed rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.7); margin-top:8px;'>
+                <div style='font-size:12px; color:rgba(232,228,220,0.4);'>本次探索概览</div>
+                <div style='font-size:13px; color:#E8E4DC; margin-top:6px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {selected_strategy} / {mode_preview} / {depth_preview} / {order_label} / 每个话题 {limit_val} 条</div>
+                <div style='font-size:13px; color:#6B8BDB; margin-top:6px; font-weight:600;'>起始话题：{keyword_count} 个 · 最大轮数：{int(max_depth)} · 每轮新话题上限：{int(per_round_keywords)}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -376,18 +376,18 @@ def _render_recursive_tree(run: dict) -> None:
         return
 
     status_colors = {
-        "running": "#2563EB",
+        "running": "#6B8BDB",
         "success": "#16A34A",
-        "stopped": "#D97706",
-        "paused": "#EA580C",
-        "error": "#DC2626",
+        "stopped": "#D4956B",
+        "paused": "#D4956B",
+        "error": "#E85D4A",
     }
     rounds = sorted({int(node.get("round", 0) or 0) for node in nodes})
     html_rounds = []
     for round_idx in rounds:
         cards = []
         for node in [item for item in nodes if int(item.get("round", 0) or 0) == round_idx]:
-            color = status_colors.get(node.get("status"), "#64748B")
+            color = status_colors.get(node.get("status"), "rgba(232,228,220,0.4)")
             search = node.get("search_metrics", {}) or {}
             crawl = node.get("crawl_metrics", {}) or {}
             candidates = node.get("candidate_metrics", {}) or {}
@@ -415,16 +415,16 @@ def _render_recursive_tree(run: dict) -> None:
 
     html = f"""
     <style>
-      .tree-wrap {{ border:1px solid #EAEAEA; border-radius:8px; padding:14px; background:#fff; overflow:auto; }}
+      .tree-wrap {{ border:1px solid rgba(180,160,120,0.12); border-radius:8px; padding:14px; background:rgba(12,15,20,0.92); overflow:auto; }}
       .tree-grid {{ display:flex; gap:16px; align-items:flex-start; min-width:860px; }}
       .tree-round {{ min-width:250px; }}
-      .round-title {{ font-size:12px; color:#64748B; font-weight:800; margin-bottom:8px; }}
+      .round-title {{ font-size:12px; color:rgba(232,228,220,0.4); font-weight:800; margin-bottom:8px; }}
       .round-cards {{ display:flex; flex-direction:column; gap:10px; }}
-      .tree-card {{ border:1px solid; border-left-width:4px; border-radius:8px; background:#F8FAFC; padding:10px 12px; }}
+      .tree-card {{ border:1px solid; border-left-width:4px; border-radius:8px; background:rgba(12,15,20,0.7); padding:10px 12px; }}
       .tree-status {{ font-size:10px; font-weight:800; text-transform:uppercase; }}
-      .tree-keyword {{ font-size:16px; color:#111827; font-weight:800; margin-top:3px; word-break:break-word; }}
-      .tree-meta {{ font-size:12px; color:#475569; margin-top:5px; }}
-      .tree-stop {{ font-size:12px; color:#B45309; margin-top:5px; min-height:14px; }}
+      .tree-keyword {{ font-size:16px; color:rgba(232,228,220,0.8); font-weight:800; margin-top:3px; word-break:break-word; }}
+      .tree-meta {{ font-size:12px; color:rgba(232,228,220,0.5); margin-top:5px; }}
+      .tree-stop {{ font-size:12px; color:#D4956B; margin-top:5px; min-height:14px; }}
     </style>
     <div class="tree-wrap"><div class="tree-grid">{''.join(html_rounds)}</div></div>
     """
@@ -728,7 +728,7 @@ def _render_candidate_panel(config: dict, keyword_runtime: dict, is_expert: bool
     else:
         selected_keywords = []
         st.markdown(
-            "<div style='padding:12px 14px; border:1px dashed #D4D4D4; border-radius:8px; background:#FCFCFC; color:#666; font-size:13px;'>暂无新发现话题。可以先运行一次基础采集，或点击“从最新结果发现话题”。</div>",
+            "<div style='padding:12px 14px; border:1px dashed rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.7); color:rgba(232,228,220,0.4); font-size:13px;'>暂无新发现话题。可以先运行一次基础采集，或点击“从最新结果发现话题”。</div>",
             unsafe_allow_html=True,
         )
 
