@@ -6,6 +6,15 @@ import streamlit as st
 import streamlit.components.v1 as st_components
 
 from src.core.config import load_config
+from ui.components.atlas_shell import (
+    atlas_chips,
+    atlas_empty,
+    atlas_rows,
+    render_atlas_drawer,
+    render_atlas_list_editor,
+    render_atlas_panel,
+    render_atlas_stage,
+)
 from ui.components.common import render_atlas_ops_board, render_page_header
 from ui.components.crawl import (
     render_crawl_result_card,
@@ -205,200 +214,253 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
 
 
 def render_crawl_page() -> None:
-    keyword_count = len(load_keyword_library()[1])
-    render_page_header(
-        t("crawl.title"),
-        t("crawl.subtitle"),
-        [("mode", "crawl"), ("queue", "manual"), ("depth", "ops")],
-    )
-    render_atlas_ops_board(
-        t("crawl.ops.title"),
-        t("crawl.ops.subtitle"),
-        [("Seed Keywords", str(keyword_count)), ("Auth Mode", "adaptive"), ("Route", "5 steps"), ("Output", "csv")],
-        t("crawl.ops.eyebrow"),
-    )
-    left_col, right_col = st.columns([1.7, 1.05], gap="large")
-    keyword_runtime = {}
+    _, merged_keywords, expansion = load_keyword_library()
+    keyword_runtime = {
+        "keyword_count": len(merged_keywords),
+        "keywords": merged_keywords,
+        "expansion": expansion,
+    }
+    keyword_count = len(merged_keywords)
+    limit_options = {
+        10: t("crawl.limit_10"),
+        20: t("crawl.limit_20"),
+        30: t("crawl.limit_30"),
+        40: t("crawl.limit_40"),
+        50: t("crawl.limit_50"),
+    }
+    auth_required_label = t("crawl.auth_required")
+    auth_anonymous_label = t("crawl.auth_anonymous")
+    auth_local_label = t("crawl.auth_local")
+    depth_limited_label = t("crawl.depth_limited")
+    depth_basic_label = t("crawl.depth_basic")
+    depth_deep_label = t("crawl.depth_deep")
+    strategy_default_label = t("crawl.strategy_default")
+    media_platforms = {"xiaohongshu", "douyin", "kuaishou"}
 
-    with right_col:
-        keyword_runtime = render_keyword_library("crawl")
+    default_platform = st.session_state.get("crawl_platform", "bilibili")
+    platform = default_platform if default_platform in PLATFORM_OPTIONS else "bilibili"
+    mode = auth_required_label if platform in media_platforms else st.session_state.get("crawl_mode_general", auth_anonymous_label)
+    depth = depth_limited_label if platform in media_platforms else st.session_state.get("crawl_depth_general", depth_basic_label)
+    order_label = strategy_default_label
+    order_val = "totalrank"
+    limit_val = int(st.session_state.get("crawl_limit", 20))
 
-    with left_col:
-        render_step_overview(
-            [
-                ("01", t("crawl.step.platform"), "#5B9A6E"),
-                ("02", t("crawl.step.auth"), "#6B8BDB"),
-                ("03", t("crawl.step.depth"), "#D4956B"),
-                ("04", t("crawl.step.strategy"), "#9B7FD4"),
-                ("05", t("crawl.step.limit"), "#7FB5B0"),
-            ]
-        )
-
-        keyword_count = keyword_runtime.get("keyword_count", keyword_count)
-        order_val = "totalrank"
-        limit_options = {
-            10: t("crawl.limit_10"),
-            20: t("crawl.limit_20"),
-            30: t("crawl.limit_30"),
-            40: t("crawl.limit_40"),
-            50: t("crawl.limit_50"),
-        }
-        auth_required_label = t("crawl.auth_required")
-        auth_anonymous_label = t("crawl.auth_anonymous")
-        auth_local_label = t("crawl.auth_local")
-        depth_limited_label = t("crawl.depth_limited")
-        depth_basic_label = t("crawl.depth_basic")
-        depth_deep_label = t("crawl.depth_deep")
-        strategy_default_label = t("crawl.strategy_default")
-
-        with st.container(border=True):
-            st.markdown(f"<div style='font-family:Cinzel,serif; font-size:16px; font-weight:600; color:#E8E4DC; letter-spacing:1px;'>{t('crawl.config_title')}</div>", unsafe_allow_html=True)
-
-            with st.container():
-                render_step_block_header("01", t("crawl.step.platform"), "#5B9A6E", "Select the platform for this collection route.")
-                platform = st.selectbox(
-                    t("crawl.platform_label"),
-                    list(PLATFORM_OPTIONS.keys()),
-                    format_func=lambda x: PLATFORM_OPTIONS[x],
-                    key="crawl_platform",
+    cmd_cols = st.columns([1.05, 1.15, 1.0, 1.0, 5.2], gap="small")
+    with cmd_cols[0]:
+        with st.popover(t('popover.route'), use_container_width=True):
+            render_step_block_header("01", t("crawl.step.platform"), "#5B9A6E", t("crawl.step.platform_desc"))
+            platform = st.selectbox(
+                t("crawl.platform_label"),
+                list(PLATFORM_OPTIONS.keys()),
+                format_func=lambda x: PLATFORM_OPTIONS[x],
+                key="crawl_platform",
+                label_visibility="collapsed",
+            )
+            st.divider()
+            render_step_block_header("02", t("crawl.step.auth"), "#6B8BDB", t("crawl.step.auth_desc"))
+            if platform in media_platforms:
+                mode = st.radio(t("crawl.auth_label"), [auth_required_label], key="crawl_mode_media", label_visibility="collapsed")
+                st.caption(t("crawl.auth_required_note"))
+            else:
+                mode = st.radio(
+                    t("crawl.auth_label"),
+                    [auth_anonymous_label, auth_local_label],
+                    key="crawl_mode_general",
                     label_visibility="collapsed",
                 )
-
             st.divider()
-            with st.container():
-                render_step_block_header("02", t("crawl.step.auth"), "#6B8BDB", "Choose whether this platform should use local session authorization.")
-                if platform in ["xiaohongshu", "douyin", "kuaishou"]:
-                    mode = st.radio(t("crawl.auth_label"), [auth_required_label], key="crawl_mode_media", label_visibility="collapsed")
-                    st.markdown(f"<p style='font-size:12px; color:#E85D4A; margin:2px 0 0 0;'>{t('crawl.auth_required_note')}</p>", unsafe_allow_html=True)
-                else:
-                    mode = st.radio(
-                        t("crawl.auth_label"),
-                        [auth_anonymous_label, auth_local_label],
-                        key="crawl_mode_general",
-                        label_visibility="collapsed",
-                    )
-
+            render_step_block_header("03", t("crawl.step.depth"), "#D4956B", t("crawl.step.depth_desc"))
+            if platform in media_platforms:
+                depth = st.radio(t("crawl.step.depth"), [depth_limited_label], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
+            else:
+                depth = st.radio(t("crawl.step.depth"), [depth_basic_label, depth_deep_label], key="crawl_depth_general", label_visibility="collapsed")
             st.divider()
-            with st.container():
-                render_step_block_header("03", t("crawl.step.depth"), "#D4956B", "Decide whether to collect only metadata or continue into comment depth.")
-                if platform in ["xiaohongshu", "douyin", "kuaishou"]:
-                    depth = st.radio(t("crawl.step.depth"), [depth_limited_label], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
-                else:
-                    depth = st.radio(t("crawl.step.depth"), [depth_basic_label, depth_deep_label], key="crawl_depth_general", label_visibility="collapsed")
-                st.markdown(f"<p style='font-size:12px; color:rgba(232,228,220,0.4); margin:2px 0 0 0;'>{t('crawl.depth_note')}</p>", unsafe_allow_html=True)
-
+            render_step_block_header("04", t("crawl.step.strategy"), "#9B7FD4", t("crawl.strategy_note"))
+            if platform == "bilibili":
+                order_map = {
+                    t("crawl.order_totalrank"): "totalrank",
+                    t("crawl.order_pubdate"): "pubdate",
+                    t("crawl.order_click"): "click",
+                    t("crawl.order_stow"): "stow",
+                }
+                order_label = st.selectbox(t("crawl.step.strategy"), list(order_map.keys()), index=0, key="crawl_order_bilibili", label_visibility="collapsed")
+                order_val = order_map[order_label]
+            else:
+                st.caption(t("crawl.strategy_empty_note"))
             st.divider()
-            with st.container():
-                if platform == "bilibili":
-                    render_step_block_header("04", t("crawl.step.strategy"), "#9B7FD4", t("crawl.strategy_note"))
-                    order_map = {
-                        "平台搜索默认排序 (Total Rank)": "totalrank",
-                        "最新发布时间排序 (Publish Date)": "pubdate",
-                        "最多点击播放排序 (Click)": "click",
-                        "最多用户收藏排序 (Stow)": "stow",
-                    }
-                    order_label = st.selectbox(t("crawl.step.strategy"), list(order_map.keys()), index=0, key="crawl_order_bilibili", label_visibility="collapsed")
-                    order_val = order_map[order_label]
-                else:
-                    render_step_block_header("04", t("crawl.step.strategy"), "#9B7FD4", t("crawl.strategy_empty_note"))
-                    order_label = strategy_default_label
-                    st.markdown(f"<div style='padding:10px 12px; border:1px dashed rgba(180,160,120,0.12); border-radius:8px; background:rgba(12,15,20,0.6); font-size:12px; color:rgba(232,228,220,0.45);'>{t('crawl.strategy_empty_note')}</div>", unsafe_allow_html=True)
+            render_step_block_header("05", t("crawl.step.limit"), "#7FB5B0", t("crawl.step.limit_desc"))
+            limit_val = st.selectbox(
+                t("crawl.step.limit"),
+                list(limit_options.keys()),
+                format_func=lambda x: limit_options[x],
+                key="crawl_limit",
+                label_visibility="collapsed",
+            )
+            estimated_results = int(limit_val) * int(keyword_count)
+            st.markdown(
+                render_atlas_list_editor(
+                    t("crawl.overview_title"),
+                    [
+                        (t('crawl.row.platform'), PLATFORM_OPTIONS[platform]),
+                        (t('crawl.row.auth'), t('crawl.row.auth_anon') if mode == auth_anonymous_label else t('crawl.row.auth_local')),
+                        (t('crawl.row.depth'), t('crawl.row.depth_deep') if depth == depth_deep_label else t('crawl.row.depth_basic')),
+                        (t('crawl.estimated'), f"{limit_val} × {keyword_count} = {estimated_results}"),
+                    ],
+                    compact=True,
+                ),
+                unsafe_allow_html=True,
+            )
+            runtime_config = load_config()
+            can_execute = True
+            if keyword_count == 0:
+                can_execute = False
+                st.warning(t("crawl.empty_keywords"))
+            elif platform in media_platforms and not media_crawler_exists():
+                can_execute = False
+                st.error(t("crawl.mediacrawler_missing"))
+            elif platform == "bilibili" and mode != auth_anonymous_label and not runtime_config.bili_sessdata:
+                st.info(t("crawl.bilibili_session_missing"))
 
-            st.divider()
-            with st.container():
-                render_step_block_header("05", t("crawl.step.limit"), "#7FB5B0", "Set the upper bound and confirm the operation.")
-                action_left, action_right = st.columns([1, 1.1])
-                with action_left:
-                    limit_val = st.selectbox(t("crawl.step.limit"), list(limit_options.keys()), format_func=lambda x: limit_options[x], key="crawl_limit", label_visibility="collapsed")
-                with action_right:
-                    estimated_results = limit_val * keyword_count
-                    mode_preview = "Anonymous" if mode == auth_anonymous_label else "Local Auth"
-                    depth_preview = "Deep" if depth == depth_deep_label else "Basic"
-                    order_preview = strategy_default_label if platform != "bilibili" else order_label.replace("平台搜索默认排序 ", "").replace("(", "").replace(")", "")
-                    st.markdown(
-                        f"""
-                        <div style='background:rgba(12,15,20,0.92); border:1px solid rgba(180,160,120,0.15); border-radius:8px; padding:12px 14px; box-shadow:0 4px 24px rgba(0,0,0,0.25);'>
-                            <div style='font-family:IBM Plex Sans,sans-serif; font-size:11px; font-weight:500; color:rgba(232,228,220,0.45); text-transform:uppercase; letter-spacing:1px;'>{t('crawl.overview_title')}</div>
-                            <div style='font-size:12px; color:rgba(232,228,220,0.65); margin-top:8px; line-height:1.7;'>{PLATFORM_OPTIONS[platform]} / {mode_preview} / {depth_preview} / {order_preview} / {limit_val}</div>
-                            <div style='font-size:12px; color:#d4af37; margin-top:6px; font-weight:600;'>{t('crawl.estimated')}: {limit_val} × {keyword_count} = {estimated_results}</div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+            if st.button(t("crawl.run_button", platform=PLATFORM_OPTIONS[platform]), type="primary", use_container_width=True, disabled=not can_execute):
+                mode_value = "actions" if mode == auth_anonymous_label else "local"
+                started_at = datetime.now()
+                before_snapshot = get_crawl_file_snapshot(platform)
+                progress_state = init_crawl_progress_state(platform, keyword_count, int(limit_val))
+                progress_title = st.empty()
+                progress_bar = st.progress(0)
+                progress_eta = st.empty()
+                progress_detail = st.empty()
 
-                st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
-                media_platforms = {"xiaohongshu", "douyin", "kuaishou"}
-                runtime_config = load_config()
-                can_execute = True
-                if keyword_count == 0:
-                    can_execute = False
-                    st.warning(t("crawl.empty_keywords"))
-                elif platform in media_platforms and not media_crawler_exists():
-                    can_execute = False
-                    st.error(t("crawl.mediacrawler_missing"))
-                elif platform == "bilibili" and mode != auth_anonymous_label and not runtime_config.bili_sessdata:
-                    st.info(t("crawl.bilibili_session_missing"))
-
-                st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-                if st.button(t("crawl.run_button", platform=PLATFORM_OPTIONS[platform]), type="primary", use_container_width=True, disabled=not can_execute):
-                    mode_value = "actions" if mode == auth_anonymous_label else "local"
-                    started_at = datetime.now()
-                    before_snapshot = get_crawl_file_snapshot(platform)
-                    progress_state = init_crawl_progress_state(platform, keyword_count, limit_val)
-                    progress_title = st.empty()
-                    progress_bar = st.progress(0)
-                    progress_eta = st.empty()
-                    progress_detail = st.empty()
-
-                    def refresh_progress_ui() -> None:
-                        eta_seconds = estimate_remaining_seconds(progress_state)
-                        progress_percent = 100 if progress_state["progress"] >= 1.0 else max(min(int(progress_state["progress"] * 100), 99), 1)
-                        progress_title.markdown(f"<div style='font-size:13px; color:#E8E4DC; font-weight:700;'>{t('crawl.progress')}: {progress_percent}%</div>", unsafe_allow_html=True)
-                        progress_bar.progress(progress_percent)
-                        if progress_percent >= 100:
-                            progress_eta.caption(f"{t('crawl.stage')}: {progress_state['stage']}")
-                        elif eta_seconds is None:
-                            progress_eta.caption(t("crawl.connecting"))
-                        else:
-                            progress_eta.caption(f"{t('crawl.stage')}: {progress_state['stage']} · {t('crawl.remaining', seconds=eta_seconds)}")
-                        progress_detail.caption(progress_state["detail"])
-
-                    refresh_progress_ui()
-                    cmd_args = ["crawl", "--platform", platform, "--mode", mode_value, "--order", order_val, "--limit", str(limit_val)]
-                    if platform not in media_platforms and depth == depth_basic_label:
-                        cmd_args.extend(["--depth", "shallow"])
-                    elif platform not in media_platforms and depth == depth_deep_label:
-                        cmd_args.extend(["--depth", "deep"])
-
-                    def on_progress_line(line: str) -> None:
-                        update_crawl_progress_state(progress_state, line)
-                        refresh_progress_ui()
-
-                    stdout, stderr, code = run_cli_stream(cmd_args, on_line=on_progress_line)
-                    progress_state["progress"] = 1.0 if code == 0 else max(progress_state["progress"], 0.92)
-                    progress_state["stage"] = "采集完成" if code == 0 else "采集结束，等待查看结果"
-                    refresh_progress_ui()
-                    after_snapshot = get_crawl_file_snapshot(platform)
-                    st.session_state["crawl_last_result"] = summarize_crawl_result(
-                        platform=platform,
-                        platform_label=PLATFORM_OPTIONS[platform],
-                        before_snapshot=before_snapshot,
-                        after_snapshot=after_snapshot,
-                        keyword_count=keyword_count,
-                        limit_val=limit_val,
-                        started_at=started_at,
-                        return_code=code,
-                        stdout=stdout,
-                        stderr=stderr,
-                    )
-                    if code == 0:
-                        st.success(t("crawl.success", platform=PLATFORM_OPTIONS[platform]))
+                def refresh_progress_ui() -> None:
+                    eta_seconds = estimate_remaining_seconds(progress_state)
+                    progress_percent = 100 if progress_state["progress"] >= 1.0 else max(min(int(progress_state["progress"] * 100), 99), 1)
+                    progress_title.markdown(f"<div style='font-size:13px; color:#E8E4DC; font-weight:700;'>{t('crawl.progress')}: {progress_percent}%</div>", unsafe_allow_html=True)
+                    progress_bar.progress(progress_percent)
+                    if progress_percent >= 100:
+                        progress_eta.caption(f"{t('crawl.stage')}: {progress_state['stage']}")
+                    elif eta_seconds is None:
+                        progress_eta.caption(t("crawl.connecting"))
                     else:
-                        st.error(t("crawl.failed_code", code=code))
+                        progress_eta.caption(f"{t('crawl.stage')}: {progress_state['stage']} · {t('crawl.remaining', seconds=eta_seconds)}")
+                    progress_detail.caption(progress_state["detail"])
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.session_state.get("crawl_last_result"):
-        render_crawl_result_card(st.session_state["crawl_last_result"])
-        st.markdown("<br>", unsafe_allow_html=True)
+                refresh_progress_ui()
+                cmd_args = ["crawl", "--platform", platform, "--mode", mode_value, "--order", order_val, "--limit", str(limit_val)]
+                if platform not in media_platforms and depth == depth_basic_label:
+                    cmd_args.extend(["--depth", "shallow"])
+                elif platform not in media_platforms and depth == depth_deep_label:
+                    cmd_args.extend(["--depth", "deep"])
 
-    _render_platform_field_tables(platform, mode, depth)
+                def on_progress_line(line: str) -> None:
+                    update_crawl_progress_state(progress_state, line)
+                    refresh_progress_ui()
+
+                stdout, stderr, code = run_cli_stream(cmd_args, on_line=on_progress_line)
+                progress_state["progress"] = 1.0 if code == 0 else max(progress_state["progress"], 0.92)
+                progress_state["stage"] = t("crawl.stage_done") if code == 0 else t("crawl.stage_finished")
+                refresh_progress_ui()
+                after_snapshot = get_crawl_file_snapshot(platform)
+                st.session_state["crawl_last_result"] = summarize_crawl_result(
+                    platform=platform,
+                    platform_label=PLATFORM_OPTIONS[platform],
+                    before_snapshot=before_snapshot,
+                    after_snapshot=after_snapshot,
+                    keyword_count=keyword_count,
+                    limit_val=int(limit_val),
+                    started_at=started_at,
+                    return_code=code,
+                    stdout=stdout,
+                    stderr=stderr,
+                )
+                if code == 0:
+                    st.success(t("crawl.success", platform=PLATFORM_OPTIONS[platform]))
+                else:
+                    st.error(t("crawl.failed_code", code=code))
+    with cmd_cols[1]:
+        with st.popover(t('popover.keywords'), use_container_width=True):
+            keyword_runtime = render_keyword_library("crawl")
+            keyword_count = int(keyword_runtime.get("keyword_count", keyword_count))
+            merged_keywords = list(keyword_runtime.get("keywords", merged_keywords))
+    with cmd_cols[2]:
+        with st.popover(t('popover.fields'), use_container_width=True):
+            _render_platform_field_tables(platform, mode, depth)
+    with cmd_cols[3]:
+        with st.popover(t('popover.result'), use_container_width=True):
+            if st.session_state.get("crawl_last_result"):
+                render_crawl_result_card(st.session_state["crawl_last_result"])
+            else:
+                st.caption(t("common.empty_first_action"))
+
+    result = st.session_state.get("crawl_last_result") or {}
+    result_rows = [
+        (t('crawl.row.status'), "OK" if result.get("return_code") == 0 else "WAITING"),
+        (t('crawl.row.platform'), result.get("platform_label", PLATFORM_OPTIONS.get(platform, platform))),
+        (t('crawl.row.keywords'), result.get("keyword_count", keyword_count)),
+        (t('crawl.row.limit'), result.get("limit_val", limit_val)),
+    ]
+    preview_keywords = merged_keywords[:16]
+    keyword_body = atlas_chips(preview_keywords) if preview_keywords else atlas_empty(t('crawl.panel.no_keywords'), t("crawl.empty_keywords"))
+    scene_html = f"""
+    <div class='atlas-scene-sigil'></div>
+    <div class='atlas-scene-line' style='left:18%;top:58%;width:31%;transform:rotate(-18deg);'></div>
+    <div class='atlas-scene-line' style='left:47%;top:48%;width:28%;transform:rotate(13deg);'></div>
+    <div class='atlas-scene-line' style='left:33%;top:35%;width:24%;transform:rotate(34deg);'></div>
+    <span class='atlas-scene-node' style='left:18%;top:57%;background:#5B9A6E;'></span>
+    <span class='atlas-scene-node' style='left:47%;top:47%;background:#d4af37;'></span>
+    <span class='atlas-scene-node' style='left:73%;top:54%;background:#6B8BDB;'></span>
+    <span class='atlas-scene-node' style='left:34%;top:34%;background:#D4956B;'></span>
+    <div class='atlas-stage-map'>
+      <svg viewBox='0 0 1200 720' preserveAspectRatio='xMidYMid slice' aria-hidden='true'>
+        <path class='gridline' d='M120 0V720M260 0V720M400 0V720M540 0V720M680 0V720M820 0V720M960 0V720M1100 0V720M0 120H1200M0 260H1200M0 400H1200M0 540H1200'/>
+        <text x='210' y='445' font-size='14'>{t('crawl.stage.timeline_start')}</text>
+        <text x='545' y='365' font-size='14'>{t('crawl.metric.keywords')} {keyword_count}</text>
+        <text x='850' y='422' font-size='14'>{t('label.csv')} {t('crawl.metric.output')}</text>
+      </svg>
+    </div>
+    """
+    panels = [
+        render_atlas_panel(
+            t('crawl.panel.route'),
+            atlas_rows([
+                (t('crawl.row.platform'), PLATFORM_OPTIONS.get(platform, platform)),
+                (t('crawl.row.auth'), t('crawl.row.auth_anon') if mode == auth_anonymous_label else t('crawl.row.auth_local')),
+                (t('crawl.row.depth'), t('crawl.row.depth_deep') if depth == depth_deep_label else t('crawl.row.depth_basic')),
+            ], compact=True),
+            kicker=t('crawl.kicker.route'),
+        ),
+        render_atlas_panel(t('crawl.panel.keywords'), keyword_body, kicker=t('crawl.kicker.signals')),
+        render_atlas_panel(t('crawl.panel.result'), atlas_rows(result_rows, compact=True), kicker=t('crawl.kicker.output')),
+    ]
+    drawers = [
+        render_atlas_drawer(t('crawl.drawer.preview'), render_atlas_list_editor(t('crawl.drawer.exec_preview'), [
+            (t('crawl.row.strategy'), order_label),
+            (t('crawl.row.result_limit'), limit_val),
+            (t('crawl.row.estimated'), int(limit_val) * max(keyword_count, 1)),
+        ], compact=True), badge=t('label.ready')),
+        render_atlas_drawer(t('crawl.panel.keywords'), keyword_body, badge=str(keyword_count)),
+        render_atlas_drawer(t('crawl.drawer.fields'), atlas_rows([
+            ("Bilibili", "Search / Video / Comments"),
+            ("YouTube", "Search / Channel / Comments"),
+            ("TapTap", "Reviews / Games"),
+            ("MediaCrawler", "Local Authorized Platforms"),
+        ], compact=True)),
+    ]
+    render_atlas_stage(
+        page_id="crawl",
+        title=t('crawl.stage.title'),
+        subtitle=t("crawl.subtitle"),
+        metrics=[
+            (t('crawl.stage.timeline_start'), PLATFORM_OPTIONS.get(platform, platform)),
+            (t('crawl.metric.keywords'), str(keyword_count)),
+            (t('crawl.metric.limit'), str(limit_val)),
+            (t('crawl.metric.output'), t('label.csv')),
+        ],
+        scene_html=scene_html,
+        panels=panels,
+        drawers=drawers,
+        timeline_label=t('crawl.kicker.route'),
+        timeline_start=t('crawl.stage.timeline_start'),
+        timeline_end=t('crawl.stage.timeline_end'),
+        accent="#5B9A6E",
+        mode_label=t('crawl.stage.mode'),
+    )

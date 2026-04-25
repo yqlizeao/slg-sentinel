@@ -1,7 +1,17 @@
 """SLG Sentinel — 竞品对比页面"""
 from __future__ import annotations
+from html import escape
+
 import streamlit as st
 from src.core.config import load_config
+from ui.components.atlas_shell import (
+    atlas_empty,
+    atlas_rows,
+    render_atlas_drawer,
+    render_atlas_list_editor,
+    render_atlas_panel,
+    render_atlas_stage,
+)
 from ui.components.common import render_atlas_ops_board, render_empty_state, render_page_header, icon
 from ui.i18n import t
 from ui.services.app_services import load_targets_config
@@ -50,74 +60,96 @@ def render_competitor_page() -> None:
     game_names = [g["name"] for g in games] if games else []
     config = load_config()
     has_llm = bool(config.deepseek_api_key or config.openai_api_key or config.qwen_api_key)
-    render_page_header(
-        t("competitor.title"),
-        t("competitor.subtitle"),
-        [("targets", str(len(game_names))), ("mode", "duel"), ("engine", "online" if has_llm else "local")],
+    if game_names:
+        idx_a_default = int(st.session_state.get("comp_a", 0))
+        idx_b_default = int(st.session_state.get("comp_b", min(1, len(game_names) - 1)))
+        name_a = game_names[min(idx_a_default, len(game_names) - 1)]
+        name_b = game_names[min(idx_b_default, len(game_names) - 1)]
+    else:
+        name_a = st.session_state.get("comp_a_text", "")
+        name_b = st.session_state.get("comp_b_text", "")
+
+    cmd_cols = st.columns([1.05, 1.0, 1.0, 6.2], gap="small")
+    with cmd_cols[0]:
+        with st.popover(t('popover.select'), use_container_width=True):
+            if game_names:
+                idx_a = st.selectbox(t("competitor.a"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_a")
+                idx_b = st.selectbox(t("competitor.b"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_b", index=min(1, len(game_names)-1))
+                name_a = game_names[idx_a]
+                name_b = game_names[idx_b]
+            else:
+                name_a = st.text_input(t("competitor.a"), placeholder=t("competitor.placeholder"), key="comp_a_text")
+                name_b = st.text_input(t("competitor.b"), placeholder=t("competitor.placeholder"), key="comp_b_text")
+            if not has_llm:
+                st.warning(t("competitor.llm_warning"))
+            if name_a == name_b and name_a:
+                st.info(t("competitor.same_info"))
+            generate_disabled = not has_llm or not name_a or not name_b or name_a == name_b
+            if st.button(t("competitor.generate", a=name_a or "A", b=name_b or "B"), type="primary", use_container_width=True, disabled=generate_disabled):
+                with st.spinner(t("competitor.generating")):
+                    result = _run_comparison(name_a, name_b)
+                if result:
+                    st.session_state["competitor_last_result"] = result
+                    st.session_state["competitor_last_names"] = (name_a, name_b)
+                else:
+                    st.error(t("competitor.failed"))
+    with cmd_cols[1]:
+        with st.popover(t('popover.result'), use_container_width=True):
+            if "competitor_last_result" in st.session_state:
+                st.markdown(st.session_state["competitor_last_result"])
+            else:
+                st.caption(t("competitor.empty_hint"))
+
+    last_names = st.session_state.get("competitor_last_names", (name_a, name_b))
+    result_markdown = st.session_state.get("competitor_last_result", "")
+    report_body = (
+        "<div class='atlas-shell-copy'>" + escape(result_markdown[:4200]).replace("\n", "<br>") + "</div>"
+        if result_markdown
+        else atlas_empty(t("competitor.empty_title"), t("competitor.empty_desc"))
     )
-    render_atlas_ops_board(
-        t("competitor.ops.title"),
-        t("competitor.ops.subtitle"),
-        [("Targets", str(len(game_names))), ("Mode", "duel"), ("Engine", "online" if has_llm else "local"), ("Output", "brief")],
-        t("competitor.ops.eyebrow"),
+    display_a = name_a or t('competitor.rival_a')
+    display_b = name_b or t('competitor.rival_b')
+    scene_html = f"""
+    <div class='atlas-stage-map'>
+      <svg viewBox='0 0 1200 720' preserveAspectRatio='xMidYMid slice' aria-hidden='true'>
+        <path class='gridline' d='M120 0V720M260 0V720M400 0V720M540 0V720M680 0V720M820 0V720M960 0V720M1100 0V720M0 120H1200M0 260H1200M0 400H1200M0 540H1200'/>
+        <path d='M170 180H500L548 360L500 540H170L120 360Z' fill='rgba(107,139,219,.16)' stroke='rgba(107,139,219,.76)' stroke-width='2'/>
+        <path d='M700 180H1030L1080 360L1030 540H700L652 360Z' fill='rgba(232,93,74,.16)' stroke='rgba(232,93,74,.76)' stroke-width='2'/>
+        <path class='route' d='M500 360C555 327 612 327 700 360'/>
+        <circle class='signal' cx='600' cy='360' r='18' fill='#d4af37'/><circle cx='600' cy='360' r='54' fill='rgba(212,175,55,.10)'/>
+        <text x='205' y='348' font-size='20'>{escape(display_a[:22])}</text>
+        <text x='742' y='348' font-size='20'>{escape(display_b[:22])}</text>
+        <text x='574' y='414' font-size='16'>{t('label.vs')}</text>
+      </svg>
+    </div>
+    """
+    target_rows = [(game.get("name", t('profile.unknown')), game.get("app_id", "")) for game in games[:10]]
+    panels = [
+        render_atlas_panel(t('competitor.panel.rival_a'), atlas_rows([(t('competitor.panel.name'), display_a), (t('competitor.panel.role'), t('competitor.panel.left'))], compact=True), kicker=t('competitor.stage.start')),
+        render_atlas_panel(t('competitor.panel.rival_b'), atlas_rows([(t('competitor.panel.name'), display_b), (t('competitor.panel.role'), t('competitor.panel.right'))], compact=True), kicker=t('competitor.stage.end')),
+        render_atlas_panel(t('competitor.panel.engine'), atlas_rows([(t('competitor.panel.llm'), t('label.online') if has_llm else t('label.missing')), (t('competitor.panel.output'), t('competitor.panel.battle'))], compact=True), kicker=t('label.ai')),
+    ]
+    drawers = [
+        render_atlas_drawer(t('competitor.drawer.brief'), report_body, badge=t('label.ready') if result_markdown else t('label.empty')),
+        render_atlas_drawer(t('competitor.drawer.targets'), render_atlas_list_editor(t('competitor.drawer.targets_title'), target_rows, compact=True, empty_title=t("competitor.empty_title"), empty_body=t("competitor.empty_hint")), badge=str(len(target_rows))),
+        render_atlas_drawer(t('competitor.drawer.last'), atlas_rows([(t('competitor.a'), last_names[0] or display_a), (t('competitor.b'), last_names[1] or display_b)], compact=True), badge=t('label.vs')),
+    ]
+    render_atlas_stage(
+        page_id="competitor",
+        title=t('competitor.stage.title'),
+        subtitle=t("competitor.subtitle"),
+        metrics=[
+            (t('competitor.metric.targets'), str(len(game_names))),
+            (t('competitor.metric.mode'), t('label.duel')),
+            (t('competitor.metric.engine'), t('label.online') if has_llm else t('label.local')),
+            (t('competitor.metric.output'), t('popover.brief')),
+        ],
+        scene_html=scene_html,
+        panels=panels,
+        drawers=drawers,
+        timeline_label=t('competitor.stage.timeline'),
+        timeline_start=t('competitor.stage.start'),
+        timeline_end=t('competitor.stage.end'),
+        accent="#E85D4A",
+        mode_label=t('competitor.stage.mode'),
     )
-
-    st.markdown(f"<h3>{t('competitor.select_title')}</h3>", unsafe_allow_html=True)
-    mode_col1, mode_col2 = st.columns(2)
-    with mode_col1:
-        if game_names:
-            idx_a = st.selectbox(t("competitor.a"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_a")
-            name_a = game_names[idx_a]
-        else:
-            name_a = st.text_input(t("competitor.a"), placeholder=t("competitor.placeholder"), key="comp_a_text")
-    with mode_col2:
-        if game_names:
-            idx_b = st.selectbox(t("competitor.b"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_b", index=min(1, len(game_names)-1))
-            name_b = game_names[idx_b]
-        else:
-            name_b = st.text_input(t("competitor.b"), placeholder=t("competitor.placeholder"), key="comp_b_text")
-
-    if not name_a or not name_b:
-        render_empty_state("swords", t("competitor.empty_title"), t("competitor.empty_desc"), t("competitor.empty_hint"))
-        return
-    if name_a == name_b:
-        st.info(t("competitor.same_info")); return
-
-    shield_svg = icon("shield", color="#6B8BDB")
-    target_svg = icon("target", color="#E85D4A")
-    swords_svg = icon("swords", color="#d4af37")
-    st.markdown(
-        f"""<div class='atlas-duel'>
-            <div class='atlas-duel-card'>
-                <div class='atlas-mini-label'>{shield_svg} competitor a</div>
-                <div style='font-family:Cinzel,serif; font-size:30px; font-weight:700; color:#E8E4DC; margin-top:18px; letter-spacing:2px;'>{name_a}</div>
-                <div class='atlas-title-line'></div>
-            </div>
-            <div class='atlas-duel-vs'>{swords_svg}<div style='font-family:Cinzel,serif; font-size:18px; letter-spacing:2px; margin-left:8px;'>VS</div></div>
-            <div class='atlas-duel-card red'>
-                <div class='atlas-mini-label'>{target_svg} competitor b</div>
-                <div style='font-family:Cinzel,serif; font-size:30px; font-weight:700; color:#E8E4DC; margin-top:18px; letter-spacing:2px;'>{name_b}</div>
-                <div class='atlas-title-line'></div>
-            </div>
-        </div>""",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if not has_llm:
-        st.warning(t("competitor.llm_warning"))
-    if st.button(t("competitor.generate", a=name_a, b=name_b), type="primary", use_container_width=True, disabled=not has_llm):
-        with st.spinner(t("competitor.generating")):
-            result = _run_comparison(name_a, name_b)
-        if result:
-            st.session_state["competitor_last_result"] = result
-            st.session_state["competitor_last_names"] = (name_a, name_b)
-        else:
-            st.error(t("competitor.failed"))
-
-    if "competitor_last_result" in st.session_state:
-        names = st.session_state.get("competitor_last_names", (name_a, name_b))
-        st.markdown("<hr style='border:none; border-top:1px solid rgba(180,160,120,0.08); margin:2rem 0;'/>", unsafe_allow_html=True)
-        compare_svg = icon("compare", color="#d4af37")
-        st.markdown(f"<h3>{compare_svg} {names[0]} vs {names[1]}</h3>", unsafe_allow_html=True)
-        st.markdown(st.session_state["competitor_last_result"])

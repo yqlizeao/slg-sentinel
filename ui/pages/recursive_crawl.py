@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from html import escape
 from datetime import datetime
 
 import pandas as pd
@@ -7,6 +8,15 @@ import streamlit as st
 import streamlit.components.v1 as st_components
 
 from src.core.config import load_config
+from ui.components.atlas_shell import (
+    atlas_chips,
+    atlas_empty,
+    atlas_rows,
+    render_atlas_drawer,
+    render_atlas_list_editor,
+    render_atlas_panel,
+    render_atlas_stage,
+)
 from ui.components.common import render_atlas_ops_board
 from ui.components.crawl import (
     render_crawl_result_card,
@@ -54,175 +64,6 @@ from ui.services.recursive_insights import (
     search_scale_label,
 )
 
-
-def _inject_recursive_page_styles() -> None:
-    st.markdown(
-        """
-        <style>
-          div[data-testid="stAppViewContainer"] .main .block-container {
-            padding-top: 1.2rem;
-            max-width: 1320px;
-          }
-          .recursive-hero {
-            border: 1px solid rgba(180,160,120,0.15);
-            border-radius: 14px;
-            background: linear-gradient(135deg, rgba(12,15,20,0.92) 0%, rgba(15,20,25,0.9) 52%, rgba(12,15,20,0.92) 100%);
-            padding: 24px 26px;
-            margin-bottom: 18px;
-            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
-          }
-          .recursive-hero-top {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            align-items: flex-start;
-          }
-          .recursive-eyebrow {
-            color: #d4af37;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 1.2px;
-            margin-bottom: 8px;
-          }
-          .recursive-title {
-            color: rgba(232,228,220,0.8);
-            font-size: 34px;
-            line-height: 1.15;
-            font-weight: 850;
-            margin: 0;
-          }
-          .recursive-subtitle {
-            color: rgba(232,228,220,0.5);
-            font-size: 15px;
-            line-height: 1.75;
-            max-width: 760px;
-            margin-top: 10px;
-          }
-          .recursive-mode-pill {
-            border: 1px solid rgba(180,160,120,0.15);
-            border-radius: 999px;
-            padding: 7px 12px;
-            color: rgba(232,228,220,0.7);
-            background: rgba(12,15,20,0.8);
-            font-size: 12px;
-            font-weight: 750;
-            white-space: nowrap;
-          }
-          .recursive-hero-kpis {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-          }
-          .recursive-kpi {
-            border: 1px solid rgba(180,160,120,0.1);
-            border-radius: 10px;
-            background: rgba(12,15,20,0.92);
-            padding: 12px 14px;
-          }
-          .recursive-kpi-label {
-            color: rgba(232,228,220,0.4);
-            font-size: 12px;
-            font-weight: 650;
-          }
-          .recursive-kpi-value {
-            color: #E8E4DC;
-            font-size: 22px;
-            font-weight: 850;
-            margin-top: 5px;
-          }
-          .recursive-section {
-            margin: 18px 0 8px 0;
-            padding-top: 2px;
-          }
-          .recursive-section-label {
-            color: #6B8BDB;
-            font-size: 12px;
-            font-weight: 850;
-            margin-bottom: 5px;
-          }
-          .recursive-section-title {
-            color: rgba(232,228,220,0.8);
-            font-size: 22px;
-            line-height: 1.25;
-            font-weight: 850;
-          }
-          .recursive-section-desc {
-            color: rgba(232,228,220,0.4);
-            font-size: 13px;
-            line-height: 1.65;
-            margin-top: 5px;
-          }
-          .recursive-inline-note {
-            border: 1px solid rgba(180,160,120,0.1);
-            border-left: 4px solid #d4af37;
-            border-radius: 10px;
-            background: rgba(12,15,20,0.7);
-            color: rgba(232,228,220,0.7);
-            padding: 12px 14px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            line-height: 1.65;
-          }
-          div[data-testid="stExpander"] {
-            border-color: rgba(180,160,120,0.1);
-            border-radius: 12px;
-            background: rgba(12,15,20,0.92);
-          }
-          div[data-testid="stMetric"] {
-            background: rgba(12,15,20,0.92);
-            border: 1px solid rgba(180,160,120,0.1);
-            border-radius: 10px;
-            padding: 10px 12px;
-          }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def _render_recursive_hero(is_expert: bool, keyword_count: int, latest_run: dict | None) -> None:
-    summary = build_exploration_summary(latest_run) if latest_run else {}
-    status = summary.get("status") or "待开始"
-    videos = summary.get("total_videos", 0)
-    topics = summary.get("discovered_topics", 0)
-    recommended = summary.get("recommended_topics", 0)
-    mode_label = t("recursive.expert_mode") if is_expert else t("recursive.simple_mode")
-    with st.container():
-        st.markdown(
-            f"""
-            <div class="recursive-hero">
-              <div class="recursive-hero-top">
-                <div>
-                  <div class="recursive-eyebrow">AI TOPIC EXPLORATION</div>
-                  <h1 class="recursive-title">{t('recursive.title')}</h1>
-                  <div class="recursive-subtitle">{t('recursive.subtitle')}</div>
-                </div>
-                <div class="recursive-mode-pill">{mode_label}</div>
-              </div>
-              <div class="recursive-hero-kpis">
-                <div class="recursive-kpi"><div class="recursive-kpi-label">{t('recursive.step_seed')}</div><div class="recursive-kpi-value">{keyword_count}</div></div>
-                <div class="recursive-kpi"><div class="recursive-kpi-label">当前状态</div><div class="recursive-kpi-value">{status}</div></div>
-                <div class="recursive-kpi"><div class="recursive-kpi-label">已采集视频</div><div class="recursive-kpi-value">{videos}</div></div>
-                <div class="recursive-kpi"><div class="recursive-kpi-label">推荐继续</div><div class="recursive-kpi-value">{recommended}/{topics}</div></div>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-
-def _render_section_header(label: str, title: str, description: str) -> None:
-    st.markdown(
-        f"""
-        <div class="recursive-section">
-          <div class="recursive-section-label">{label}</div>
-          <div class="recursive-section-title">{title}</div>
-          <div class="recursive-section-desc">{description}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 def _render_recursive_config(keyword_runtime: dict, is_expert: bool) -> dict:
@@ -1012,70 +853,162 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
 
 
 def render_recursive_crawl_page() -> None:
-    _inject_recursive_page_styles()
     _, initial_keywords, _ = load_keyword_library()
     current_expert = st.session_state.get("recursive_view_mode") == "expert"
-    _render_recursive_hero(current_expert, len(initial_keywords), st.session_state.get("recursive_last_run"))
-    render_atlas_ops_board(
-        t("recursive.ops.title"),
-        t("recursive.ops.subtitle"),
-        [("Seed Topics", str(len(initial_keywords))), ("Mode", "expert" if current_expert else "simple"), ("Depth", "recursive"), ("Queue", "branch")],
-        t("recursive.ops.eyebrow"),
-    )
-    toggle_cols = st.columns([1, 0.22], vertical_alignment="center")
-    with toggle_cols[1]:
-        is_expert = st.checkbox(
-            t("recursive.open_expert"),
-            value=current_expert,
-            key="recursive_expert_mode_enabled",
-            help=t("recursive.expert_help"),
-        )
+    is_expert = current_expert
+    keyword_runtime = {
+        "keywords": list(initial_keywords),
+        "keyword_count": len(initial_keywords),
+    }
+    config = {
+        "platform": st.session_state.get("recursive_platform", "bilibili"),
+        "strategy": st.session_state.get("recursive_strategy", "标准探索"),
+        "mode": st.session_state.get("recursive_mode_general", "免登录"),
+        "depth": st.session_state.get("recursive_depth_general", "基础采集"),
+        "order_val": "totalrank",
+        "limit_val": int(st.session_state.get("recursive_limit", 20)),
+        "max_depth": int(st.session_state.get("recursive_depth_limit", 2)),
+        "per_round_keywords": int(st.session_state.get("recursive_topk", 8)),
+        "min_score": float(st.session_state.get("recursive_min_score", 3.0)),
+        "stop_new_keywords": int(st.session_state.get("recursive_stop_new", 3)),
+        "can_execute": bool(initial_keywords),
+        "keyword_count": len(initial_keywords),
+    }
+
+    cmd_cols = st.columns([0.95, 1.0, 1.05, 1.15, 1.0, 4.85], gap="small")
+    with cmd_cols[0]:
+        with st.popover(t('popover.mode'), use_container_width=True):
+            is_expert = st.checkbox(
+                t("recursive.open_expert"),
+                value=current_expert,
+                key="recursive_expert_mode_enabled",
+                help=t("recursive.expert_help"),
+            )
     st.session_state["recursive_view_mode"] = "expert" if is_expert else "simple"
+    with cmd_cols[1]:
+        with st.popover(t('popover.seeds'), use_container_width=True):
+            st.markdown(
+                f"<div class='recursive-inline-note'>{t('recursive.seed_note', count=len(initial_keywords))}</div>",
+                unsafe_allow_html=True,
+            )
+            keyword_runtime = render_keyword_library("recursive")
+    with cmd_cols[2]:
+        with st.popover(t('popover.config'), use_container_width=True):
+            config = _render_recursive_config(keyword_runtime, is_expert)
+            if is_expert:
+                _render_search_metrics(config["platform"])
+    with cmd_cols[3]:
+        with st.popover(t('popover.candidates'), use_container_width=True):
+            _render_candidate_panel(config, keyword_runtime, is_expert)
+    with cmd_cols[4]:
+        with st.popover(t('popover.history'), use_container_width=True):
+            _render_history_library(is_expert)
+            if st.session_state.get("recursive_last_run") and is_expert:
+                st.divider()
+                _render_node_detail(st.session_state["recursive_last_run"])
 
-    _render_section_header("STEP 01", t("recursive.step_seed"), t("recursive.step_seed_desc"))
-    with st.expander(t("recursive.seed_expander"), expanded=False):
-        st.markdown(
-            f"<div class='recursive-inline-note'>{t('recursive.seed_note', count=len(initial_keywords))}</div>",
-            unsafe_allow_html=True,
+    run = st.session_state.get("recursive_last_run")
+    result = st.session_state.get("recursive_last_result")
+    nodes = run.get("nodes", []) if run else []
+    rounds = run.get("rounds", []) if run else []
+    candidates = collect_candidates_from_run(run) if run else []
+    summary = run.get("summary", {}) if run else {}
+    status = run.get("status", "waiting") if run else "waiting"
+    seed_preview = list(keyword_runtime.get("keywords", initial_keywords))[:18]
+    node_rows = [
+        (
+            f"R{node.get('round')} · {node.get('keyword', '')}",
+            f"{node.get('status', '')} · {node.get('candidate_metrics', {}).get('count', 0)}",
         )
-        keyword_runtime = render_keyword_library("recursive")
-
-    if is_expert:
-        _render_section_header("EXPERT", t("recursive.expert_chain"), t("recursive.expert_chain_desc"))
-        render_step_overview(
-            [
-                ("01", "种子词", "#5B9A6E"),
-                ("02", "采集", "#6B8BDB"),
-                ("03", "提词", "#9B7FD4"),
-                ("04", "递归", "#D4956B"),
-                ("05", "停止", "#E85D4A"),
-            ]
+        for node in nodes[:12]
+    ]
+    round_rows = [
+        (
+            f"Round {item.get('round')}",
+            f"{item.get('status', '')} · {len(item.get('keywords', []))} topics",
         )
-        render_recursive_crawl_flow()
+        for item in rounds[:8]
+    ]
+    candidate_rows = [
+        (
+            str(item.get("keyword", "")),
+            format_score(float(item.get("score", 0) or 0)),
+        )
+        for item in candidates[:10]
+    ]
+    seed_body = atlas_chips(seed_preview) if seed_preview else atlas_empty(t("recursive.step_seed"), t("common.empty_first_action"))
+    tree_body = render_atlas_list_editor(
+        t('recursive.panel.tree'),
+        node_rows,
+        compact=True,
+        empty_title=t('recursive.panel.no_tree'),
+        empty_body=t("common.empty_first_action"),
+    )
+    if run:
+        progress_body = render_atlas_list_editor(t('recursive.drawer.timeline'), round_rows, compact=True)
+    else:
+        progress_body = atlas_empty(t('recursive.no_exploration'), t("recursive.subtitle"))
 
-    _render_section_header("STEP 02", "探索设置", "选择平台和探索策略。营销同学通常只需要选择标准/保守/深度，高级参数保持折叠。")
-    config = _render_recursive_config(keyword_runtime, is_expert)
-    if is_expert:
-        _render_search_metrics(config["platform"])
-
-    _render_section_header("STEP 03", "新发现话题", "把最新采集结果转成可行动的话题建议，并按推荐价值分组。")
-    with st.container(border=True):
-        _render_candidate_panel(config, keyword_runtime, is_expert)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.session_state.get("recursive_last_result"):
-        if is_expert:
-            render_crawl_result_card(st.session_state["recursive_last_result"])
-    if st.session_state.get("recursive_last_run"):
-        if is_expert:
-            _render_section_header("STEP 04", "递归树复盘", "查看每个关键词节点的搜索规模、采集结果、候选词和停止原因。")
-            st.markdown("### 本次递归树")
-            _render_recursive_tree(st.session_state["recursive_last_run"])
-            _render_node_detail(st.session_state["recursive_last_run"])
-        else:
-            _render_run_summary(st.session_state["recursive_last_run"])
-            _render_business_progress(st.session_state["recursive_last_run"])
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    _render_section_header("STEP 05", "历史探索", "打开历史任务，复盘某次探索发现了哪些话题，以及为什么继续或停止。")
-    _render_history_library(is_expert)
+    scene_html = f"""
+    <div class='atlas-scene-sigil'></div>
+    <div class='atlas-scene-line' style='left:18%;top:58%;width:25%;transform:rotate(-25deg);'></div>
+    <div class='atlas-scene-line' style='left:42%;top:44%;width:21%;transform:rotate(24deg);'></div>
+    <div class='atlas-scene-line' style='left:58%;top:55%;width:23%;transform:rotate(-12deg);'></div>
+    <div class='atlas-scene-line' style='left:42%;top:44%;width:18%;transform:rotate(92deg);'></div>
+    <span class='atlas-scene-node' style='left:18%;top:57%;background:#5B9A6E;'></span>
+    <span class='atlas-scene-node' style='left:42%;top:43%;background:#d4af37;'></span>
+    <span class='atlas-scene-node' style='left:63%;top:56%;background:#9B7FD4;'></span>
+    <span class='atlas-scene-node' style='left:81%;top:51%;background:#D4956B;'></span>
+    <span class='atlas-scene-node' style='left:43%;top:62%;background:#6B8BDB;'></span>
+    <div class='atlas-stage-map'>
+      <svg viewBox='0 0 1200 720' preserveAspectRatio='xMidYMid slice' aria-hidden='true'>
+        <path class='gridline' d='M120 0V720M260 0V720M400 0V720M540 0V720M680 0V720M820 0V720M960 0V720M1100 0V720M0 120H1200M0 260H1200M0 400H1200M0 540H1200'/>
+        <text x='212' y='444' font-size='14'>{t('recursive.map.seeds')} {len(seed_preview)}</text>
+        <text x='506' y='326' font-size='14'>{t('recursive.map.round')} {len(rounds)}</text>
+        <text x='730' y='438' font-size='14'>{t('recursive.map.nodes')} {len(nodes)}</text>
+        <text x='500' y='540' font-size='13'>{t('recursive.map.candidates')} {len(candidates)}</text>
+      </svg>
+    </div>
+    """
+    panels = [
+        render_atlas_panel(
+            t('recursive.panel.state'),
+            atlas_rows([
+                (t('nav.mode'), t('label.expert') if is_expert else t('label.simple')),
+                (t('crawl.row.platform'), PLATFORM_OPTIONS.get(config.get("platform"), config.get("platform", "bilibili"))),
+                (t('crawl.row.status'), status),
+            ], compact=True),
+            kicker=t('crawl.kicker.route'),
+        ),
+        render_atlas_panel(t('recursive.panel.seeds'), seed_body, kicker=t('recursive.metric.seeds')),
+        render_atlas_panel(t('recursive.panel.tree'), tree_body, kicker=t('recursive.metric.nodes')),
+    ]
+    drawers = [
+        render_atlas_drawer(t('recursive.drawer.timeline'), progress_body, badge=str(len(rounds))),
+        render_atlas_drawer(t('recursive.drawer.nodes'), tree_body, badge=str(len(nodes))),
+        render_atlas_drawer(t('recursive.drawer.candidates'), render_atlas_list_editor(t('recursive.drawer.candidates_title'), candidate_rows, compact=True, empty_title=t('recursive.drawer.no_candidates'), empty_body=t("common.empty_first_action")), badge=str(len(candidate_rows))),
+        render_atlas_drawer(t('recursive.drawer.result'), atlas_rows([
+            (t('recursive.row.videos'), summary.get("total_videos", result.get("added_videos", 0) if result else 0)),
+            (t('recursive.row.comments'), summary.get("total_comments", result.get("added_comments", 0) if result else 0)),
+            (t('recursive.row.output'), len(run.get("output_files", [])) if run else 0),
+        ], compact=True), badge=status.upper()),
+    ]
+    render_atlas_stage(
+        page_id="recursive",
+        title=t('recursive.stage.title'),
+        subtitle=t("recursive.subtitle"),
+        metrics=[
+            (t('recursive.metric.seeds'), str(len(keyword_runtime.get("keywords", initial_keywords)))),
+            (t('recursive.metric.mode'), t('label.expert') if is_expert else t('label.simple')),
+            (t('recursive.metric.rounds'), str(len(rounds))),
+            (t('recursive.metric.nodes'), str(len(nodes))),
+        ],
+        scene_html=scene_html,
+        panels=panels,
+        drawers=drawers,
+        timeline_label=t('recursive.stage.timeline'),
+        timeline_start=t('recursive.stage.start'),
+        timeline_end=t('recursive.stage.end'),
+        accent="#9B7FD4",
+        mode_label=t('recursive.stage.mode'),
+    )
