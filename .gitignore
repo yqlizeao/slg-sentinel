@@ -44,6 +44,7 @@ logs/
 *.tmp
 scratch.py
 spider_slg_full.py
+.streamlit.pid
 
 # ── 数据目录（由 data 分支管理，不跟踪到 main） ─────────────
 # data/
