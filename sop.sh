@@ -31,11 +31,16 @@ port_in_use() {
 kill_port() {
     local pids
     pids=$(lsof -ti "tcp:$PORT" 2>/dev/null || true)
-    [[ -z "$pids" ]] && return 0
+    if [[ -z "$pids" ]]; then
+        return 0
+    fi
     echo "$pids" | xargs kill 2>/dev/null || true
     sleep 0.5
     pids=$(lsof -ti "tcp:$PORT" 2>/dev/null || true)
-    [[ -n "$pids" ]] && echo "$pids" | xargs kill -9 2>/dev/null || true
+    if [[ -n "$pids" ]]; then
+        echo "$pids" | xargs kill -9 2>/dev/null || true
+    fi
+    return 0
 }
 
 wait_up() {
@@ -45,7 +50,7 @@ wait_up() {
             return 0
         fi
         sleep 0.5
-        (( i++ ))
+        ((++i))
     done
     return 1
 }
@@ -109,7 +114,7 @@ do_stop() {
         kill "$pid" 2>/dev/null || true
         local i=0
         while (( i < 20 )) && kill -0 "$pid" 2>/dev/null; do
-            sleep 0.3; (( i++ ))
+            sleep 0.3; ((++i))
         done
         kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
         stopped=true

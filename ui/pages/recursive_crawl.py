@@ -99,7 +99,21 @@ def _render_recursive_config(keyword_runtime: dict, is_expert: bool) -> dict:
                 help="标准探索适合日常营销选题；保守探索更快更稳；深度探索用于更完整地铺开话题。",
             )
         with quick_cols[2]:
-            st.metric("起始话题", f"{keyword_count} 个")
+            st.markdown(
+                "<div style='display:flex;flex-direction:column;justify-content:flex-start;'>"
+                "<div style='font-family:var(--wa-font-mono);font-size:10px;font-weight:500;"
+                "color:rgba(232,228,220,.38);letter-spacing:1px;text-transform:uppercase;"
+                "min-height:18px;line-height:18px;margin-bottom:4px;'>起始话题</div>"
+                "<div style='display:flex;align-items:center;min-height:38px;padding:0 12px;"
+                "border:1px solid rgba(180,160,120,.16);border-radius:4px;"
+                "background:rgba(0,0,0,.30);box-shadow:inset 0 1px 0 rgba(255,255,255,.03);'>"
+                f"<span style='color:#d4af37;font-family:var(--wa-font-display);font-size:16px;"
+                f"font-weight:700;letter-spacing:1px;'>{keyword_count}</span>"
+                "<span style='margin-left:6px;color:rgba(232,228,220,.5);font-size:11px;'>个</span>"
+                "</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
 
         preset = strategy_options[selected_strategy]
         mode = "本地鉴权" if platform in ["xiaohongshu", "douyin", "kuaishou"] else "免登录"
@@ -473,15 +487,49 @@ def _render_run_summary(run: dict) -> None:
     candidates = collect_candidates_from_run(run)
     summary = build_exploration_summary(run, candidates)
     st.markdown("### 本次探索摘要")
-    seed = "、".join(summary["seed_keywords"][:4]) if summary["seed_keywords"] else "未记录"
-    st.caption(f"起始话题：{seed} · 建议：{summary['next_action']}")
-    metric_cols = st.columns(6)
-    metric_cols[0].metric("状态", summary["status"] or "—")
-    metric_cols[1].metric("已采集视频", str(summary["total_videos"]))
-    metric_cols[2].metric("评论线索", str(summary["total_comments"]))
-    metric_cols[3].metric("发现话题", str(summary["discovered_topics"]))
-    metric_cols[4].metric("推荐继续", str(summary["recommended_topics"]))
-    metric_cols[5].metric("异常数", str(summary["abnormal_count"]))
+    seed_full = "、".join(summary["seed_keywords"]) if summary["seed_keywords"] else "未记录"
+    seed_preview = "、".join(summary["seed_keywords"][:4]) if summary["seed_keywords"] else "未记录"
+    next_action = summary.get("next_action", "")
+    st.markdown(
+        "<div style='display:flex;flex-direction:column;gap:4px;margin:6px 0 12px 0;color:rgba(232,228,220,.5);font-size:12px;line-height:1.6;'>"
+        f"<div title='{escape(seed_full)}' style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help;'>"
+        f"<span style='color:rgba(232,228,220,.36);'>起始话题：</span>{escape(seed_preview)}"
+        f"{'…' if len(summary['seed_keywords']) > 4 else ''}"
+        "</div>"
+        f"<div title='{escape(next_action)}' style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help;'>"
+        f"<span style='color:rgba(232,228,220,.36);'>建议：</span>{escape(next_action)}"
+        "</div>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+    metrics_data = [
+        ("状态", summary["status"] or "—"),
+        ("已采集视频", str(summary["total_videos"])),
+        ("评论线索", str(summary["total_comments"])),
+        ("发现话题", str(summary["discovered_topics"])),
+        ("推荐继续", str(summary["recommended_topics"])),
+        ("异常数", str(summary["abnormal_count"])),
+    ]
+    metric_html = "".join(
+        f"<div title='{escape(label)}: {escape(value)}' style='border:1px solid rgba(180,160,120,.14);"
+        "border-radius:6px;padding:10px 12px;background:rgba(7,9,12,.54);min-width:0;cursor:help;'>"
+        f"<div style='font-family:var(--wa-font-mono);font-size:9px;font-weight:600;letter-spacing:1.2px;"
+        "color:rgba(232,228,220,.38);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;"
+        f"white-space:nowrap;'>{escape(label)}</div>"
+        f"<div style='margin-top:6px;font-family:var(--wa-font-display);font-size:18px;font-weight:700;"
+        "letter-spacing:.6px;color:#e8e4dc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>"
+        f"{escape(value)}</div>"
+        "</div>"
+        for label, value in metrics_data
+    )
+    st.markdown(
+        "<div style='display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:12px;'>"
+        f"{metric_html}"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
     if candidates:
         _render_topic_group_cards(summary["groups"], run_id=str(run.get("run_id", "last")))
     else:

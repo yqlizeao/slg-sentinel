@@ -840,12 +840,18 @@ def render_overview_page() -> None:
                 if st.button(t("overview.delete_all"), type="primary", use_container_width=True):
                     confirm_clear_all()
                 for idx, item in enumerate(loaded_files[:20]):
-                    file_cols = st.columns([4, 1.2])
+                    file_cols = st.columns([3, 1.4], gap="small")
                     with file_cols[0]:
-                        st.markdown(item["display_html"], unsafe_allow_html=True)
-                        st.caption(f"{item['size_kb']:.1f} KB")
+                        full_name = escape(str(item["path"].name))
+                        st.markdown(
+                            f"<div title='{full_name}' style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(232,228,220,0.78);font-size:12px;'>"
+                            f"{item['display_html']}"
+                            f"</div>"
+                            f"<div style='color:rgba(232,228,220,0.36);font-size:10px;margin-top:2px;'>{item['size_kb']:.1f} KB</div>",
+                            unsafe_allow_html=True,
+                        )
                     with file_cols[1]:
-                        if st.button(t("overview.delete"), key=f"del_{idx}_{item['path']}"):
+                        if st.button(t("overview.delete"), key=f"del_{idx}_{item['path']}", use_container_width=True):
                             try:
                                 delete_loaded_csv_file(item["path"])
                                 st.rerun()
@@ -863,10 +869,25 @@ def render_overview_page() -> None:
             )
             trending = get_trending_videos(int(view_limit))
             if trending:
-                st.markdown(render_atlas_list_editor(t('overview.drawer.hot_title'), [
-                    (str(video.get("title") or video.get("video_title") or t('overview.untitled'))[:38], f"{int(video.get('view_count', 0) or 0):,}")
-                    for video in trending[:12]
-                ], caption=t('overview.sorted_by_views'), compact=True), unsafe_allow_html=True)
+                visible = trending[: int(view_limit)]
+                rows_html = render_atlas_list_editor(
+                    t('overview.drawer.hot_title'),
+                    [
+                        (str(video.get("title") or video.get("video_title") or t('overview.untitled'))[:38], f"{int(video.get('view_count', 0) or 0):,}")
+                        for video in visible
+                    ],
+                    caption=t('overview.sorted_by_views'),
+                    compact=True,
+                )
+                st.markdown(rows_html, unsafe_allow_html=True)
+                if len(visible) < int(view_limit):
+                    st.markdown(
+                        "<div style='margin-top:8px;padding:8px 10px;border:1px dashed rgba(180,160,120,0.18);"
+                        "border-radius:6px;color:rgba(232,228,220,0.42);font-size:11px;text-align:center;letter-spacing:0.4px;'>"
+                        f"{t('overview.no_more_data')}"
+                        "</div>",
+                        unsafe_allow_html=True,
+                    )
             else:
                 st.caption(t("common.empty_first_action"))
     with cmd_cols[2]:
@@ -882,7 +903,20 @@ def render_overview_page() -> None:
                 st.caption(t("common.empty_first_action"))
     with cmd_cols[3]:
         with st.popover(t('popover.freshness'), use_container_width=True):
-            render_data_freshness()
+            from datetime import datetime as _dt
+            now_str = _dt.now().strftime("%Y-%m-%d %H:%M")
+            clk = icon("clock", color="#d4af37")
+            st.markdown(
+                "<div style='display:flex;align-items:center;gap:10px;padding:14px 16px;"
+                "border:1px solid rgba(180,160,120,0.14);border-radius:8px;background:rgba(12,15,20,0.7);'>"
+                f"<div style='font-size:14px;'>{clk}</div>"
+                "<div style='display:flex;flex-direction:column;line-height:1.5;'>"
+                f"<span style='font-size:10px;color:rgba(232,228,220,0.42);letter-spacing:1px;text-transform:uppercase;'>{t('common.freshness')}</span>"
+                f"<span style='font-size:13px;color:rgba(232,228,220,0.85);font-family:var(--wa-font-mono);'>{now_str}</span>"
+                "</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
 
     api_text = t('label.online') if health["api_health"] else t('label.local')
     platform_rows = [

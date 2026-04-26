@@ -435,6 +435,8 @@ button[kind="primary"]:hover,
 [data-baseweb="input"] input,
 [data-baseweb="textarea"] textarea {
     min-height: 38px !important;
+    line-height: 1.4 !important;
+    padding: 8px 12px !important;
     background: rgba(0,0,0,.30) !important;
     border: 1px solid rgba(180,160,120,.16) !important;
     border-radius: 4px !important;
@@ -442,6 +444,47 @@ button[kind="primary"]:hover,
     font-family: var(--wa-font-body) !important;
     font-size: 12px !important;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+/* Password / secret inputs: keep wrapper, input, and visibility toggle button aligned */
+.stTextInput [data-baseweb="input"] {
+    min-height: 38px !important;
+    align-items: stretch !important;
+    padding-right: 0 !important;
+}
+.stTextInput [data-baseweb="input"] > div:last-child:has(button),
+.stTextInput [data-baseweb="input"] [data-baseweb="button"] {
+    align-self: stretch !important;
+}
+.stTextInput [data-baseweb="input"] button {
+    height: 38px !important;
+    min-height: 38px !important;
+    width: 38px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: rgba(232,228,220,.62) !important;
+    box-shadow: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.stTextInput [data-baseweb="input"] button:hover {
+    color: var(--wa-gold) !important;
+    background: rgba(212,175,55,.06) !important;
+    transform: none !important;
+}
+.stTextInput [data-baseweb="input"] button svg {
+    width: 16px !important;
+    height: 16px !important;
+}
+/* Number input internals */
+.stNumberInput [data-baseweb="input"] {
+    min-height: 38px !important;
+}
+.stNumberInput button {
+    height: 18px !important;
+    min-height: 18px !important;
 }
 .stTextInput input:hover,
 .stTextArea textarea:hover,
@@ -488,12 +531,22 @@ button[kind="primary"]:hover,
     min-height: 36px !important;
     background: transparent !important;
     border: 0 !important;
+    align-items: center !important;
+}
+.stSelectbox [data-baseweb="select"] [data-baseweb="select-option"],
+.stSelectbox [data-baseweb="select"] [class*="ValueContainer"],
+.stMultiSelect [data-baseweb="select"] [class*="ValueContainer"] {
+    padding: 0 12px !important;
+    min-height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
 }
 .stSelectbox [data-baseweb="select"] span,
 .stMultiSelect [data-baseweb="select"] span,
 [data-baseweb="select"] span {
     color: rgba(232,228,220,.78) !important;
     font-size: 12px !important;
+    line-height: 1.4 !important;
 }
 [data-baseweb="select"] svg {
     fill: rgba(212,175,55,.70) !important;
@@ -527,10 +580,17 @@ ul[role="listbox"] {
 .stCheckbox label,
 .stRadio label {
     min-height: 32px !important;
-    padding: 5px 8px !important;
+    height: auto !important;
+    padding: 6px 8px !important;
     border-radius: 4px !important;
     color: rgba(232,228,220,.62) !important;
+    align-items: flex-start !important;
     transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast) !important;
+}
+.stCheckbox label > div:first-child,
+.stCheckbox label [data-baseweb="checkbox"] {
+    flex: 0 0 auto !important;
+    margin-top: 2px !important;
 }
 .stRadio [role="radiogroup"] {
     display: flex !important;
@@ -597,18 +657,30 @@ ul[role="listbox"] {
     color: #e8e4dc !important;
     background: rgba(212,175,55,.045) !important;
 }
-.stCheckbox [data-baseweb="checkbox"] > div,
-.stRadio [data-baseweb="radio"] > div {
+/* Checkbox indicator only — the leaf 14x14 square. For st.toggle, baseweb
+   wraps the toggle track + ball in nested divs, so we exclude any parent
+   div that itself contains a child div (that's the toggle track). */
+.stCheckbox [data-baseweb="checkbox"] > div:first-child:not(:has(> div)),
+.stRadio [data-baseweb="radio"] > div:first-child:not(:has(> div)) {
     width: 14px !important;
     height: 14px !important;
     border: 1px solid rgba(212,175,55,.42) !important;
     background: transparent !important;
     box-shadow: none !important;
 }
-.stCheckbox [data-baseweb="checkbox"] [aria-checked="true"] > div,
-.stCheckbox [data-baseweb="checkbox"]:has(input:checked) > div,
-.stRadio [data-baseweb="radio"] [aria-checked="true"] > div,
-.stRadio [data-baseweb="radio"]:has(input:checked) > div {
+/* Restore baseweb toggle visuals: never apply our checkbox border to the
+   toggle's track (it has a child div = the ball). */
+.stCheckbox [data-baseweb="checkbox"] > div:has(> div) {
+    width: auto !important;
+    height: auto !important;
+    border: 0 !important;
+}
+/* Checked state: only paint the leaf checkmark/radio square gold, never the
+   toggle track (which has a child div = the ball). */
+.stCheckbox [data-baseweb="checkbox"] [aria-checked="true"] > div:not(:has(> div)),
+.stCheckbox [data-baseweb="checkbox"]:has(input:checked) > div:first-child:not(:has(> div)),
+.stRadio [data-baseweb="radio"] [aria-checked="true"] > div:not(:has(> div)),
+.stRadio [data-baseweb="radio"]:has(input:checked) > div:first-child:not(:has(> div)) {
     background: #d4af37 !important;
     border-color: #d4af37 !important;
 }
@@ -750,33 +822,21 @@ pre,
     box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
-/* Dataframe / data editor shell */
+/* Dataframe / data editor shell — only style the OUTER wrapper.
+   Do NOT set background/filter/opacity on the canvas itself or on the
+   dvn-scroller, because glide-data-grid draws cell colors on the canvas
+   pixel-by-pixel using Streamlit theme tokens (configured in
+   .streamlit/config.toml: textColor / backgroundColor /
+   dataframeHeaderBackgroundColor / dataframeBorderColor). Any CSS layer
+   on the canvas or its scroll wrapper visually blends with the glide
+   pixels and can washed-out / dim the rendered text. */
 [data-testid="stDataFrame"],
 [data-testid="stDataEditor"] {
     position: relative !important;
     overflow: hidden !important;
     border: 1px solid rgba(180,160,120,.16) !important;
     border-radius: 8px !important;
-    background:
-        linear-gradient(rgba(212,175,55,.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(212,175,55,.014) 1px, transparent 1px),
-        rgba(7,9,12,.86) !important;
-    background-size: 34px 34px, 34px 34px, auto !important;
     box-shadow: 0 18px 52px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.025) !important;
-}
-[data-testid="stDataFrame"] [class*="dvn-scroller"],
-[data-testid="stDataEditor"] [class*="dvn-scroller"],
-.stDataFrameGlideDataEditor {
-    border-radius: 6px !important;
-    background: rgba(5,7,10,.94) !important;
-    border: 1px solid rgba(180,160,120,.13) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
-}
-[data-testid="stDataFrame"] canvas,
-[data-testid="stDataEditor"] canvas {
-    border-radius: 5px !important;
-    background: #07090d !important;
-    filter: saturate(.78) contrast(1.06) brightness(.72);
 }
 [data-testid="stDataFrame"] button,
 [data-testid="stDataEditor"] button {

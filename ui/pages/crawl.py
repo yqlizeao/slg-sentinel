@@ -40,27 +40,29 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
     matrix_html_base = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; }
-        table { width:100%; border-collapse:collapse; font-size:12px; border:1px solid rgba(180,160,120,0.12); border-radius:8px; overflow:hidden; }
+        html, body { width:100%; max-width:100%; overflow-x:hidden; }
+        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; padding:0; }
+        table { width:100%; max-width:100%; table-layout:fixed; border-collapse:collapse; font-size:12px; border:1px solid rgba(180,160,120,0.12); border-radius:8px; overflow:hidden; }
         thead tr { background:rgba(180,160,120,0.06); border-bottom:1px solid rgba(180,160,120,0.12); }
-        th { padding:12px 14px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; text-transform:uppercase; letter-spacing:0.8px; }
-        td { padding:12px 14px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:12px; color:rgba(232,228,220,0.7); }
+        th { padding:10px 12px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; text-transform:uppercase; letter-spacing:0.8px; word-break:break-word; }
+        td { padding:10px 12px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:12px; color:rgba(232,228,220,0.7); word-break:break-word; overflow-wrap:anywhere; }
+        tr:last-child td { border-bottom:none; }
         tr:hover td { background:rgba(180,160,120,0.04); }
-        .status { display:inline-flex; align-items:center; gap:6px; }
+        .status { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
         .dot { display:inline-block; width:8px; height:8px; border-radius:50%; flex:0 0 8px; }
         .dot-g { background:#5B9A6E; }
         .dot-r { background:#E85D4A; }
         .g { color:#5B9A6E; font-weight:600; }
         .r { color:#E85D4A; font-weight:600; }
-        code { background:rgba(180,160,120,0.1); padding:2px 6px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#d4af37; }
+        code { background:rgba(180,160,120,0.1); padding:2px 6px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#d4af37; word-break:break-all; display:inline-block; max-width:100%; white-space:normal; }
         .desc { font-size:11px; color:rgba(232,228,220,0.4); }
     </style></head><body>
     <table>
         <thead><tr>
-            <th style="width:18%">属性</th>
+            <th style="width:22%">属性</th>
             <th style="width:30%">数据来源</th>
-            <th style="width:25%">业务价值</th>
-            <th style="width:27%">当前可见范围</th>
+            <th style="width:24%">业务价值</th>
+            <th style="width:24%">当前可见范围</th>
         </tr></thead>
         <tbody>"""
 
@@ -69,7 +71,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
 
     if platform == "bilibili":
         comp_title = "采集引擎：<a href='https://github.com/Nemo2011/bilibili-api' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>bilibili-api-python</a>"
-        iframe_height = 680
+        iframe_height = 580
         is_simple = "基础" in depth
         is_basic = "免登录" in mode
         sess_status = green_status("可获取")
@@ -96,7 +98,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>关注关系链</td><td><code>API /x/relation/followings</code></td><td class="desc">用于识别关联账号与兴趣重合</td><td>{follow_status}</td></tr>"""
     elif platform == "youtube":
         comp_title = "采集引擎：<a href='https://github.com/yt-dlp/yt-dlp' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-dlp</a> · <a href='https://github.com/dermasmid/scrapetube' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>scrapetube</a> · <a href='https://github.com/egbertbouman/youtube-comment-downloader' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>yt-cmt-dl</a>"
-        iframe_height = 600
+        iframe_height = 540
         ok_status = green_status("可获取")
         rows = f"""
         <tr><td>视频 ID (videoId)</td><td><code>yt-dlp ytsearch:关键词</code></td><td class="desc">用于唯一定位内容</td><td>{ok_status}</td></tr>
@@ -114,7 +116,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>评论完整纯文本</td><td><code>youtube-comment-downloader</code></td><td class="desc">用于情感与主题分析</td><td>{ok_status}</td></tr>"""
     elif platform == "taptap":
         comp_title = "采集引擎：<span style='font-family:IBM Plex Mono,monospace; font-weight:600; color:#d4af37; background:rgba(180,160,120,0.1); padding:4px 8px; border-radius:4px;'>自有协议解析引擎</span>"
-        iframe_height = 420
+        iframe_height = 400
         ok_status = green_status("可获取")
         rows = f"""
         <tr><td>核心星评 (1-5星)</td><td><code>API /v2/review/thread</code></td><td class="desc">用于观察口碑趋势</td><td>{ok_status}</td></tr>
@@ -128,7 +130,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>外部竞品评价横比</td><td><code>API /v2/game/games</code></td><td class="desc">用于对比竞品体验路径</td><td>{ok_status}</td></tr>"""
     else:
         comp_title = "采集引擎：<a href='https://github.com/NanmiCoder/MediaCrawler' target='_blank' style='color:#d4af37; text-decoration:none; font-family:IBM Plex Mono,monospace; font-weight:600;'>MediaCrawler</a> 本地桥接"
-        iframe_height = 560
+        iframe_height = 480
         local_auth_status = green_status("本地授权后可获取")
         rows = f"""
         <tr><td>帖子/视频 ID</td><td><code>MediaCrawler (aweme_id)</code></td><td class="desc">用于唯一定位内容</td><td>{local_auth_status}</td></tr>
@@ -155,17 +157,21 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
     privacy_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; }
-        table { width:100%; border-collapse:collapse; font-size:12px; }
+        html, body { width:100%; max-width:100%; overflow-x:hidden; }
+        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; padding:0; }
+        table { width:100%; max-width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; }
         thead tr { background:rgba(180,160,120,0.08); }
-        th { padding:12px 14px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; white-space:nowrap; text-transform:uppercase; letter-spacing:0.8px; }
-        td { padding:12px 14px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:12px; color:rgba(232,228,220,0.6); }
+        th { padding:8px 8px; font-size:9px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; text-transform:uppercase; letter-spacing:0.6px; word-break:break-word; }
+        th:first-child { width:18%; }
+        th:not(:first-child) { width:13.6%; }
+        td { padding:8px 8px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:11px; color:rgba(232,228,220,0.65); word-break:break-word; }
+        tr:last-child td { border-bottom:none; }
         tr:hover td { background:rgba(180,160,120,0.04); }
-        td:first-child { font-weight:600; color:rgba(232,228,220,0.8); white-space:nowrap; }
+        td:first-child { font-weight:600; color:rgba(232,228,220,0.85); }
         .r { color:#E85D4A; } .y { color:#D4956B; } .g { color:#5B9A6E; }
-        .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+        .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; vertical-align:middle; }
         .dot-r { background:#E85D4A; } .dot-y { background:#D4956B; } .dot-g { background:#5B9A6E; }
-        .na { color:rgba(232,228,220,0.2); font-size:11px; }
+        .na { color:rgba(232,228,220,0.22); font-size:10px; }
     </style></head><body>
     <table>
         <thead><tr><th>数据类型</th><th>B站</th><th>抖音</th><th>快手</th><th>小红书</th><th>TapTap</th><th>YouTube</th></tr></thead>
@@ -178,25 +184,29 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>玩过的游戏列表</td><td class="na">N/A</td><td class="na">N/A</td><td class="na">N/A</td><td class="na">N/A</td><td><span class="dot dot-g"></span><span class="g">公开</span></td><td class="na">N/A</td></tr>
         </tbody>
     </table></body></html>"""
-    st_components.html(privacy_matrix_html, height=340, scrolling=False)
+    st_components.html(privacy_matrix_html, height=290, scrolling=False)
 
     st.markdown("<h3>视频指标可采集范围</h3>", unsafe_allow_html=True)
     st.markdown("<p style='color:rgba(232,228,220,0.35); font-size:12px; margin-bottom:0.8rem;'>各平台视频/内容维度指标的可用性与对应字段名。</p>", unsafe_allow_html=True)
     metrics_matrix_html = """<!DOCTYPE html><html><head><meta charset="utf-8">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; }
-        table { width:100%; border-collapse:collapse; font-size:12px; }
+        html, body { width:100%; max-width:100%; overflow-x:hidden; }
+        body { font-family:'IBM Plex Sans',-apple-system,sans-serif; background:#0A0C10; color:#E8E4DC; padding:0; }
+        table { width:100%; max-width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; }
         thead tr { background:rgba(180,160,120,0.08); }
-        th { padding:12px 14px; font-size:10px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; white-space:nowrap; text-transform:uppercase; letter-spacing:0.8px; }
-        td { padding:12px 14px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:12px; color:rgba(232,228,220,0.6); }
+        th { padding:8px 8px; font-size:9px; font-weight:600; color:rgba(232,228,220,0.4); text-align:left; text-transform:uppercase; letter-spacing:0.6px; word-break:break-word; }
+        th:first-child { width:14%; }
+        th:not(:first-child) { width:14.3%; }
+        td { padding:8px 8px; border-bottom:1px solid rgba(180,160,120,0.05); vertical-align:middle; font-size:11px; color:rgba(232,228,220,0.65); word-break:break-word; }
+        tr:last-child td { border-bottom:none; }
         tr:hover td { background:rgba(180,160,120,0.04); }
-        td:first-child { font-weight:600; color:rgba(232,228,220,0.8); white-space:nowrap; }
+        td:first-child { font-weight:600; color:rgba(232,228,220,0.85); }
         .g { color:#5B9A6E; }
-        .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+        .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; vertical-align:middle; }
         .dot-g { background:#5B9A6E; }
-        .na { color:rgba(232,228,220,0.2); font-size:11px; }
-        code { background:rgba(91,154,110,0.12); color:#5B9A6E; font-size:10px; padding:2px 6px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-weight:600; }
+        .na { color:rgba(232,228,220,0.22); font-size:10px; }
+        code { background:rgba(91,154,110,0.12); color:#5B9A6E; font-size:9px; padding:1px 4px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-weight:600; word-break:break-all; display:inline-block; max-width:100%; }
     </style></head><body>
     <table>
         <thead><tr><th>指标</th><th>B站</th><th>抖音</th><th>快手</th><th>小红书</th><th>TapTap</th><th>YouTube</th></tr></thead>
@@ -210,7 +220,7 @@ def _render_platform_field_tables(platform: str, mode: str, depth: str) -> None:
         <tr><td>评论数</td><td><span class="dot dot-g"></span><code>reply</code></td><td><span class="dot dot-g"></span><span class="g">✓</span></td><td><span class="dot dot-g"></span><span class="g">✓</span></td><td><span class="dot dot-g"></span><span class="g">✓</span></td><td><span class="dot dot-g"></span><span class="g">✓</span></td><td><span class="dot dot-g"></span><code>commentCount</code></td></tr>
         </tbody>
     </table></body></html>"""
-    st_components.html(metrics_matrix_html, height=380, scrolling=False)
+    st_components.html(metrics_matrix_html, height=290, scrolling=False)
 
 
 def render_crawl_page() -> None:

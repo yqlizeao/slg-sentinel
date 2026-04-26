@@ -572,7 +572,7 @@ def render_keyword_library(editor_prefix: str = "crawl") -> dict:
                 unsafe_allow_html=True,
             )
 
-            exp_col1, exp_col2 = st.columns(2)
+            exp_col1, exp_col2 = st.columns([1.4, 1], gap="medium")
             with exp_col1:
                 exp_enabled = st.toggle(t("keyword.enable_expansion"), value=expansion.get("enabled", True), key=f"{editor_prefix}_exp_enabled")
             with exp_col2:

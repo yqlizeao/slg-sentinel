@@ -1,7 +1,31 @@
 [theme]
-base="dark"
-primaryColor="#d4af37"
-backgroundColor="#0a0c10"
-secondaryBackgroundColor="#0c0f14"
-textColor="#e8e4dc"
-font="sans serif"
+base = "dark"
+primaryColor = "#d4af37"
+backgroundColor = "#0a0c10"
+secondaryBackgroundColor = "#141820"
+textColor = "#f0eee8"
+borderColor = "#2a2620"
+linkColor = "#d4af37"
+font = "sans serif"
+
+# DataFrame / DataEditor (glide-data-grid canvas) — these tokens are read by
+# glide-data-grid's renderer; CSS filters cannot reach inside the canvas.
+# Mapping confirmed in DataFrame.BgahE5yf.js:
+#   textDark   <- bodyText      <- textColor      (cell text)
+#   textHeader <- fadedText60   (auto-derived ~60% blend)
+#   bgCell     <- bgColor       <- backgroundColor
+#   bgHeader   <- dataframeHeaderBackgroundColor
+#   bgBubble   <- secondaryBg   <- secondaryBackgroundColor
+dataframeHeaderBackgroundColor = "#1a1f28"
+dataframeBorderColor = "#2a2620"
+
+# Force the same overrides when an explicit dark color-mode is requested
+[theme.dark]
+primaryColor = "#d4af37"
+backgroundColor = "#0a0c10"
+secondaryBackgroundColor = "#141820"
+textColor = "#f0eee8"
+borderColor = "#2a2620"
+linkColor = "#d4af37"
+dataframeHeaderBackgroundColor = "#1a1f28"
+dataframeBorderColor = "#2a2620"
