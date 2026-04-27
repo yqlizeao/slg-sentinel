@@ -224,3 +224,83 @@ def render_graph_scene(run: dict, *, selected_node_id: str | None, query: dict) 
         f"</div>"
         f"</div>"
     )
+
+
+def _format_view(value: object) -> str:
+    try:
+        n = int(float(str(value)))
+    except (TypeError, ValueError):
+        return str(value or "—")
+    if n >= 10_000:
+        return f"{n/10_000:.1f}w"
+    return str(n)
+
+
+def render_node_detail(node: dict, videos: list[dict]) -> str:
+    """Right-side panel: header + video list + candidate list."""
+    status = node.get("status", "")
+    keyword = _escape(node.get("keyword", ""))
+    crawl = node.get("crawl_metrics", {}) or {}
+    cands = node.get("candidate_metrics", {}) or {}
+    videos_count = int(crawl.get("videos", 0) or 0)
+    cand_count = int(cands.get("count", 0) or 0)
+
+    fallback_hint = ""
+    if any(v.get("fallback") for v in videos):
+        fallback_hint = "<div class='recursive-detail-hint'>数据为旧版 run 估算结果</div>"
+
+    if videos:
+        items = []
+        for v in videos:
+            title = _escape(str(v.get("title") or "—"))
+            author = _escape(str(v.get("author") or "—"))
+            view = _format_view(v.get("view_count") or v.get("view") or 0)
+            pubdate = _escape(str(v.get("publish_date") or v.get("pubdate") or ""))
+            url = _escape(str(v.get("url") or "#"))
+            items.append(
+                f"<li><a href='{url}' target='_blank' rel='noopener'>"
+                f"<div class='title'>{title}</div>"
+                f"<div class='meta'>{author} · {view}播放 · {pubdate}</div>"
+                f"</a></li>"
+            )
+        videos_block = f"<ul>{''.join(items)}</ul>"
+        if videos_count > len(videos):
+            videos_block += f"<div class='recursive-detail-more'>...还有 {videos_count - len(videos)} 条</div>"
+    else:
+        videos_block = "<div class='recursive-detail-empty'>该节点未采集到视频</div>"
+
+    candidates = cands.get("candidates") or []
+    if candidates:
+        cand_items = []
+        for c in candidates:
+            ck = _escape(str(c.get("keyword") or ""))
+            cs = c.get("score", 0)
+            try:
+                cs_text = f"{float(cs):.1f}"
+            except (TypeError, ValueError):
+                cs_text = str(cs)
+            cand_items.append(
+                f"<li><span>{ck}</span><b>★ {cs_text}</b></li>"
+            )
+        candidates_block = f"<ul>{''.join(cand_items)}</ul>"
+    else:
+        candidates_block = "<div class='recursive-detail-empty'>未挖掘出新候选词</div>"
+
+    return (
+        f"<aside class='recursive-node-detail' data-status=\"{_escape(status)}\">"
+        f"<header>"
+        f"<div class='kicker'>第 {int(node.get('round', 0) or 0)} 轮 · "
+        f"{_escape(status)} · {videos_count} 视频</div>"
+        f"<h3>{keyword}</h3>"
+        f"</header>"
+        f"<section class='videos'>"
+        f"<div class='section-title'>视频列表 ({videos_count})</div>"
+        f"{fallback_hint}"
+        f"{videos_block}"
+        f"</section>"
+        f"<section class='candidates'>"
+        f"<div class='section-title'>下一轮候选词 ({cand_count})</div>"
+        f"{candidates_block}"
+        f"</section>"
+        f"</aside>"
+    )

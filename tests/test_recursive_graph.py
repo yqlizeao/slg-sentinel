@@ -193,3 +193,69 @@ def test_render_graph_scene_escapes_html_in_keyword():
 
     assert "<script>" not in html
     assert "&lt;script&gt;" in html
+
+
+def test_render_node_detail_videos_and_candidates():
+    from ui.components.recursive_graph import render_node_detail
+
+    node = {
+        "node_id": "n1", "keyword": "蜀汉将领",
+        "round": 2, "status": "success",
+        "crawl_metrics": {"videos": 9},
+        "candidate_metrics": {
+            "count": 2,
+            "candidates": [
+                {"keyword": "战棋玩法", "score": 6.2},
+                {"keyword": "三国战略", "score": 4.1},
+            ],
+        },
+    }
+    videos = [
+        {"title": "蜀汉开荒", "author": "Up1", "view_count": "12000",
+         "publish_date": "2026-04-25", "url": "https://b/1", "fallback": False},
+    ]
+
+    html = render_node_detail(node, videos)
+
+    assert "蜀汉将领" in html
+    assert "第 2 轮" in html and "success" in html
+    assert "9 视频" in html
+    assert "蜀汉开荒" in html
+    assert "1.2w" in html or "12000" in html  # tolerated formatting
+    assert "战棋玩法" in html and "6.2" in html
+    assert "data-status=\"success\"" in html
+
+
+def test_render_node_detail_paused_with_empty_states():
+    from ui.components.recursive_graph import render_node_detail
+
+    node = {
+        "node_id": "n1", "keyword": "三国",
+        "round": 1, "status": "paused",
+        "crawl_metrics": {"videos": 0},
+        "candidate_metrics": {"count": 0, "candidates": []},
+        "stop_reason": "B站搜索量无法获取",
+    }
+
+    html = render_node_detail(node, [])
+
+    assert "data-status=\"paused\"" in html
+    assert "未采集到视频" in html
+    assert "未挖掘出新候选词" in html
+
+
+def test_render_node_detail_fallback_hint():
+    from ui.components.recursive_graph import render_node_detail
+
+    node = {
+        "node_id": "n1", "keyword": "三国",
+        "round": 1, "status": "success",
+        "crawl_metrics": {"videos": 1},
+        "candidate_metrics": {"count": 0, "candidates": []},
+    }
+    videos = [{"title": "x", "author": "y", "view_count": "1",
+               "publish_date": "2026-04-26", "url": "u", "fallback": True}]
+
+    html = render_node_detail(node, videos)
+
+    assert "估算结果" in html
