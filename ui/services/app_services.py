@@ -738,6 +738,58 @@ def get_crawl_file_snapshot(platform: str) -> dict[str, dict]:
     return snapshot
 
 
+def read_video_id_set(platform: str) -> dict[str, set[str]]:
+    """Return {csv_path_str: {video_id, ...}} snapshot of all platform's videos CSVs.
+
+    Used by the recursive graph to capture per-node video_id deltas across the
+    crawl boundary.
+    """
+    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+
+    if platform in VIDEO_PLATFORMS:
+        category = "video_platforms"
+    elif platform in COMMUNITY_PLATFORMS:
+        category = "community_platforms"
+    else:
+        category = "misc_platforms"
+
+    v_dir = DATA_DIR / category / platform / "videos"
+    snapshot: dict[str, set[str]] = {}
+    if not v_dir.exists():
+        return snapshot
+
+    for csv_file in v_dir.glob("*.csv"):
+        ids: set[str] = set()
+        try:
+            with open(csv_file, encoding="utf-8-sig") as fh:
+                reader = csv.DictReader(fh)
+                for row in reader:
+                    vid = (row.get("video_id") or "").strip()
+                    if vid:
+                        ids.add(vid)
+        except Exception:
+            continue
+        snapshot[str(csv_file)] = ids
+    return snapshot
+
+
+def _list_video_csv_paths(platform: str) -> list[str]:
+    """Return sorted paths of all videos CSVs for `platform` (no body parsing)."""
+    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+
+    if platform in VIDEO_PLATFORMS:
+        category = "video_platforms"
+    elif platform in COMMUNITY_PLATFORMS:
+        category = "community_platforms"
+    else:
+        category = "misc_platforms"
+
+    v_dir = DATA_DIR / category / platform / "videos"
+    if not v_dir.exists():
+        return []
+    return sorted(str(p) for p in v_dir.glob("*.csv"))
+
+
 def summarize_crawl_result(
     platform: str,
     platform_label: str,
@@ -837,6 +889,91 @@ def delete_all_loaded_csv_files() -> None:
 
 def delete_loaded_csv_file(file_path: Path) -> None:
     os.remove(file_path)
+
+
+def _load_reviews_for_node_taptap(node: dict, limit: int) -> list[dict]:
+    c_dir = DATA_DIR / "community_platforms" / "taptap" / "comments"
+    if not c_dir.exists():
+        return []
+    target_date = (node.get("started_at") or "")[:10]
+    rows: list[dict] = []
+    for csv_file in sorted(c_dir.glob("*.csv")):
+        try:
+            with open(csv_file, encoding="utf-8-sig") as fh:
+                reader = csv.DictReader(fh)
+                for raw in reader:
+                    if target_date and raw.get("snapshot_date") != target_date:
+                        continue
+                    star = raw.get("star", "")
+                    playtime = raw.get("playtime_minutes", "")
+                    rows.append({
+                        "title": raw.get("author") or "—",
+                        "author": raw.get("content", "")[:40],
+                        "view_count": "",
+                        "meta": f"★ {star} · playtime {playtime}min",
+                        "publish_date": raw.get("snapshot_date", ""),
+                        "url": raw.get("url", ""),
+                        "fallback": True,
+                    })
+                    if len(rows) >= limit:
+                        return rows
+        except Exception:
+            continue
+    return rows
+
+
+def load_videos_for_node(run: dict, node: dict, limit: int = 20) -> list[dict]:
+    """Return up to `limit` video rows associated with this recursive node.
+
+    Strategy:
+    1. TapTap (community platform): read review CSVs and shape into video-like rows.
+    2. If `node.crawl_metrics.video_ids` exists (new runs), filter platform
+       videos CSVs by exact video_id membership.
+    3. Otherwise fall back to filtering by `snapshot_date == node.started_at[:10]`
+       and tag rows with `fallback=True` so callers can show a hint.
+    """
+    platform = run.get("platform", "")
+    if platform == "taptap":
+        return _load_reviews_for_node_taptap(node, limit)
+    crawl = node.get("crawl_metrics", {}) or {}
+    video_ids: list[str] = list(crawl.get("video_ids") or [])
+
+    csv_paths = _list_video_csv_paths(platform)
+    if not csv_paths:
+        return []
+
+    rows: list[dict] = []
+    if video_ids:
+        wanted = set(video_ids)
+        for path_str in csv_paths:
+            try:
+                with open(path_str, encoding="utf-8-sig") as fh:
+                    reader = csv.DictReader(fh)
+                    for raw in reader:
+                        if raw.get("video_id") in wanted:
+                            rows.append(dict(raw))
+                            if len(rows) >= limit:
+                                return rows
+            except Exception:
+                continue
+        return rows
+
+    # Fallback path: snapshot_date match
+    target_date = (node.get("started_at") or "")[:10]
+    if not target_date:
+        return []
+    for path_str in csv_paths:
+        try:
+            with open(path_str, encoding="utf-8-sig") as fh:
+                reader = csv.DictReader(fh)
+                for raw in reader:
+                    if (raw.get("snapshot_date") or "") == target_date:
+                        rows.append({**raw, "fallback": True})
+                        if len(rows) >= limit:
+                            return rows
+        except Exception:
+            continue
+    return rows
 
 
 def media_crawler_exists() -> bool:

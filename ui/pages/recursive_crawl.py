@@ -12,18 +12,22 @@ from ui.components.atlas_shell import (
     atlas_chips,
     atlas_empty,
     atlas_rows,
-    render_atlas_drawer,
     render_atlas_list_editor,
     render_atlas_panel,
-    render_atlas_stage,
 )
-from ui.components.common import render_atlas_ops_board
 from ui.components.crawl import (
     render_crawl_result_card,
     render_keyword_library,
     render_keyword_mind_map,
     render_recursive_crawl_flow,
     render_step_overview,
+)
+from ui.components.recursive_graph import (
+    diff_video_ids,
+    render_graph_scene,
+    render_node_detail,
+    render_panels_collapsible,
+    url_with,
 )
 from ui.i18n import t
 from ui.services.app_services import (
@@ -34,7 +38,9 @@ from ui.services.app_services import (
     init_crawl_progress_state,
     load_keyword_library,
     load_latest_search_metrics,
+    load_videos_for_node,
     media_crawler_exists,
+    read_video_id_set,
     run_cli_stream,
     save_keyword_library,
     summarize_crawl_result,
@@ -731,6 +737,7 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
 
             keyword_started_at = datetime.now()
             before_snapshot = get_crawl_file_snapshot(platform)
+            before_video_ids = read_video_id_set(platform)
             tmp_keywords_path = write_temporary_keyword_file([keyword], label=f"{platform}_round_{round_idx}_{keyword}")
             cmd_args = [
                 "crawl",
@@ -753,6 +760,7 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
 
             stdout, stderr, code = run_cli_stream(cmd_args, on_line=on_recursive_line)
             after_snapshot = get_crawl_file_snapshot(platform)
+            node_video_ids = diff_video_ids(before_video_ids, read_video_id_set(platform))
             result = summarize_crawl_result(
                 platform=platform,
                 platform_label=PLATFORM_OPTIONS[platform],
@@ -770,6 +778,7 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
                 "videos": result["added_videos"],
                 "comments": result["added_comments"],
                 "touched_files": result["touched_files"],
+                "video_ids": node_video_ids,
             }
 
             error_reason = ""
@@ -955,13 +964,32 @@ def render_recursive_crawl_page() -> None:
                 st.divider()
                 _render_node_detail(st.session_state["recursive_last_run"])
 
-    run = st.session_state.get("recursive_last_run")
-    result = st.session_state.get("recursive_last_result")
-    nodes = run.get("nodes", []) if run else []
+    # ---- Bind to most recent run (incl. running) ----
+    runs = list_recursive_runs()
+    run = runs[0] if runs else None
     rounds = run.get("rounds", []) if run else []
-    candidates = collect_candidates_from_run(run) if run else []
-    summary = run.get("summary", {}) if run else {}
+    nodes = run.get("nodes", []) if run else []
     status = run.get("status", "waiting") if run else "waiting"
+
+    # ---- Resolve query state ----
+    query = dict(st.query_params)
+    selected_node_id = query.get("recursive_node") or (nodes[-1]["node_id"] if nodes else None)
+    if selected_node_id and not any(n.get("node_id") == selected_node_id for n in nodes):
+        selected_node_id = nodes[-1]["node_id"] if nodes else None
+    panels_collapsed = query.get("recursive_panels") == "closed"
+
+    # ---- Center graph ----
+    scene_html = render_graph_scene(run or {}, selected_node_id=selected_node_id, query=query)
+
+    # ---- Right-side panel (single block, replaces 4 drawers) ----
+    if run and selected_node_id:
+        selected_node = next(n for n in nodes if n.get("node_id") == selected_node_id)
+        videos = load_videos_for_node(run, selected_node, limit=20)
+        right_panel_html = render_node_detail(selected_node, videos)
+    else:
+        right_panel_html = ""
+
+    # ---- Bottom-left three panel cards (collapsible wrapper) ----
     seed_preview = list(keyword_runtime.get("keywords", initial_keywords))[:18]
     node_rows = [
         (
@@ -969,20 +997,6 @@ def render_recursive_crawl_page() -> None:
             f"{node.get('status', '')} · {node.get('candidate_metrics', {}).get('count', 0)}",
         )
         for node in nodes[:12]
-    ]
-    round_rows = [
-        (
-            f"Round {item.get('round')}",
-            f"{item.get('status', '')} · {len(item.get('keywords', []))} topics",
-        )
-        for item in rounds[:8]
-    ]
-    candidate_rows = [
-        (
-            str(item.get("keyword", "")),
-            format_score(float(item.get("score", 0) or 0)),
-        )
-        for item in candidates[:10]
     ]
     seed_body = atlas_chips(seed_preview) if seed_preview else atlas_empty(t("recursive.step_seed"), t("common.empty_first_action"))
     tree_body = render_atlas_list_editor(
@@ -992,32 +1006,6 @@ def render_recursive_crawl_page() -> None:
         empty_title=t('recursive.panel.no_tree'),
         empty_body=t("common.empty_first_action"),
     )
-    if run:
-        progress_body = render_atlas_list_editor(t('recursive.drawer.timeline'), round_rows, compact=True)
-    else:
-        progress_body = atlas_empty(t('recursive.no_exploration'), t("recursive.subtitle"))
-
-    scene_html = f"""
-    <div class='atlas-scene-sigil'></div>
-    <div class='atlas-scene-line' style='left:18%;top:58%;width:25%;transform:rotate(-25deg);'></div>
-    <div class='atlas-scene-line' style='left:42%;top:44%;width:21%;transform:rotate(24deg);'></div>
-    <div class='atlas-scene-line' style='left:58%;top:55%;width:23%;transform:rotate(-12deg);'></div>
-    <div class='atlas-scene-line' style='left:42%;top:44%;width:18%;transform:rotate(92deg);'></div>
-    <span class='atlas-scene-node' style='left:18%;top:57%;background:#5B9A6E;'></span>
-    <span class='atlas-scene-node' style='left:42%;top:43%;background:#d4af37;'></span>
-    <span class='atlas-scene-node' style='left:63%;top:56%;background:#9B7FD4;'></span>
-    <span class='atlas-scene-node' style='left:81%;top:51%;background:#D4956B;'></span>
-    <span class='atlas-scene-node' style='left:43%;top:62%;background:#6B8BDB;'></span>
-    <div class='atlas-stage-map'>
-      <svg viewBox='0 0 1200 720' preserveAspectRatio='xMidYMid slice' aria-hidden='true'>
-        <path class='gridline' d='M120 0V720M260 0V720M400 0V720M540 0V720M680 0V720M820 0V720M960 0V720M1100 0V720M0 120H1200M0 260H1200M0 400H1200M0 540H1200'/>
-        <text x='212' y='444' font-size='14'>{t('recursive.map.seeds')} {len(seed_preview)}</text>
-        <text x='506' y='326' font-size='14'>{t('recursive.map.round')} {len(rounds)}</text>
-        <text x='730' y='438' font-size='14'>{t('recursive.map.nodes')} {len(nodes)}</text>
-        <text x='500' y='540' font-size='13'>{t('recursive.map.candidates')} {len(candidates)}</text>
-      </svg>
-    </div>
-    """
     panels = [
         render_atlas_panel(
             t('recursive.panel.state'),
@@ -1031,32 +1019,57 @@ def render_recursive_crawl_page() -> None:
         render_atlas_panel(t('recursive.panel.seeds'), seed_body, kicker=t('recursive.metric.seeds')),
         render_atlas_panel(t('recursive.panel.tree'), tree_body, kicker=t('recursive.metric.nodes')),
     ]
-    drawers = [
-        render_atlas_drawer(t('recursive.drawer.timeline'), progress_body, badge=str(len(rounds))),
-        render_atlas_drawer(t('recursive.drawer.nodes'), tree_body, badge=str(len(nodes))),
-        render_atlas_drawer(t('recursive.drawer.candidates'), render_atlas_list_editor(t('recursive.drawer.candidates_title'), candidate_rows, compact=True, empty_title=t('recursive.drawer.no_candidates'), empty_body=t("common.empty_first_action")), badge=str(len(candidate_rows))),
-        render_atlas_drawer(t('recursive.drawer.result'), atlas_rows([
-            (t('recursive.row.videos'), summary.get("total_videos", result.get("added_videos", 0) if result else 0)),
-            (t('recursive.row.comments'), summary.get("total_comments", result.get("added_comments", 0) if result else 0)),
-            (t('recursive.row.output'), len(run.get("output_files", [])) if run else 0),
-        ], compact=True), badge=status.upper()),
-    ]
-    render_atlas_stage(
-        page_id="recursive",
-        title=t('recursive.stage.title'),
-        subtitle=t("recursive.subtitle"),
-        metrics=[
-            (t('recursive.metric.seeds'), str(len(keyword_runtime.get("keywords", initial_keywords)))),
-            (t('recursive.metric.mode'), t('label.expert') if is_expert else t('label.simple')),
-            (t('recursive.metric.rounds'), str(len(rounds))),
-            (t('recursive.metric.nodes'), str(len(nodes))),
-        ],
-        scene_html=scene_html,
-        panels=panels,
-        drawers=drawers,
-        timeline_label=t('recursive.stage.timeline'),
-        timeline_start=t('recursive.stage.start'),
-        timeline_end=t('recursive.stage.end'),
-        accent="#9B7FD4",
-        mode_label=t('recursive.stage.mode'),
+    panels_inner_html = "".join(
+        f"<article class='atlas-shell-panel {escape(p.get('tone', ''))}'>"
+        f"<div class='atlas-shell-panel-kicker'>{escape(p['kicker'])}</div>"
+        f"<h3>{escape(p['title'])}</h3>"
+        f"<div class='atlas-shell-panel-body'>{p['body']}</div>"
+        f"</article>"
+        for p in panels
     )
+    toggle_url = url_with(query, recursive_panels=("open" if panels_collapsed else "closed"))
+    panels_wrap_html = render_panels_collapsible(
+        panels_html=panels_inner_html,
+        collapsed=panels_collapsed,
+        toggle_url=toggle_url,
+    )
+
+    # Custom stage template — drops the decorative atlas-shell-controls
+    # and atlas-shell-range blocks because the recursive page uses popovers
+    # at the top for navigation and the bottom-left collapsible panels for
+    # state, so the footer chrome adds no information.
+    # ---- Render the full atlas-shell-stage manually (so we can inject scene + replace drawers) ----
+    metrics = [
+        (t('recursive.metric.seeds'), str(len(keyword_runtime.get("keywords", initial_keywords)))),
+        (t('recursive.metric.mode'), t('label.expert') if is_expert else t('label.simple')),
+        (t('recursive.metric.rounds'), str(len(rounds))),
+        (t('recursive.metric.nodes'), str(len(nodes))),
+    ]
+    metrics_html = "".join(
+        f"<div class='atlas-shell-display-row'><span>{label}</span><b>{value}</b></div>"
+        for label, value in metrics
+    )
+    stage_html = (
+        "<div class='atlas-shell-stage atlas-shell-recursive' style='--atlas-accent:#9B7FD4;'>"
+        f"<div class='atlas-shell-scene'>{scene_html}</div>"
+        "<div class='atlas-shell-vignette'></div>"
+        "<header class='atlas-shell-hero'>"
+        "<div class='atlas-shell-kicker'>SLG SENTINEL · "
+        f"{t('recursive.stage.mode')}</div>"
+        f"<h1>{t('recursive.stage.title')}</h1>"
+        "<div class='atlas-shell-title-line'></div>"
+        f"<p>{t('recursive.subtitle')}</p>"
+        "</header>"
+        f"<aside class='atlas-shell-display'><div class='atlas-shell-display-title'>{t('stage.display')}</div>{metrics_html}</aside>"
+        f"{panels_wrap_html}"
+        f"<div class='atlas-shell-drawers'>{right_panel_html}</div>"
+        "<footer class='atlas-shell-timeline'>"
+        "<div class='atlas-shell-play'>&#9654;</div>"
+        "<div class='atlas-shell-era'>"
+        f"<span>{t('recursive.stage.mode')}</span>"
+        f"<strong>{t('recursive.stage.timeline')}</strong>"
+        "</div>"
+        "</footer>"
+        "</div>"
+    )
+    st.markdown(stage_html, unsafe_allow_html=True)
