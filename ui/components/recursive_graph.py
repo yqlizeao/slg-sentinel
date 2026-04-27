@@ -194,7 +194,7 @@ def render_graph_scene(run: dict, *, selected_node_id: str | None, query: dict) 
             keyword_html = _escape(node["keyword"])
             node_parts.append(
                 f"<a class='recursive-graph-node {tone}{sel}' "
-                f"href='{_escape(href)}' title='{keyword_html}' "
+                f"href='{_escape(href)}' target='_self' title='{keyword_html}' "
                 f"style='left:{node['x']}px;top:{node['y']}px;"
                 f"width:{node['width']}px;height:{node['height']}px;'>"
                 f"<div class='node-status-dot'></div>"
@@ -319,7 +319,7 @@ def render_panels_collapsible(
         f"<details class='atlas-shell-panels-wrap'{open_attr}>"
         f"<summary class='atlas-shell-panels-summary'>"
         f"<span>状态报告 · 3</span>"
-        f"<a class='collapse-toggle' href='{_escape(toggle_url)}'>{icon}</a>"
+        f"<a class='collapse-toggle' href='{_escape(toggle_url)}' target='_self'>{icon}</a>"
         f"</summary>"
         f"<div class='atlas-shell-panels'>{panels_html}</div>"
         f"</details>"
