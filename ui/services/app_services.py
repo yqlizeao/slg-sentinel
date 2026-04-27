@@ -891,16 +891,50 @@ def delete_loaded_csv_file(file_path: Path) -> None:
     os.remove(file_path)
 
 
+def _load_reviews_for_node_taptap(node: dict, limit: int) -> list[dict]:
+    c_dir = DATA_DIR / "community_platforms" / "taptap" / "comments"
+    if not c_dir.exists():
+        return []
+    target_date = (node.get("started_at") or "")[:10]
+    rows: list[dict] = []
+    for csv_file in sorted(c_dir.glob("*.csv")):
+        try:
+            with open(csv_file, encoding="utf-8-sig") as fh:
+                reader = csv.DictReader(fh)
+                for raw in reader:
+                    if target_date and raw.get("snapshot_date") != target_date:
+                        continue
+                    star = raw.get("star", "")
+                    playtime = raw.get("playtime_minutes", "")
+                    rows.append({
+                        "title": raw.get("author") or "—",
+                        "author": raw.get("content", "")[:40],
+                        "view_count": "",
+                        "meta": f"★ {star} · playtime {playtime}min",
+                        "publish_date": raw.get("snapshot_date", ""),
+                        "url": raw.get("url", ""),
+                        "fallback": True,
+                    })
+                    if len(rows) >= limit:
+                        return rows
+        except Exception:
+            continue
+    return rows
+
+
 def load_videos_for_node(run: dict, node: dict, limit: int = 20) -> list[dict]:
     """Return up to `limit` video rows associated with this recursive node.
 
     Strategy:
-    1. If `node.crawl_metrics.video_ids` exists (new runs), filter platform
+    1. TapTap (community platform): read review CSVs and shape into video-like rows.
+    2. If `node.crawl_metrics.video_ids` exists (new runs), filter platform
        videos CSVs by exact video_id membership.
-    2. Otherwise fall back to filtering by `snapshot_date == node.started_at[:10]`
+    3. Otherwise fall back to filtering by `snapshot_date == node.started_at[:10]`
        and tag rows with `fallback=True` so callers can show a hint.
     """
     platform = run.get("platform", "")
+    if platform == "taptap":
+        return _load_reviews_for_node_taptap(node, limit)
     crawl = node.get("crawl_metrics", {}) or {}
     video_ids: list[str] = list(crawl.get("video_ids") or [])
 

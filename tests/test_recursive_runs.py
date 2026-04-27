@@ -272,3 +272,30 @@ def test_load_videos_for_node_empty_when_no_match(tmp_path, monkeypatch):
     node = {"keyword": "无", "started_at": "2026-04-27T10:00:00", "crawl_metrics": {"videos": 0}}
 
     assert app_services.load_videos_for_node(run, node) == []
+
+
+def test_load_videos_for_node_taptap_returns_reviews(tmp_path, monkeypatch):
+    from ui.services import app_services
+
+    c_dir = tmp_path / "community_platforms" / "taptap" / "comments"
+    c_dir.mkdir(parents=True)
+    (c_dir / "2026-04-27_reviews.csv").write_text(
+        "platform,review_id,author,star,playtime_minutes,content,snapshot_date\n"
+        "taptap,r1,player1,4,300,\"非常硬核\",2026-04-27\n"
+        "taptap,r2,player2,2,90,\"画面一般\",2026-04-27\n",
+        encoding="utf-8-sig",
+    )
+    monkeypatch.setattr(app_services, "DATA_DIR", tmp_path)
+
+    run = {"platform": "taptap"}
+    node = {
+        "keyword": "三国",
+        "started_at": "2026-04-27T10:00:00",
+        "crawl_metrics": {"comments": 2},
+    }
+
+    rows = app_services.load_videos_for_node(run, node)
+
+    assert len(rows) == 2
+    assert rows[0]["title"] in {"player1", "player2"}  # author becomes title
+    assert "playtime" in rows[0]["meta"] or "★" in rows[0]["meta"]
