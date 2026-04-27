@@ -1049,16 +1049,13 @@ def render_recursive_crawl_page() -> None:
         f"<div class='atlas-shell-display-row'><span>{label}</span><b>{value}</b></div>"
         for label, value in metrics
     )
+    stage_label = escape(f"{t('recursive.stage.title')} · {t('recursive.subtitle')}")
     stage_html = (
         "<div class='atlas-shell-stage atlas-shell-recursive' style='--atlas-accent:#9B7FD4;'>"
         f"<div class='atlas-shell-scene'>{scene_html}</div>"
         "<div class='atlas-shell-vignette'></div>"
-        "<header class='atlas-shell-hero'>"
-        "<div class='atlas-shell-kicker'>SLG SENTINEL · "
-        f"{t('recursive.stage.mode')}</div>"
-        f"<h1>{t('recursive.stage.title')}</h1>"
-        "<div class='atlas-shell-title-line'></div>"
-        f"<p>{t('recursive.subtitle')}</p>"
+        "<header class='atlas-shell-hero atlas-shell-hero-compact'>"
+        f"<div class='atlas-shell-kicker'>{stage_label}</div>"
         "</header>"
         f"<aside class='atlas-shell-display'><div class='atlas-shell-display-title'>{t('stage.display')}</div>{metrics_html}</aside>"
         f"{panels_wrap_html}"

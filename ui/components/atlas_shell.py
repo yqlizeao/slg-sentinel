@@ -66,22 +66,14 @@ def render_atlas_stage(
     scene_html = " ".join(str(scene_html).split())
     panel_html = " ".join(panel_html.split())
     drawer_html = " ".join(drawer_html.split())
+    stage_label = f"{title} · {subtitle}" if subtitle else title
     stage_html = (
         f"<div class='atlas-shell-stage atlas-shell-{_safe(page_id)}' style='--atlas-accent:{_safe(accent)};'>"
         f"<div class='atlas-shell-scene'>{scene_html}</div>"
         "<div class='atlas-shell-vignette'></div>"
-        "<header class='atlas-shell-hero'>"
-        f"<div class='atlas-shell-kicker'>SLG SENTINEL · {_safe(mode_label)}</div>"
-        f"<h1>{_safe(title)}</h1>"
-        "<div class='atlas-shell-title-line'></div>"
-        f"<p>{_safe(subtitle)}</p>"
+        "<header class='atlas-shell-hero atlas-shell-hero-compact'>"
+        f"<div class='atlas-shell-kicker'>{_safe(stage_label)}</div>"
         "</header>"
-        "<div class='atlas-shell-controls'>"
-        f"<button type='button'>▣ {_safe(t('atlas.control.guided'))}</button>"
-        f"<button type='button'>◷ {_safe(t('atlas.control.cycle'))}</button>"
-        f"<button type='button'>⌖ {_safe(t('atlas.control.focus'))}</button>"
-        f"<button type='button'>▥ {_safe(t('atlas.control.stats'))}</button>"
-        "</div>"
         f"<aside class='atlas-shell-display'><div class='atlas-shell-display-title'>{_safe(t('stage.display'))}</div>{metrics_html}</aside>"
         f"<div class='atlas-shell-panels'>{panel_html}</div>"
         f"<div class='atlas-shell-drawers'>{drawer_html}</div>"
@@ -157,3 +149,87 @@ def atlas_empty(title: str, body: str) -> str:
         f"<span>{_safe(body)}</span>"
         "</div>"
     )
+
+
+def render_atlas_popover_header(title: str, subtitle: str = "", *, icon: str = "bars") -> str:
+    icon_html = (
+        "<span></span><span></span><span></span>"
+        if icon == "bars"
+        else _safe(icon)
+    )
+    subtitle_html = f"<p>{_safe(subtitle)}</p>" if subtitle else ""
+    return (
+        "<section class='atlas-popover-head'>"
+        f"<div class='atlas-popover-icon {'' if icon == 'bars' else 'is-text'}'>{icon_html}</div>"
+        "<div>"
+        f"<div class='atlas-popover-title'>{_safe(title)}</div>"
+        f"{subtitle_html}"
+        "</div>"
+        "</section>"
+    )
+
+
+def render_atlas_metric_tiles(metrics: Iterable[tuple[str, object]], *, columns: int = 2) -> str:
+    metric_html = "".join(
+        "<div class='atlas-popover-metric'>"
+        f"<strong>{_safe(value)}</strong>"
+        f"<span>{_safe(label)}</span>"
+        "</div>"
+        for label, value in metrics
+    )
+    return f"<section class='atlas-popover-metrics' style='--atlas-popover-metric-cols:{max(1, min(columns, 4))};'>{metric_html}</section>"
+
+
+def render_atlas_bar_rows(
+    rows: Iterable[tuple[str, object, float]],
+    *,
+    title: str = "",
+    tone: str = "gold",
+) -> str:
+    title_html = f"<div class='atlas-popover-section-title'>{_safe(title)}</div>" if title else ""
+    row_html = ""
+    for label, value, percent in rows:
+        safe_percent = max(0, min(float(percent), 100))
+        row_html += (
+            "<div class='atlas-popover-bar-row'>"
+            f"<span>{_safe(label)}</span>"
+            "<div class='atlas-popover-bar-track'>"
+            f"<i style='width:{safe_percent:.2f}%;'></i>"
+            "</div>"
+            f"<b>{_safe(value)}</b>"
+            "</div>"
+        )
+    return f"<section class='atlas-popover-bars is-{_safe(tone)}'>{title_html}{row_html}</section>"
+
+
+def render_atlas_segment_bar(
+    segments: Iterable[tuple[str, float, str]],
+    *,
+    title: str = "",
+) -> str:
+    title_html = f"<div class='atlas-popover-section-title'>{_safe(title)}</div>" if title else ""
+    segment_html = ""
+    legend_html = ""
+    for label, percent, color in segments:
+        safe_percent = max(0, min(float(percent), 100))
+        safe_color = _safe(color)
+        segment_html += f"<i style='width:{safe_percent:.2f}%;background:{safe_color};'></i>"
+        legend_html += (
+            "<div class='atlas-popover-segment-legend'>"
+            f"<span style='background:{safe_color};'></span>"
+            f"<em>{_safe(label)}</em>"
+            f"<b>{safe_percent:.0f}%</b>"
+            "</div>"
+        )
+    return (
+        "<section class='atlas-popover-segments'>"
+        f"{title_html}"
+        f"<div class='atlas-popover-segment-track'>{segment_html}</div>"
+        f"<div class='atlas-popover-segment-grid'>{legend_html}</div>"
+        "</section>"
+    )
+
+
+def render_atlas_popover_footer(note: str, *, action: str = "") -> str:
+    action_html = f"<span>{_safe(action)}</span>" if action else ""
+    return f"<footer class='atlas-popover-footer'><em>{_safe(note)}</em>{action_html}</footer>"

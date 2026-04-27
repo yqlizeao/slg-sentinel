@@ -12,7 +12,11 @@ from ui.components.atlas_shell import (
     atlas_rows,
     render_atlas_drawer,
     render_atlas_list_editor,
+    render_atlas_bar_rows,
+    render_atlas_metric_tiles,
     render_atlas_panel,
+    render_atlas_popover_footer,
+    render_atlas_popover_header,
     render_atlas_stage,
 )
 from ui.components.common import render_atlas_ops_board, render_page_header
@@ -258,6 +262,39 @@ def render_crawl_page() -> None:
     cmd_cols = st.columns([1.05, 1.15, 1.0, 1.0, 5.2], gap="small")
     with cmd_cols[0]:
         with st.popover(t('popover.route'), use_container_width=True):
+            st.markdown(
+                render_atlas_popover_header(
+                    t("crawl.panel.route"),
+                    t("crawl.subtitle"),
+                ),
+                unsafe_allow_html=True,
+            )
+            route_preview_estimated = int(limit_val) * int(keyword_count)
+            st.markdown(
+                render_atlas_metric_tiles(
+                    [
+                        (t("crawl.row.platform"), PLATFORM_OPTIONS[platform]),
+                        (t("crawl.metric.keywords"), keyword_count),
+                        (t("crawl.metric.limit"), limit_val),
+                        (t("crawl.metric.output"), f"{route_preview_estimated:,}"),
+                    ],
+                    columns=4,
+                ),
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                render_atlas_bar_rows(
+                    [
+                        (t("crawl.row.platform"), PLATFORM_OPTIONS[platform], 100),
+                        (t("crawl.metric.keywords"), keyword_count, min(100, keyword_count / 20 * 100 if keyword_count else 0)),
+                        (t("crawl.metric.limit"), limit_val, min(100, int(limit_val) / 50 * 100)),
+                        (t("crawl.estimated"), f"{route_preview_estimated:,}", min(100, route_preview_estimated / 1000 * 100 if route_preview_estimated else 0)),
+                    ],
+                    title=t("crawl.popover.route_bars"),
+                    tone="green",
+                ),
+                unsafe_allow_html=True,
+            )
             render_step_block_header("01", t("crawl.step.platform"), "#5B9A6E", t("crawl.step.platform_desc"))
             platform = st.selectbox(
                 t("crawl.platform_label"),
@@ -317,6 +354,13 @@ def render_crawl_page() -> None:
                         (t('crawl.estimated'), f"{limit_val} × {keyword_count} = {estimated_results}"),
                     ],
                     compact=True,
+                ),
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                render_atlas_popover_footer(
+                    t("crawl.popover.route_note"),
+                    action=t("crawl.popover.launch_hint"),
                 ),
                 unsafe_allow_html=True,
             )
@@ -388,22 +432,110 @@ def render_crawl_page() -> None:
                     st.error(t("crawl.failed_code", code=code))
     with cmd_cols[1]:
         with st.popover(t('popover.keywords'), use_container_width=True):
+            st.markdown(
+                render_atlas_popover_header(
+                    t("crawl.panel.keywords"),
+                    t("keyword.subtitle"),
+                ),
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                render_atlas_metric_tiles(
+                    [
+                        (t("crawl.metric.keywords"), keyword_count),
+                        (t("crawl.metric.limit"), limit_val),
+                    ],
+                    columns=2,
+                ),
+                unsafe_allow_html=True,
+            )
             keyword_runtime = render_keyword_library("crawl")
             keyword_count = int(keyword_runtime.get("keyword_count", keyword_count))
             merged_keywords = list(keyword_runtime.get("keywords", merged_keywords))
+            st.markdown(
+                render_atlas_bar_rows(
+                    [
+                        (t("keyword.count"), keyword_count, min(100, keyword_count / 24 * 100 if keyword_count else 0)),
+                        (t("crawl.estimated"), int(limit_val) * max(keyword_count, 1), min(100, int(limit_val) * max(keyword_count, 1) / 1000 * 100)),
+                    ],
+                    title=t("crawl.popover.keyword_bars"),
+                    tone="gold",
+                ),
+                unsafe_allow_html=True,
+            )
     with cmd_cols[2]:
         with st.popover(t('popover.fields'), use_container_width=True):
+            st.markdown(
+                render_atlas_popover_header(
+                    t("crawl.drawer.fields"),
+                    t("crawl.depth_note"),
+                ),
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                render_atlas_bar_rows(
+                    [
+                        ("Bilibili", t("crawl.field.search_video_comments"), 92),
+                        ("YouTube", t("crawl.field.search_channel_comments"), 68),
+                        ("TapTap", t("crawl.field.reviews_games"), 74),
+                        ("MediaCrawler", t("crawl.field.local_authorized"), 58),
+                    ],
+                    title=t("crawl.popover.field_bars"),
+                    tone="green",
+                ),
+                unsafe_allow_html=True,
+            )
             _render_platform_field_tables(platform, mode, depth)
+            st.markdown(
+                render_atlas_popover_footer(t("crawl.popover.field_note")),
+                unsafe_allow_html=True,
+            )
     with cmd_cols[3]:
         with st.popover(t('popover.result'), use_container_width=True):
+            st.markdown(
+                render_atlas_popover_header(
+                    t("crawl.panel.result"),
+                    t("crawl.progress"),
+                ),
+                unsafe_allow_html=True,
+            )
             if st.session_state.get("crawl_last_result"):
+                last_result = st.session_state["crawl_last_result"]
+                st.markdown(
+                    render_atlas_metric_tiles(
+                        [
+                            (t("crawl.row.status"), t("label.ok") if last_result.get("return_code") == 0 else t("label.waiting")),
+                            (t("crawl.row.platform"), last_result.get("platform_label", PLATFORM_OPTIONS.get(platform, platform))),
+                            (t("crawl.metric.keywords"), last_result.get("keyword_count", keyword_count)),
+                            (t("crawl.metric.limit"), last_result.get("limit_val", limit_val)),
+                        ],
+                        columns=4,
+                    ),
+                    unsafe_allow_html=True,
+                )
                 render_crawl_result_card(st.session_state["crawl_last_result"])
             else:
-                st.caption(t("common.empty_first_action"))
+                st.markdown(
+                    render_atlas_metric_tiles(
+                        [
+                            (t("crawl.row.status"), t("label.waiting")),
+                            (t("crawl.row.platform"), PLATFORM_OPTIONS.get(platform, platform)),
+                            (t("crawl.metric.keywords"), keyword_count),
+                            (t("crawl.metric.output"), t("label.csv")),
+                        ],
+                        columns=4,
+                    ),
+                    unsafe_allow_html=True,
+                )
+                st.markdown(atlas_empty(t("crawl.panel.result"), t("common.empty_first_action")), unsafe_allow_html=True)
+            st.markdown(
+                render_atlas_popover_footer(t("crawl.popover.result_note")),
+                unsafe_allow_html=True,
+            )
 
     result = st.session_state.get("crawl_last_result") or {}
     result_rows = [
-        (t('crawl.row.status'), "OK" if result.get("return_code") == 0 else "WAITING"),
+        (t('crawl.row.status'), t('label.ok') if result.get("return_code") == 0 else t('label.waiting')),
         (t('crawl.row.platform'), result.get("platform_label", PLATFORM_OPTIONS.get(platform, platform))),
         (t('crawl.row.keywords'), result.get("keyword_count", keyword_count)),
         (t('crawl.row.limit'), result.get("limit_val", limit_val)),
@@ -449,10 +581,10 @@ def render_crawl_page() -> None:
         ], compact=True), badge=t('label.ready')),
         render_atlas_drawer(t('crawl.panel.keywords'), keyword_body, badge=str(keyword_count)),
         render_atlas_drawer(t('crawl.drawer.fields'), atlas_rows([
-            ("Bilibili", "Search / Video / Comments"),
-            ("YouTube", "Search / Channel / Comments"),
-            ("TapTap", "Reviews / Games"),
-            ("MediaCrawler", "Local Authorized Platforms"),
+            ("Bilibili", t('crawl.field.search_video_comments')),
+            ("YouTube", t('crawl.field.search_channel_comments')),
+            ("TapTap", t('crawl.field.reviews_games')),
+            ("MediaCrawler", t('crawl.field.local_authorized')),
         ], compact=True)),
     ]
     render_atlas_stage(

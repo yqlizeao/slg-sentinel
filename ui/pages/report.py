@@ -83,10 +83,16 @@ def render_report_page() -> None:
         with st.popover(t('popover.freshness'), use_container_width=True):
             render_data_freshness()
 
+    sentiment_label = {
+        "positive": t('label.sentiment_positive'),
+        "negative": t('label.sentiment_negative'),
+        "neutral": t('label.sentiment_neutral'),
+        "mixed": t('label.sentiment_mixed'),
+    }
     insight_rows = [
         (
-            str(item.get("topic", "Insight"))[:42],
-            f"{item.get('sentiment', 'mixed')} · {item.get('count', 0)}",
+            str(item.get("topic", t('report.default_insight')))[:42],
+            f"{sentiment_label.get(str(item.get('sentiment', 'mixed')), str(item.get('sentiment', 'mixed')))} · {item.get('count', 0)}",
         )
         for item in insights[:8]
     ]
@@ -121,7 +127,7 @@ def render_report_page() -> None:
             atlas_rows([
                 (t('report.panel.date'), date_str),
                 (t('report.panel.artifact'), t('report.panel.ready') if artifacts else t('report.panel.missing')),
-                (t('report.panel.output'), "Markdown"),
+                (t('report.panel.output'), t('label.markdown')),
             ], compact=True),
             kicker=t('report.panel.status'),
         ),

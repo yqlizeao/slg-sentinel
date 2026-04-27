@@ -39,7 +39,7 @@ def _render_atlas_command_map(health: dict) -> None:
     target_count = int(health.get("targets", 0) or 0)
     keyword_count = int(health.get("keywords", 0) or 0)
     last_sync = str(health.get("last_sync", "暂无记录"))
-    status_text = "ONLINE" if health.get("api_health") else "LOCAL"
+    status_text = t('label.online') if health.get("api_health") else t('label.local')
     map_doc = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -973,31 +973,68 @@ def render_overview_page() -> None:
     keywords = max(int(health.get("keywords", 0) or 0), 1)
     signal_count = int(health.get("capacity", 0) or 0)
     scene_html = f"""
-    <div class='atlas-stage-map'>
-      <svg viewBox='0 0 1200 720' preserveAspectRatio='xMidYMid slice' aria-hidden='true'>
+    <div class='atlas-stage-map atlas-stage-map-overview'>
+      <svg viewBox='0 0 1400 760' preserveAspectRatio='xMidYMid meet' aria-hidden='true'>
         <defs>
-          <radialGradient id='overviewGlow' cx='50%' cy='48%' r='58%'>
+          <radialGradient id='overviewGlow' cx='53%' cy='46%' r='62%'>
             <stop offset='0%' stop-color='rgba(212,175,55,.16)'/>
-            <stop offset='70%' stop-color='rgba(212,175,55,.02)'/>
+            <stop offset='70%' stop-color='rgba(212,175,55,.025)'/>
             <stop offset='100%' stop-color='rgba(10,12,16,0)'/>
           </radialGradient>
+          <linearGradient id='overviewSea' x1='0' x2='1' y1='0' y2='1'>
+            <stop offset='0%' stop-color='rgba(55,74,88,.04)'/>
+            <stop offset='100%' stop-color='rgba(67,98,116,.16)'/>
+          </linearGradient>
         </defs>
-        <rect width='1200' height='720' fill='url(#overviewGlow)'/>
-        <path class='gridline' d='M120 0V720M260 0V720M400 0V720M540 0V720M680 0V720M820 0V720M960 0V720M1100 0V720M0 120H1200M0 260H1200M0 400H1200M0 540H1200'/>
-        <path class='land' d='M407 100C478 76 595 82 680 129C764 175 824 211 889 250C956 291 1009 365 996 438C982 517 905 565 824 594C740 624 648 625 572 594C499 565 456 510 386 495C311 478 218 501 176 442C135 385 170 298 221 251C273 203 333 125 407 100Z'/>
-        <path class='kingdom wei' d='M400 122C482 90 615 95 702 151C765 192 785 245 771 305C696 287 612 298 549 338C512 287 460 252 397 238C369 197 366 154 400 122Z'/>
-        <path class='kingdom shu' d='M270 280C332 235 449 242 533 337C492 394 477 463 508 542C431 520 384 480 320 485C248 491 183 461 176 411C169 361 212 322 270 280Z'/>
-        <path class='kingdom wu' d='M567 352C646 302 748 315 846 352C924 381 987 421 960 480C929 549 798 602 697 595C603 589 534 541 517 475C504 425 523 380 567 352Z'/>
-        <path class='route' d='M455 232C530 276 613 316 702 371C779 419 820 468 888 512'/>
-        <path class='route' d='M315 418C393 396 477 383 568 352'/>
-        <circle class='signal' cx='455' cy='232' r='10' fill='#e22d3f'/><circle cx='455' cy='232' r='26' fill='rgba(226,45,63,.12)'/>
-        <circle class='signal' cx='315' cy='418' r='10' fill='#d4af37'/><circle cx='315' cy='418' r='31' fill='rgba(212,175,55,.12)'/>
-        <circle class='signal' cx='888' cy='512' r='10' fill='#588eff'/><circle cx='888' cy='512' r='29' fill='rgba(88,142,255,.12)'/>
-        <text x='434' y='205' font-size='26'>{t('overview.stage.wei')}</text>
-        <text x='268' y='454' font-size='26'>{t('overview.stage.shu')}</text>
-        <text x='842' y='543' font-size='26'>{t('overview.stage.wu')}</text>
-        <text x='532' y='404' font-size='15'>{t('overview.map.signals')} {signal_count}</text>
-        <text x='618' y='331' font-size='13'>{t('overview.map.keywords')} {keywords}</text>
+        <rect width='1400' height='760' fill='url(#overviewGlow)'/>
+        <rect x='0' y='0' width='1400' height='760' fill='url(#overviewSea)'/>
+        <path class='gridline' d='M120 0V760M250 0V760M380 0V760M510 0V760M640 0V760M770 0V760M900 0V760M1030 0V760M1160 0V760M1290 0V760M0 92H1400M0 220H1400M0 348H1400M0 476H1400M0 604H1400'/>
+
+        <path class='land full-china' d='M147 321C98 270 113 203 173 169C234 134 319 151 393 112C469 73 554 82 629 57C719 27 838 52 920 98C988 137 1039 115 1105 151C1174 190 1196 255 1166 319C1227 354 1234 425 1183 481C1131 538 1048 555 978 587C879 633 777 678 674 651C604 632 568 589 486 587C382 585 313 543 287 474C214 463 154 414 147 321Z'/>
+        <path class='island' d='M1113 607C1135 594 1161 599 1170 618C1178 637 1159 660 1132 661C1107 661 1094 628 1113 607Z'/>
+        <path class='island' d='M1210 522C1227 514 1242 522 1244 542C1246 566 1235 588 1218 587C1201 586 1195 559 1201 541C1203 533 1206 526 1210 522Z'/>
+
+        <path class='kingdom wei' d='M457 126C555 77 719 85 852 137C935 169 1020 159 1092 205C1129 235 1149 281 1131 322C1045 318 967 303 899 292C812 279 723 259 643 281C576 299 512 285 454 247C418 210 421 152 457 126Z'/>
+        <path class='kingdom shu' d='M190 318C178 267 226 217 293 200C363 184 421 213 473 255C529 304 564 375 542 455C520 540 442 585 352 552C281 526 234 485 224 432C178 413 151 362 190 318Z'/>
+        <path class='kingdom wu' d='M566 350C647 295 771 295 887 325C995 352 1109 371 1164 431C1147 500 1073 541 980 574C886 609 786 647 692 612C619 585 561 519 549 447C541 404 543 372 566 350Z'/>
+
+        <path class='admin-line wei-admin' d='M540 108C529 173 532 229 572 289M673 91C665 162 688 223 742 277M816 134C792 191 793 245 842 297M456 247C540 228 612 229 704 246C801 265 936 288 1131 322'/>
+        <path class='admin-line shu-admin' d='M283 202C308 286 313 386 270 481M407 218C428 290 431 381 389 538M473 255C449 331 468 417 542 455'/>
+        <path class='admin-line wu-admin' d='M652 319C657 394 667 504 692 612M774 304C785 395 811 514 786 647M899 328C916 416 942 498 980 574M570 430C708 418 850 427 1033 470'/>
+        <path class='frontier wei-shu' d='M454 247C500 287 533 323 566 350'/>
+        <path class='frontier wei-wu' d='M643 281C710 292 803 300 887 325'/>
+        <path class='frontier shu-wu' d='M542 455C590 506 629 562 692 612'/>
+
+        <path class='route' d='M726 252C768 287 820 318 879 356C944 399 994 433 1042 485'/>
+        <path class='route' d='M390 420C448 392 506 371 566 350'/>
+        <path class='route' d='M704 250C645 285 604 320 566 350'/>
+
+        <circle class='capital-ring' cx='704' cy='250' r='34'/><circle class='signal capital wei-capital' cx='704' cy='250' r='8'/>
+        <circle class='capital-ring' cx='390' cy='420' r='34'/><circle class='signal capital shu-capital' cx='390' cy='420' r='8'/>
+        <circle class='capital-ring' cx='945' cy='440' r='34'/><circle class='signal capital wu-capital' cx='945' cy='440' r='8'/>
+        <circle class='signal' cx='780' cy='334' r='7' fill='#ff4b0b'/><circle cx='780' cy='334' r='28' fill='rgba(255,75,11,.12)'/>
+        <circle class='signal' cx='520' cy='314' r='7' fill='#d4af37'/><circle cx='520' cy='314' r='26' fill='rgba(212,175,55,.11)'/>
+
+        <text class='kingdom-label' x='710' y='178'>{t('overview.stage.wei')}</text>
+        <text class='kingdom-label' x='310' y='368'>{t('overview.stage.shu')}</text>
+        <text class='kingdom-label' x='820' y='520'>{t('overview.stage.wu')}</text>
+        <text class='province-label' x='520' y='163'>{t('overview.map.region.yong')}</text>
+        <text class='province-label' x='665' y='220'>{t('overview.map.region.sili')}</text>
+        <text class='province-label' x='794' y='201'>{t('overview.map.region.ji')}</text>
+        <text class='province-label' x='931' y='256'>{t('overview.map.region.qing')}</text>
+        <text class='province-label' x='808' y='284'>{t('overview.map.region.yu')}</text>
+        <text class='province-label' x='1014' y='318'>{t('overview.map.region.xu')}</text>
+        <text class='province-label' x='306' y='266'>{t('overview.map.region.liang')}</text>
+        <text class='province-label' x='358' y='480'>{t('overview.map.region.yi')}</text>
+        <text class='province-label' x='560' y='430'>{t('overview.map.region.jing')}</text>
+        <text class='province-label' x='848' y='430'>{t('overview.map.region.yang')}</text>
+        <text class='province-label' x='792' y='594'>{t('overview.map.region.jiao')}</text>
+        <text x='716' y='236' font-size='11'>{t('overview.map.capital.wei')}</text>
+        <text x='402' y='407' font-size='11'>{t('overview.map.capital.shu')}</text>
+        <text x='958' y='428' font-size='11'>{t('overview.map.capital.wu')}</text>
+        <text x='794' y='326' font-size='12'>{t('overview.map.battle.redcliffs')}</text>
+        <text x='532' y='304' font-size='12'>{t('overview.map.battle.hanzhong')}</text>
+        <text x='614' y='610' font-size='14'>{t('overview.map.signals')} {signal_count} · {t('overview.map.keywords')} {keywords}</text>
       </svg>
     </div>
     """
