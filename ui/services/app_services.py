@@ -738,6 +738,41 @@ def get_crawl_file_snapshot(platform: str) -> dict[str, dict]:
     return snapshot
 
 
+def read_video_id_set(platform: str) -> dict[str, set[str]]:
+    """Return {csv_path_str: {video_id, ...}} snapshot of all platform's videos CSVs.
+
+    Used by the recursive graph to capture per-node video_id deltas across the
+    crawl boundary.
+    """
+    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+
+    if platform in VIDEO_PLATFORMS:
+        category = "video_platforms"
+    elif platform in COMMUNITY_PLATFORMS:
+        category = "community_platforms"
+    else:
+        category = "misc_platforms"
+
+    v_dir = DATA_DIR / category / platform / "videos"
+    snapshot: dict[str, set[str]] = {}
+    if not v_dir.exists():
+        return snapshot
+
+    for csv_file in v_dir.glob("*.csv"):
+        ids: set[str] = set()
+        try:
+            with open(csv_file, encoding="utf-8-sig") as fh:
+                reader = csv.DictReader(fh)
+                for row in reader:
+                    vid = (row.get("video_id") or "").strip()
+                    if vid:
+                        ids.add(vid)
+        except Exception:
+            continue
+        snapshot[str(csv_file)] = ids
+    return snapshot
+
+
 def summarize_crawl_result(
     platform: str,
     platform_label: str,

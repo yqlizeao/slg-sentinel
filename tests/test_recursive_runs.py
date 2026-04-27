@@ -186,3 +186,21 @@ def test_recursive_round_event_persistence(tmp_path):
     assert loaded["rounds"][0]["round"] == 1
     assert loaded["events"][0]["message"] == "round started"
     assert loaded["status"] == "success"
+
+
+def test_read_video_id_set_groups_by_csv_path(tmp_path, monkeypatch):
+    from ui.services import app_services
+
+    v_dir = tmp_path / "video_platforms" / "bilibili" / "videos"
+    v_dir.mkdir(parents=True)
+    (v_dir / "2026-04-27_videos.csv").write_text(
+        "platform,video_id,title\nbilibili,BV1,蜀汉\nbilibili,BV2,曹魏\n",
+        encoding="utf-8-sig",
+    )
+    monkeypatch.setattr(app_services, "DATA_DIR", tmp_path)
+
+    snapshot = app_services.read_video_id_set("bilibili")
+
+    paths = list(snapshot.keys())
+    assert len(paths) == 1
+    assert snapshot[paths[0]] == {"BV1", "BV2"}
