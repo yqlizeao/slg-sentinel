@@ -204,3 +204,71 @@ def test_read_video_id_set_groups_by_csv_path(tmp_path, monkeypatch):
     paths = list(snapshot.keys())
     assert len(paths) == 1
     assert snapshot[paths[0]] == {"BV1", "BV2"}
+
+
+def test_load_videos_for_node_uses_video_ids_when_present(tmp_path, monkeypatch):
+    from ui.services import app_services
+
+    v_dir = tmp_path / "video_platforms" / "bilibili" / "videos"
+    v_dir.mkdir(parents=True)
+    (v_dir / "2026-04-27_videos.csv").write_text(
+        "platform,video_id,title,author,view_count,publish_date,url\n"
+        "bilibili,BV1,蜀汉将领,Up1,12000,2026-04-25,https://b/1\n"
+        "bilibili,BV2,曹魏五子,Up2,8000,2026-04-26,https://b/2\n"
+        "bilibili,BV3,东吴水军,Up3,3000,2026-04-26,https://b/3\n",
+        encoding="utf-8-sig",
+    )
+    monkeypatch.setattr(app_services, "DATA_DIR", tmp_path)
+
+    run = {"platform": "bilibili"}
+    node = {
+        "keyword": "三国",
+        "started_at": "2026-04-27T10:00:00",
+        "crawl_metrics": {"videos": 2, "video_ids": ["BV1", "BV3"]},
+    }
+
+    rows = app_services.load_videos_for_node(run, node, limit=20)
+
+    ids = [r["video_id"] for r in rows]
+    assert sorted(ids) == ["BV1", "BV3"]
+    assert rows[0]["title"] in {"蜀汉将领", "东吴水军"}
+
+
+def test_load_videos_for_node_falls_back_to_snapshot_date(tmp_path, monkeypatch):
+    from ui.services import app_services
+
+    v_dir = tmp_path / "video_platforms" / "bilibili" / "videos"
+    v_dir.mkdir(parents=True)
+    (v_dir / "2026-04-27_videos.csv").write_text(
+        "platform,video_id,title,author,view_count,snapshot_date,publish_date,url\n"
+        "bilibili,BV1,蜀汉将领,Up1,12000,2026-04-27,2026-04-25,https://b/1\n"
+        "bilibili,BV2,曹魏五子,Up2,8000,2026-04-26,2026-04-26,https://b/2\n",
+        encoding="utf-8-sig",
+    )
+    monkeypatch.setattr(app_services, "DATA_DIR", tmp_path)
+
+    run = {"platform": "bilibili"}
+    node = {
+        "keyword": "三国",
+        "started_at": "2026-04-27T10:00:00",
+        "crawl_metrics": {"videos": 1},  # no video_ids — old run
+    }
+
+    rows = app_services.load_videos_for_node(run, node, limit=20)
+
+    assert len(rows) == 1
+    assert rows[0]["video_id"] == "BV1"
+    assert rows[0]["fallback"] is True
+
+
+def test_load_videos_for_node_empty_when_no_match(tmp_path, monkeypatch):
+    from ui.services import app_services
+
+    v_dir = tmp_path / "video_platforms" / "bilibili" / "videos"
+    v_dir.mkdir(parents=True)
+    monkeypatch.setattr(app_services, "DATA_DIR", tmp_path)
+
+    run = {"platform": "bilibili"}
+    node = {"keyword": "无", "started_at": "2026-04-27T10:00:00", "crawl_metrics": {"videos": 0}}
+
+    assert app_services.load_videos_for_node(run, node) == []

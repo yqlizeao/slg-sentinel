@@ -874,6 +874,58 @@ def delete_loaded_csv_file(file_path: Path) -> None:
     os.remove(file_path)
 
 
+def load_videos_for_node(run: dict, node: dict, limit: int = 20) -> list[dict]:
+    """Return up to `limit` video rows associated with this recursive node.
+
+    Strategy:
+    1. If `node.crawl_metrics.video_ids` exists (new runs), filter platform
+       videos CSVs by exact video_id membership.
+    2. Otherwise fall back to filtering by `snapshot_date == node.started_at[:10]`
+       and tag rows with `fallback=True` so callers can show a hint.
+    """
+    platform = run.get("platform", "")
+    crawl = node.get("crawl_metrics", {}) or {}
+    video_ids: list[str] = list(crawl.get("video_ids") or [])
+
+    snapshot = read_video_id_set(platform)
+    csv_paths = list(snapshot.keys())
+    if not csv_paths:
+        return []
+
+    rows: list[dict] = []
+    if video_ids:
+        wanted = set(video_ids)
+        for path_str in csv_paths:
+            try:
+                with open(path_str, encoding="utf-8-sig") as fh:
+                    reader = csv.DictReader(fh)
+                    for raw in reader:
+                        if raw.get("video_id") in wanted:
+                            rows.append({**raw, "fallback": False})
+                            if len(rows) >= limit:
+                                return rows
+            except Exception:
+                continue
+        return rows
+
+    # Fallback path: snapshot_date match
+    target_date = (node.get("started_at") or "")[:10]
+    if not target_date:
+        return []
+    for path_str in csv_paths:
+        try:
+            with open(path_str, encoding="utf-8-sig") as fh:
+                reader = csv.DictReader(fh)
+                for raw in reader:
+                    if (raw.get("snapshot_date") or "") == target_date:
+                        rows.append({**raw, "fallback": True})
+                        if len(rows) >= limit:
+                            return rows
+        except Exception:
+            continue
+    return rows
+
+
 def media_crawler_exists() -> bool:
     return (ROOT / "MediaCrawler").exists()
 
