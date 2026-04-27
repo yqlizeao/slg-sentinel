@@ -2067,6 +2067,276 @@ div[data-testid="stPopover"] > button {
     color: rgba(232,228,220,.68) !important;
     box-shadow: 0 10px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
+/* ===== Recursive Graph (center scene) ===== */
+.recursive-graph {
+    position: absolute;
+    inset: 60px 380px 60px 24px;
+    overflow: auto;
+    z-index: 3;
+}
+.recursive-graph-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    color: rgba(232,228,220,.4);
+    font-size: 13px;
+    text-align: center;
+}
+.recursive-graph-empty strong {
+    font-family: var(--wa-font-display);
+    font-size: 18px;
+    color: rgba(232,228,220,.7);
+    letter-spacing: 2px;
+}
+.recursive-graph-edges {
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+.recursive-graph-edge {
+    fill: none;
+    stroke: rgba(232,228,220,.32);
+    stroke-width: 1.4;
+    opacity: .6;
+}
+.recursive-graph-edge.is-success { stroke: #5B9A6E; }
+.recursive-graph-edge.is-running { stroke: #6B8BDB; }
+.recursive-graph-edge.is-paused  { stroke: #D4956B; }
+.recursive-graph-edge.is-error   { stroke: #E85D4A; }
+.recursive-graph-cols {
+    position: relative;
+    z-index: 2;
+}
+.recursive-graph-col-head {
+    position: absolute;
+    top: 0;
+    width: 220px;
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    color: rgba(232,228,220,.4);
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 32px;
+}
+.recursive-graph-node {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border: 1px solid rgba(180,160,120,.18);
+    border-left-width: 4px;
+    border-radius: 6px;
+    background: rgba(12,15,20,.82);
+    color: rgba(232,228,220,.8);
+    text-decoration: none !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.03);
+    opacity: .85;
+    transition: opacity .12s ease, box-shadow .12s ease;
+}
+.recursive-graph-node:hover { opacity: 1; }
+.recursive-graph-node.is-success { border-left-color: #5B9A6E; }
+.recursive-graph-node.is-running { border-left-color: #6B8BDB; }
+.recursive-graph-node.is-paused  { border-left-color: #D4956B; }
+.recursive-graph-node.is-error   { border-left-color: #E85D4A; }
+.recursive-graph-node.is-selected {
+    outline: 2px solid #d4af37;
+    outline-offset: -2px;
+    box-shadow: 0 0 0 4px rgba(212,175,55,.14), 0 8px 22px rgba(0,0,0,.4);
+    opacity: 1;
+}
+.recursive-graph-node .node-keyword {
+    font-family: var(--wa-font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    color: #e8e4dc;
+    line-height: 1.2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.recursive-graph-node .node-metric {
+    font-family: var(--wa-font-mono);
+    font-size: 11px;
+    color: rgba(232,228,220,.55);
+}
+.recursive-graph-node .node-extras {
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+    color: var(--atlas-accent);
+}
+.recursive-graph-node .node-status-dot { display: none; }
+/* ===== Right-side node detail panel ===== */
+.atlas-shell-recursive .atlas-shell-drawers {
+    display: block;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    width: 360px;
+    height: calc(100% - 200px);
+}
+.recursive-node-detail {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid rgba(180,160,120,.15);
+    border-left-width: 4px;
+    border-radius: 8px;
+    background: rgba(12,15,20,.84);
+    box-shadow: 0 16px 44px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.03);
+    backdrop-filter: blur(16px);
+    overflow: hidden;
+}
+.recursive-node-detail[data-status="success"] { border-left-color: #5B9A6E; }
+.recursive-node-detail[data-status="running"] { border-left-color: #6B8BDB; }
+.recursive-node-detail[data-status="paused"]  { border-left-color: #D4956B; }
+.recursive-node-detail[data-status="error"]   { border-left-color: #E85D4A; }
+.recursive-node-detail header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid rgba(180,160,120,.1);
+}
+.recursive-node-detail .kicker {
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    color: rgba(232,228,220,.4);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.recursive-node-detail h3 {
+    margin: 0;
+    color: #e8e4dc;
+    font-family: var(--wa-font-display);
+    font-size: 18px;
+    letter-spacing: 1.2px;
+    word-break: break-word;
+}
+.recursive-node-detail section {
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-bottom: 1px solid rgba(180,160,120,.08);
+}
+.recursive-node-detail section:last-child { border-bottom: 0; }
+.recursive-node-detail .section-title {
+    padding: 10px 16px 6px;
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    color: rgba(232,228,220,.4);
+    text-transform: uppercase;
+}
+.recursive-node-detail ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 8px 8px;
+    overflow-y: auto;
+    flex: 1;
+}
+.recursive-node-detail .videos li {
+    border-bottom: 1px solid rgba(180,160,120,.06);
+}
+.recursive-node-detail .videos li a {
+    display: block;
+    padding: 8px 10px;
+    color: rgba(232,228,220,.85);
+    text-decoration: none;
+}
+.recursive-node-detail .videos .title {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 4px;
+}
+.recursive-node-detail .videos .meta {
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+    color: rgba(232,228,220,.45);
+}
+.recursive-node-detail .candidates li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(180,160,120,.06);
+    font-size: 12px;
+}
+.recursive-node-detail .candidates li b {
+    color: var(--atlas-accent);
+    font-family: var(--wa-font-mono);
+    font-weight: 500;
+}
+.recursive-detail-empty {
+    padding: 12px 16px;
+    color: rgba(232,228,220,.35);
+    font-size: 11px;
+    font-style: italic;
+}
+.recursive-detail-hint {
+    padding: 4px 16px;
+    color: #D4956B;
+    font-family: var(--wa-font-mono);
+    font-size: 10px;
+}
+.recursive-detail-more {
+    padding: 6px 16px;
+    color: var(--atlas-accent);
+    font-size: 10px;
+    text-align: right;
+}
+/* ===== Collapsible bottom-left panels ===== */
+.atlas-shell-panels-wrap {
+    position: absolute;
+    z-index: 4;
+    left: 22px;
+    bottom: 54px;
+    width: min(840px, calc(100% - 500px));
+    border: 1px solid rgba(180,160,120,.14);
+    border-radius: 8px;
+    background: rgba(12,15,20,.78);
+    box-shadow: 0 16px 44px rgba(0,0,0,.30);
+    backdrop-filter: blur(14px);
+    overflow: hidden;
+}
+.atlas-shell-recursive .atlas-shell-panels {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    background: transparent;
+    border: 0;
+    padding: 10px;
+}
+.atlas-shell-panels-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 32px;
+    padding: 0 14px;
+    cursor: pointer;
+    color: rgba(232,228,220,.66);
+    font-family: var(--wa-font-mono);
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    list-style: none;
+}
+.atlas-shell-panels-summary::-webkit-details-marker { display: none; }
+.atlas-shell-panels-summary .collapse-toggle {
+    color: var(--atlas-accent);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1;
+}
 @media (max-width: 900px) {
     html,
     body,
