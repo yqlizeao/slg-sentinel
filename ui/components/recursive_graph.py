@@ -1,6 +1,8 @@
 """Recursive crawl graph rendering — pure HTML/SVG, no JS."""
 from __future__ import annotations
 
+from urllib.parse import quote
+
 
 def diff_video_ids(
     before: dict[str, set[str]],
@@ -130,3 +132,20 @@ def calculate_layout(run: dict) -> dict:
         "svg_width": (rounds[-1]) * (COL_W + COL_GAP) - COL_GAP if rounds else 0,
         "svg_height": max(col_heights) if col_heights else 0,
     }
+
+
+def url_with(current: dict, **overrides) -> str:
+    """Build a relative URL preserving current query, applying overrides.
+
+    `None` value drops the key. Non-string values are coerced via str().
+    """
+    merged = {k: v for k, v in current.items() if v is not None and v != ""}
+    for key, value in overrides.items():
+        if value is None or value == "":
+            merged.pop(key, None)
+        else:
+            merged[key] = str(value)
+    if not merged:
+        return "?"
+    parts = [f"{quote(str(k))}={quote(str(v))}" for k, v in merged.items()]
+    return "?" + "&".join(parts)

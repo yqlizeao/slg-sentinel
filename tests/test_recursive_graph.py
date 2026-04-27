@@ -118,3 +118,23 @@ def test_calculate_layout_sorts_children_by_score():
     children = [n for n in layout["nodes"] if n["round"] == 2]
     assert children[0]["node_id"] == "c2"  # higher score first
     assert children[1]["node_id"] == "c1"
+
+
+def test_url_with_overrides_preserves_other_keys():
+    from ui.components.recursive_graph import url_with
+
+    assert url_with({"recursive_node": "n1", "recursive_panels": "open"},
+                    recursive_node="n2") == "?recursive_node=n2&recursive_panels=open"
+
+
+def test_url_with_drops_empty_values():
+    from ui.components.recursive_graph import url_with
+
+    assert url_with({"recursive_node": "n1"},
+                    recursive_node=None) == "?"
+
+
+def test_url_with_no_existing_params():
+    from ui.components.recursive_graph import url_with
+
+    assert url_with({}, recursive_panels="closed") == "?recursive_panels=closed"
