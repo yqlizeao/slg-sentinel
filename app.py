@@ -2070,9 +2070,14 @@ div[data-testid="stPopover"] > button {
 /* ===== Recursive Graph (center scene) ===== */
 .recursive-graph {
     position: absolute;
-    inset: 60px 380px 60px 24px;
+    inset: 180px 400px 110px 40px;
     overflow: auto;
     z-index: 3;
+}
+.recursive-graph-inner {
+    position: relative;
+    margin: 0 auto;
+    flex: 0 0 auto;
 }
 .recursive-graph-empty {
     position: absolute;
@@ -2109,7 +2114,8 @@ div[data-testid="stPopover"] > button {
 .recursive-graph-edge.is-paused  { stroke: #D4956B; }
 .recursive-graph-edge.is-error   { stroke: #E85D4A; }
 .recursive-graph-cols {
-    position: relative;
+    position: absolute;
+    top: 0; left: 0;
     z-index: 2;
 }
 .recursive-graph-col-head {

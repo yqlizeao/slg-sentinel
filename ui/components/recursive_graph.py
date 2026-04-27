@@ -213,6 +213,8 @@ def render_graph_scene(run: dict, *, selected_node_id: str | None, query: dict) 
 
     return (
         f"<div class='recursive-graph'>"
+        f"<div class='recursive-graph-inner' "
+        f"style='width:{layout['svg_width']}px;height:{layout['svg_height']}px;'>"
         f"<svg class='recursive-graph-edges' "
         f"viewBox='0 0 {layout['svg_width']} {layout['svg_height']}' "
         f"width='{layout['svg_width']}' height='{layout['svg_height']}'>"
@@ -221,6 +223,7 @@ def render_graph_scene(run: dict, *, selected_node_id: str | None, query: dict) 
         f"<div class='recursive-graph-cols' "
         f"style='width:{layout['svg_width']}px;height:{layout['svg_height']}px;'>"
         f"{''.join(cols_html_parts)}"
+        f"</div>"
         f"</div>"
         f"</div>"
     )
