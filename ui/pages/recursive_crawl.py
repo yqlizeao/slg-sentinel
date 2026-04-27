@@ -12,12 +12,9 @@ from ui.components.atlas_shell import (
     atlas_chips,
     atlas_empty,
     atlas_rows,
-    render_atlas_drawer,
     render_atlas_list_editor,
     render_atlas_panel,
-    render_atlas_stage,
 )
-from ui.components.common import render_atlas_ops_board
 from ui.components.crawl import (
     render_crawl_result_card,
     render_keyword_library,
@@ -970,8 +967,6 @@ def render_recursive_crawl_page() -> None:
     # ---- Bind to most recent run (incl. running) ----
     runs = list_recursive_runs()
     run = runs[0] if runs else None
-    candidates = collect_candidates_from_run(run) if run else []
-    summary = run.get("summary", {}) if run else {}
     rounds = run.get("rounds", []) if run else []
     nodes = run.get("nodes", []) if run else []
     status = run.get("status", "waiting") if run else "waiting"
@@ -1025,9 +1020,9 @@ def render_recursive_crawl_page() -> None:
         render_atlas_panel(t('recursive.panel.tree'), tree_body, kicker=t('recursive.metric.nodes')),
     ]
     panels_inner_html = "".join(
-        f"<article class='atlas-shell-panel {p.get('tone', '')}'>"
-        f"<div class='atlas-shell-panel-kicker'>{p['kicker']}</div>"
-        f"<h3>{p['title']}</h3>"
+        f"<article class='atlas-shell-panel {escape(p.get('tone', ''))}'>"
+        f"<div class='atlas-shell-panel-kicker'>{escape(p['kicker'])}</div>"
+        f"<h3>{escape(p['title'])}</h3>"
         f"<div class='atlas-shell-panel-body'>{p['body']}</div>"
         f"</article>"
         for p in panels
@@ -1039,6 +1034,10 @@ def render_recursive_crawl_page() -> None:
         toggle_url=toggle_url,
     )
 
+    # Custom stage template — drops the decorative atlas-shell-controls
+    # and atlas-shell-range blocks because the recursive page uses popovers
+    # at the top for navigation and the bottom-left collapsible panels for
+    # state, so the footer chrome adds no information.
     # ---- Render the full atlas-shell-stage manually (so we can inject scene + replace drawers) ----
     metrics = [
         (t('recursive.metric.seeds'), str(len(keyword_runtime.get("keywords", initial_keywords)))),
