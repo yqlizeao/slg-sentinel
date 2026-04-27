@@ -1,4 +1,4 @@
-def test_video_id_diff_helper(tmp_path, monkeypatch):
+def test_video_id_diff_helper():
     """Diff between two read_video_id_set snapshots returns added IDs only."""
     from ui.components.recursive_graph import diff_video_ids
 
