@@ -1,6 +1,7 @@
 """Recursive crawl graph rendering — pure HTML/SVG, no JS."""
 from __future__ import annotations
 
+from html import escape as _escape
 from urllib.parse import quote
 
 
@@ -149,3 +150,77 @@ def url_with(current: dict, **overrides) -> str:
         return "?"
     parts = [f"{quote(str(k))}={quote(str(v))}" for k, v in merged.items()]
     return "?" + "&".join(parts)
+
+
+STATUS_TONE = {
+    "success": "is-success",
+    "running": "is-running",
+    "paused": "is-paused",
+    "error": "is-error",
+}
+
+
+def render_graph_scene(run: dict, *, selected_node_id: str | None, query: dict) -> str:
+    """Render the center graph: columns with nodes + bezier edges. Empty-state safe."""
+    layout = calculate_layout(run)
+    if not layout["nodes"]:
+        return (
+            "<div class='recursive-graph-empty'>"
+            "<strong>暂无递归任务</strong>"
+            "<span>左上角『候选话题』启动一次 AI 探索，即可在这里看到搜索图</span>"
+            "</div>"
+        )
+
+    rounds_present = sorted({n["round"] for n in layout["nodes"]})
+    cols_html_parts: list[str] = []
+    for round_idx in rounds_present:
+        round_nodes = sorted(
+            [n for n in layout["nodes"] if n["round"] == round_idx],
+            key=lambda n: n["y"],
+        )
+        head_x = (round_idx - 1) * (COL_W + COL_GAP)
+        head = (
+            f"<div class='recursive-graph-col-head' "
+            f"style='left:{head_x}px;'>ROUND {round_idx:02d}</div>"
+        )
+        node_parts: list[str] = []
+        for node in round_nodes:
+            tone = STATUS_TONE.get(node["status"], "")
+            sel = " is-selected" if node["node_id"] == selected_node_id else ""
+            href = url_with(query, recursive_node=node["node_id"])
+            extras = ""
+            if node["candidates_count"] > 0:
+                extras = f"<div class='node-extras'>下一轮 {node['candidates_count']} 词</div>"
+            keyword_html = _escape(node["keyword"])
+            node_parts.append(
+                f"<a class='recursive-graph-node {tone}{sel}' "
+                f"href='{_escape(href)}' title='{keyword_html}' "
+                f"style='left:{node['x']}px;top:{node['y']}px;"
+                f"width:{node['width']}px;height:{node['height']}px;'>"
+                f"<div class='node-status-dot'></div>"
+                f"<div class='node-keyword'>{keyword_html}</div>"
+                f"<div class='node-metric'>{node['videos']} 视频</div>"
+                f"{extras}"
+                "</a>"
+            )
+        cols_html_parts.append(head + "".join(node_parts))
+
+    edges_html = "".join(
+        f"<path d='{_escape(edge['path'])}' "
+        f"class='recursive-graph-edge {STATUS_TONE.get(edge['status'], '')}' />"
+        for edge in layout["edges"]
+    )
+
+    return (
+        f"<div class='recursive-graph'>"
+        f"<svg class='recursive-graph-edges' "
+        f"viewBox='0 0 {layout['svg_width']} {layout['svg_height']}' "
+        f"width='{layout['svg_width']}' height='{layout['svg_height']}'>"
+        f"{edges_html}"
+        f"</svg>"
+        f"<div class='recursive-graph-cols' "
+        f"style='width:{layout['svg_width']}px;height:{layout['svg_height']}px;'>"
+        f"{''.join(cols_html_parts)}"
+        f"</div>"
+        f"</div>"
+    )

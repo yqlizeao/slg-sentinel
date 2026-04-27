@@ -138,3 +138,58 @@ def test_url_with_no_existing_params():
     from ui.components.recursive_graph import url_with
 
     assert url_with({}, recursive_panels="closed") == "?recursive_panels=closed"
+
+
+def test_render_graph_scene_empty_run():
+    from ui.components.recursive_graph import render_graph_scene
+
+    html = render_graph_scene({"nodes": [], "edges": []}, selected_node_id=None, query={})
+
+    assert "暂无递归任务" in html
+    assert "recursive-graph-empty" in html
+
+
+def test_render_graph_scene_marks_selected_node():
+    from ui.components.recursive_graph import render_graph_scene
+
+    run = {
+        "nodes": [
+            {"node_id": "n1", "keyword": "三国", "round": 1, "parent_id": "",
+             "status": "success", "crawl_metrics": {"videos": 5},
+             "candidate_metrics": {"count": 0}},
+            {"node_id": "n2", "keyword": "蜀汉", "round": 2, "parent_id": "n1",
+             "status": "running", "crawl_metrics": {"videos": 2},
+             "candidate_metrics": {"count": 0}},
+        ],
+        "edges": [{"from": "n1", "to": "n2", "keyword": "蜀汉"}],
+    }
+
+    html = render_graph_scene(run, selected_node_id="n2", query={"recursive_panels": "open"})
+
+    assert "is-selected" in html
+    assert "recursive_node=n1" in html  # both nodes carry navigable links (incl. selected)
+    assert "recursive_node=n2" in html
+    assert "recursive_panels=open" in html  # query state preserved in node hrefs
+    assert "is-success" in html
+    assert "is-running" in html
+    assert "ROUND 01" in html and "ROUND 02" in html
+    assert "5 视频" in html and "2 视频" in html
+    assert "<path" in html  # edge SVG path
+
+
+def test_render_graph_scene_escapes_html_in_keyword():
+    from ui.components.recursive_graph import render_graph_scene
+
+    run = {
+        "nodes": [
+            {"node_id": "n1", "keyword": "<script>", "round": 1, "parent_id": "",
+             "status": "success", "crawl_metrics": {"videos": 0},
+             "candidate_metrics": {"count": 0}},
+        ],
+        "edges": [],
+    }
+
+    html = render_graph_scene(run, selected_node_id="n1", query={})
+
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
