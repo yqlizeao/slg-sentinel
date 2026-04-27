@@ -304,3 +304,23 @@ def render_node_detail(node: dict, videos: list[dict]) -> str:
         f"</section>"
         f"</aside>"
     )
+
+
+def render_panels_collapsible(
+    *,
+    panels_html: str,
+    collapsed: bool,
+    toggle_url: str,
+) -> str:
+    """Wrap the three atlas panel cards in a <details> with summary toggle."""
+    open_attr = "" if collapsed else " open"
+    icon = "▴" if collapsed else "▾"
+    return (
+        f"<details class='atlas-shell-panels-wrap'{open_attr}>"
+        f"<summary class='atlas-shell-panels-summary'>"
+        f"<span>状态报告 · 3</span>"
+        f"<a class='collapse-toggle' href='{_escape(toggle_url)}'>{icon}</a>"
+        f"</summary>"
+        f"<div class='atlas-shell-panels'>{panels_html}</div>"
+        f"</details>"
+    )

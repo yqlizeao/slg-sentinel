@@ -259,3 +259,32 @@ def test_render_node_detail_fallback_hint():
     html = render_node_detail(node, videos)
 
     assert "估算结果" in html
+
+
+def test_render_panels_collapsible_open_default():
+    from ui.components.recursive_graph import render_panels_collapsible
+
+    html = render_panels_collapsible(
+        panels_html="<article>A</article><article>B</article><article>C</article>",
+        collapsed=False,
+        toggle_url="?recursive_panels=closed",
+    )
+
+    assert "<details" in html and " open" in html
+    assert "状态报告 · 3" in html
+    assert "?recursive_panels=closed" in html
+    assert "<article>A</article>" in html
+
+
+def test_render_panels_collapsible_when_collapsed():
+    from ui.components.recursive_graph import render_panels_collapsible
+
+    html = render_panels_collapsible(
+        panels_html="<article>A</article>",
+        collapsed=True,
+        toggle_url="?",
+    )
+
+    assert "<details" in html
+    assert "<details open" not in html and "open=" not in html
+    assert "▴" in html or "▾" in html
