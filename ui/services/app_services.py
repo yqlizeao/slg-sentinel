@@ -773,6 +773,23 @@ def read_video_id_set(platform: str) -> dict[str, set[str]]:
     return snapshot
 
 
+def _list_video_csv_paths(platform: str) -> list[str]:
+    """Return sorted paths of all videos CSVs for `platform` (no body parsing)."""
+    from src.core.csv_store import VIDEO_PLATFORMS, COMMUNITY_PLATFORMS
+
+    if platform in VIDEO_PLATFORMS:
+        category = "video_platforms"
+    elif platform in COMMUNITY_PLATFORMS:
+        category = "community_platforms"
+    else:
+        category = "misc_platforms"
+
+    v_dir = DATA_DIR / category / platform / "videos"
+    if not v_dir.exists():
+        return []
+    return sorted(str(p) for p in v_dir.glob("*.csv"))
+
+
 def summarize_crawl_result(
     platform: str,
     platform_label: str,
@@ -887,8 +904,7 @@ def load_videos_for_node(run: dict, node: dict, limit: int = 20) -> list[dict]:
     crawl = node.get("crawl_metrics", {}) or {}
     video_ids: list[str] = list(crawl.get("video_ids") or [])
 
-    snapshot = read_video_id_set(platform)
-    csv_paths = list(snapshot.keys())
+    csv_paths = _list_video_csv_paths(platform)
     if not csv_paths:
         return []
 
@@ -901,7 +917,7 @@ def load_videos_for_node(run: dict, node: dict, limit: int = 20) -> list[dict]:
                     reader = csv.DictReader(fh)
                     for raw in reader:
                         if raw.get("video_id") in wanted:
-                            rows.append({**raw, "fallback": False})
+                            rows.append(dict(raw))
                             if len(rows) >= limit:
                                 return rows
             except Exception:
