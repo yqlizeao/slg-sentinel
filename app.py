@@ -2070,7 +2070,7 @@ div[data-testid="stPopover"] > button {
 /* ===== Recursive Graph (center scene) ===== */
 .recursive-graph {
     position: absolute;
-    inset: 180px 400px 110px 40px;
+    inset: 220px 400px 110px 40px;
     overflow: auto;
     z-index: 3;
 }
@@ -2078,6 +2078,13 @@ div[data-testid="stPopover"] > button {
     position: relative;
     margin: 0 auto;
     flex: 0 0 auto;
+}
+.atlas-shell-recursive .atlas-shell-hero h1 {
+    font-size: clamp(15px, 1.6vw, 24px) !important;
+    letter-spacing: 1.5px !important;
+}
+.atlas-shell-recursive .atlas-shell-hero p {
+    font-size: 11px;
 }
 .recursive-graph-empty {
     position: absolute;
