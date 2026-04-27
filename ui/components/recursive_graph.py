@@ -52,7 +52,10 @@ def _sort_round_nodes(parent_layout_y: dict[str, int], nodes: list[dict]) -> lis
 
     def key(node: dict) -> tuple:
         py = parent_layout_y.get(node.get("parent_id", ""), 0)
-        score = float((node.get("crawl_metrics", {}) or {}).get("score", 0) or 0)
+        try:
+            score = float((node.get("crawl_metrics", {}) or {}).get("score", 0) or 0)
+        except (TypeError, ValueError):
+            score = 0.0
         return (py, -score, node.get("node_id", ""))
 
     return sorted(nodes, key=key)
