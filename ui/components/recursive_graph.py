@@ -310,16 +310,23 @@ def render_panels_collapsible(
     *,
     panels_html: str,
     collapsed: bool,
-    toggle_url: str,
+    toggle_url: str = "",
 ) -> str:
-    """Wrap the three atlas panel cards in a <details> with summary toggle."""
+    """Wrap the three atlas panel cards in a native <details>/<summary>.
+
+    Folding is driven by the browser's native <details> toggle (per-session,
+    not persisted across refresh). `toggle_url` is accepted for API
+    compatibility but unused — Streamlit's markdown sanitizer eats `<a target>`
+    overrides and forces new-tab navigation on relative-href anchors.
+    """
+    del toggle_url
     open_attr = "" if collapsed else " open"
     icon = "▴" if collapsed else "▾"
     return (
         f"<details class='atlas-shell-panels-wrap'{open_attr}>"
         f"<summary class='atlas-shell-panels-summary'>"
         f"<span>状态报告 · 3</span>"
-        f"<a class='collapse-toggle' href='{_escape(toggle_url)}' target='_self'>{icon}</a>"
+        f"<span class='collapse-toggle'>{icon}</span>"
         f"</summary>"
         f"<div class='atlas-shell-panels'>{panels_html}</div>"
         f"</details>"

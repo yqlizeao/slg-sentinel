@@ -272,7 +272,7 @@ def test_render_panels_collapsible_open_default():
 
     assert "<details" in html and " open" in html
     assert "状态报告 · 3" in html
-    assert "?recursive_panels=closed" in html
+    assert "▾" in html  # native <details> toggle, no anchor link
     assert "<article>A</article>" in html
 
 
