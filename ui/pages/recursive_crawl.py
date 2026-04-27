@@ -25,6 +25,7 @@ from ui.components.crawl import (
     render_recursive_crawl_flow,
     render_step_overview,
 )
+from ui.components.recursive_graph import diff_video_ids
 from ui.i18n import t
 from ui.services.app_services import (
     PLATFORM_OPTIONS,
@@ -35,6 +36,7 @@ from ui.services.app_services import (
     load_keyword_library,
     load_latest_search_metrics,
     media_crawler_exists,
+    read_video_id_set,
     run_cli_stream,
     save_keyword_library,
     summarize_crawl_result,
@@ -731,6 +733,7 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
 
             keyword_started_at = datetime.now()
             before_snapshot = get_crawl_file_snapshot(platform)
+            before_video_ids = read_video_id_set(platform)
             tmp_keywords_path = write_temporary_keyword_file([keyword], label=f"{platform}_round_{round_idx}_{keyword}")
             cmd_args = [
                 "crawl",
@@ -753,6 +756,7 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
 
             stdout, stderr, code = run_cli_stream(cmd_args, on_line=on_recursive_line)
             after_snapshot = get_crawl_file_snapshot(platform)
+            node_video_ids = diff_video_ids(before_video_ids, read_video_id_set(platform))
             result = summarize_crawl_result(
                 platform=platform,
                 platform_label=PLATFORM_OPTIONS[platform],
@@ -770,6 +774,7 @@ def _run_recursive_crawl(config: dict, keyword_runtime: dict, is_expert: bool = 
                 "videos": result["added_videos"],
                 "comments": result["added_comments"],
                 "touched_files": result["touched_files"],
+                "video_ids": node_video_ids,
             }
 
             error_reason = ""
