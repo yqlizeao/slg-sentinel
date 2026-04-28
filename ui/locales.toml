@@ -39,6 +39,7 @@
 "common.default_status" = "LIVE"
 "common.empty_first_action" = "Run a collection first, then return here."
 "common.freshness" = "Data as of"
+"common.close" = "Close"
 
 "overview.map.meta" = "LIVE SIGNAL MAP · GLOBAL VIEW"
 "overview.map.guided" = "Guided Tours"
@@ -647,6 +648,7 @@
 "common.default_status" = "在线"
 "common.empty_first_action" = "先完成一次采集，再回到这里查看。"
 "common.freshness" = "数据截至"
+"common.close" = "关闭"
 
 "overview.map.meta" = "实时信号地图 · 全局视图"
 "overview.map.guided" = "导览模式"

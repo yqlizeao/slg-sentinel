@@ -5,10 +5,15 @@ from html import escape
 import streamlit as st
 from src.core.config import load_config
 from ui.components.atlas_shell import (
+    atlas_native_slot,
     atlas_empty,
     atlas_rows,
+    render_atlas_command_modal,
+    render_atlas_command_nav,
     render_atlas_drawer,
     render_atlas_list_editor,
+    render_atlas_metric_tiles,
+    render_atlas_modal_footer,
     render_atlas_panel,
     render_atlas_stage,
 )
@@ -69,36 +74,91 @@ def render_competitor_page() -> None:
         name_a = st.session_state.get("comp_a_text", "")
         name_b = st.session_state.get("comp_b_text", "")
 
-    cmd_cols = st.columns([1.05, 1.0, 1.0, 6.2], gap="small")
-    with cmd_cols[0]:
-        with st.popover(t('popover.select'), use_container_width=True):
-            if game_names:
-                idx_a = st.selectbox(t("competitor.a"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_a")
-                idx_b = st.selectbox(t("competitor.b"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_b", index=min(1, len(game_names)-1))
-                name_a = game_names[idx_a]
-                name_b = game_names[idx_b]
-            else:
-                name_a = st.text_input(t("competitor.a"), placeholder=t("competitor.placeholder"), key="comp_a_text")
-                name_b = st.text_input(t("competitor.b"), placeholder=t("competitor.placeholder"), key="comp_b_text")
-            if not has_llm:
-                st.warning(t("competitor.llm_warning"))
-            if name_a == name_b and name_a:
-                st.info(t("competitor.same_info"))
-            generate_disabled = not has_llm or not name_a or not name_b or name_a == name_b
-            if st.button(t("competitor.generate", a=name_a or "A", b=name_b or "B"), type="primary", use_container_width=True, disabled=generate_disabled):
-                with st.spinner(t("competitor.generating")):
-                    result = _run_comparison(name_a, name_b)
-                if result:
-                    st.session_state["competitor_last_result"] = result
-                    st.session_state["competitor_last_names"] = (name_a, name_b)
+    active_panel = render_atlas_command_nav(
+        "competitor",
+        [
+            ("select", t("popover.select")),
+            ("result", t("popover.result")),
+        ],
+    )
+
+    if active_panel == "select":
+
+        def _select_body() -> None:
+            nonlocal name_a, name_b
+            with atlas_native_slot(t("competitor.select_title"), t("competitor.subtitle")):
+                if game_names:
+                    pick_cols = st.columns(2)
+                    with pick_cols[0]:
+                        idx_a = st.selectbox(t("competitor.a"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_a")
+                    with pick_cols[1]:
+                        idx_b = st.selectbox(t("competitor.b"), range(len(game_names)), format_func=lambda i: game_names[i], key="comp_b", index=min(1, len(game_names)-1))
+                    name_a = game_names[idx_a]
+                    name_b = game_names[idx_b]
                 else:
-                    st.error(t("competitor.failed"))
-    with cmd_cols[1]:
-        with st.popover(t('popover.result'), use_container_width=True):
+                    name_a = st.text_input(t("competitor.a"), placeholder=t("competitor.placeholder"), key="comp_a_text")
+                    name_b = st.text_input(t("competitor.b"), placeholder=t("competitor.placeholder"), key="comp_b_text")
+                if not has_llm:
+                    st.warning(t("competitor.llm_warning"))
+                if name_a == name_b and name_a:
+                    st.info(t("competitor.same_info"))
+                generate_disabled = not has_llm or not name_a or not name_b or name_a == name_b
+                if st.button(t("competitor.generate", a=name_a or "A", b=name_b or "B"), type="primary", disabled=generate_disabled):
+                    with st.spinner(t("competitor.generating")):
+                        result = _run_comparison(name_a, name_b)
+                    if result:
+                        st.session_state["competitor_last_result"] = result
+                        st.session_state["competitor_last_names"] = (name_a, name_b)
+                    else:
+                        st.error(t("competitor.failed"))
+            st.markdown(render_atlas_modal_footer(t("competitor.empty_hint")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="competitor",
+            title=t("competitor.select_title"),
+            subtitle=t("competitor.subtitle"),
+            metrics=[
+                (t("competitor.metric.targets"), len(game_names)),
+                (t("competitor.metric.engine"), t("label.online") if has_llm else t("label.missing")),
+                (t("competitor.metric.mode"), t("label.duel")),
+            ],
+            filters=[
+                (t("competitor.panel.rival_a"), name_a or t("competitor.rival_a")),
+                (t("competitor.panel.rival_b"), name_b or t("competitor.rival_b")),
+                (t("competitor.metric.engine"), t("label.online") if has_llm else t("label.missing")),
+            ],
+            body=_select_body,
+            icon="S",
+            metric_columns=3,
+        )
+
+    elif active_panel == "result":
+
+        def _result_body() -> None:
             if "competitor_last_result" in st.session_state:
                 st.markdown(st.session_state["competitor_last_result"])
             else:
                 st.caption(t("competitor.empty_hint"))
+            st.markdown(render_atlas_modal_footer(t("competitor.empty_desc")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="competitor",
+            title=t("competitor.drawer.brief"),
+            subtitle=t("competitor.ops.subtitle"),
+            metrics=[
+                (t("competitor.panel.rival_a"), name_a or t("competitor.rival_a")),
+                (t("competitor.panel.rival_b"), name_b or t("competitor.rival_b")),
+                (t("competitor.metric.output"), t("label.ready") if "competitor_last_result" in st.session_state else t("label.empty")),
+            ],
+            filters=[
+                (t("competitor.panel.rival_a"), name_a or t("competitor.rival_a")),
+                (t("competitor.panel.rival_b"), name_b or t("competitor.rival_b")),
+                (t("competitor.metric.output"), t("label.ready") if "competitor_last_result" in st.session_state else t("label.empty")),
+            ],
+            body=_result_body,
+            icon="R",
+            metric_columns=3,
+        )
 
     last_names = st.session_state.get("competitor_last_names", (name_a, name_b))
     result_markdown = st.session_state.get("competitor_last_result", "")

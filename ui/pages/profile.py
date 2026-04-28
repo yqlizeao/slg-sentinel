@@ -6,11 +6,18 @@ import streamlit as st
 import pandas as pd
 
 from ui.components.atlas_shell import (
+    atlas_native_slot,
     atlas_empty,
     atlas_rows,
+    render_atlas_command_modal,
+    render_atlas_command_nav,
+    render_atlas_bar_rows,
     render_atlas_drawer,
     render_atlas_list_editor,
+    render_atlas_metric_tiles,
+    render_atlas_modal_footer,
     render_atlas_panel,
+    render_atlas_segment_bar,
     render_atlas_stage,
 )
 from ui.components.common import (
@@ -53,31 +60,123 @@ def render_profile_page() -> None:
         tag_rows = []
         player_rows = []
 
-    cmd_cols = st.columns([1.15, 1.0, 1.0, 6.0], gap="small")
-    with cmd_cols[0]:
-        with st.popover(t('popover.raw_players'), use_container_width=True):
-            if has_data:
-                st.dataframe(
-                    df[["platform", "username", "age_group", "spend_type", "tags", "location"]].rename(columns={
-                        "platform": t('profile.col.platform'),
-                        "username": t('profile.col.player'),
-                        "age_group": t('profile.col.age'),
-                        "spend_type": t('profile.col.spend'),
-                        "tags": t('profile.col.tags'),
-                        "location": t('profile.col.location'),
-                    }),
-                    use_container_width=True,
-                    hide_index=True,
+    active_panel = render_atlas_command_nav(
+        "profile",
+        [
+            ("players", t("popover.raw_players")),
+            ("segments", t("popover.segments")),
+            ("freshness", t("popover.freshness")),
+        ],
+    )
+
+    if active_panel == "players":
+
+        def _players_body() -> None:
+            with atlas_native_slot(t("profile.drawer.players"), t("profile.subtitle")):
+                if has_data:
+                    st.dataframe(
+                        df[["platform", "username", "age_group", "spend_type", "tags", "location"]].rename(columns={
+                            "platform": t('profile.col.platform'),
+                            "username": t('profile.col.player'),
+                            "age_group": t('profile.col.age'),
+                            "spend_type": t('profile.col.spend'),
+                            "tags": t('profile.col.tags'),
+                            "location": t('profile.col.location'),
+                        }),
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+                else:
+                    st.caption(t("profile.empty_hint"))
+            st.markdown(render_atlas_modal_footer(t("profile.empty_hint")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="profile",
+            title=t("profile.drawer.players"),
+            subtitle=t("profile.subtitle"),
+            metrics=[
+                (t("profile.kpi.players"), len(df)),
+                (t("profile.kpi.high_pay"), whales_dolphins),
+                (t("profile.kpi.conversion"), refugees),
+                (t("profile.kpi.hardcore"), hardcore),
+            ],
+            filters=[
+                (t("profile.kpi.players"), len(df)),
+                (t("profile.kpi.high_pay"), whales_dolphins),
+                (t("profile.kpi.hardcore"), hardcore),
+            ],
+            body=_players_body,
+            icon="P",
+        )
+
+    elif active_panel == "segments":
+
+        def _segments_body() -> None:
+            total_spend = max(sum(value for _, value in spend_rows), 1)
+            if spend_rows:
+                palette = ["#5B9A6E", "#d4af37", "#6B8BDB", "#E85D4A", "#9B7FD4", "#D4956B"]
+                st.markdown(
+                    render_atlas_segment_bar(
+                        [
+                            (label, value / total_spend * 100, palette[index % len(palette)])
+                            for index, (label, value) in enumerate(spend_rows[:6])
+                        ],
+                        title=t("profile.drawer.spend_title"),
+                    ),
+                    unsafe_allow_html=True,
                 )
-            else:
-                st.caption(t("profile.empty_hint"))
-    with cmd_cols[1]:
-        with st.popover(t('popover.segments'), use_container_width=True):
+            top_tag_value = max([value for _, value in tag_rows[:8]] or [1])
+            st.markdown(
+                render_atlas_bar_rows(
+                    [
+                        (label, value, value / top_tag_value * 100)
+                        for label, value in tag_rows[:8]
+                    ],
+                    title=t("profile.drawer.tags_title"),
+                    tone="green",
+                ),
+                unsafe_allow_html=True,
+            )
             st.markdown(render_atlas_list_editor(t('profile.drawer.spend_title'), spend_rows, compact=True), unsafe_allow_html=True)
             st.markdown(render_atlas_list_editor(t('profile.drawer.tags_title'), tag_rows, compact=True), unsafe_allow_html=True)
-    with cmd_cols[2]:
-        with st.popover(t('popover.freshness'), use_container_width=True):
+            st.markdown(render_atlas_modal_footer(t("profile.focus_desc")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="profile",
+            title=t("profile.drawer.spend"),
+            subtitle=t("profile.ops.subtitle"),
+            metrics=[
+                (t("profile.kpi.players"), len(df)),
+                (t("profile.kpi.high_pay"), whales_dolphins),
+                (t("profile.kpi.conversion"), refugees),
+                (t("profile.kpi.hardcore"), hardcore),
+            ],
+            filters=[
+                (t("profile.drawer.spend"), len(spend_rows)),
+                (t("profile.drawer.tags"), len(tag_rows)),
+                (t("profile.panel.priority"), len(player_rows)),
+            ],
+            body=_segments_body,
+            icon="S",
+        )
+
+    elif active_panel == "freshness":
+
+        def _freshness_body() -> None:
             render_data_freshness()
+
+        render_atlas_command_modal(
+            page_id="profile",
+            title=t("common.freshness"),
+            subtitle=t("profile.stage.mode"),
+            filters=[
+                (t("profile.metric.profiles"), len(df)),
+                (t("profile.metric.high_pay"), whales_dolphins),
+                (t("profile.metric.hardcore"), hardcore),
+            ],
+            body=_freshness_body,
+            icon="F",
+        )
 
     scene_html = f"""
     <div class='atlas-scene-sigil'></div>

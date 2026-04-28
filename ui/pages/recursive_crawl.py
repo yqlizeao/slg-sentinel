@@ -9,10 +9,16 @@ import streamlit.components.v1 as st_components
 
 from src.core.config import load_config
 from ui.components.atlas_shell import (
+    atlas_native_slot,
     atlas_chips,
     atlas_empty,
     atlas_rows,
+    render_atlas_bar_rows,
+    render_atlas_command_modal,
+    render_atlas_command_nav,
     render_atlas_list_editor,
+    render_atlas_metric_tiles,
+    render_atlas_modal_footer,
     render_atlas_panel,
 )
 from ui.components.crawl import (
@@ -87,7 +93,7 @@ def _render_recursive_config(keyword_runtime: dict, is_expert: bool) -> dict:
         "深度探索": {"max_depth": 3, "per_round_keywords": 12, "min_score": 2.0, "stop_new_keywords": 3, "limit_val": 30},
     }
 
-    with st.container(border=True):
+    with atlas_native_slot(t("recursive.expert_chain"), t("recursive.expert_chain_desc")):
         quick_cols = st.columns([1, 1.2, 1])
         with quick_cols[0]:
             platform = st.selectbox(
@@ -102,7 +108,6 @@ def _render_recursive_config(keyword_runtime: dict, is_expert: bool) -> dict:
                 list(strategy_options.keys()),
                 index=0,
                 key="recursive_strategy",
-                help="标准探索适合日常营销选题；保守探索更快更稳；深度探索用于更完整地铺开话题。",
             )
         with quick_cols[2]:
             st.markdown(
@@ -931,45 +936,175 @@ def render_recursive_crawl_page() -> None:
         "can_execute": bool(initial_keywords),
         "keyword_count": len(initial_keywords),
     }
+    runs = list_recursive_runs()
+    run = runs[0] if runs else None
+    rounds = run.get("rounds", []) if run else []
+    nodes = run.get("nodes", []) if run else []
+    status = run.get("status", "waiting") if run else "waiting"
 
-    cmd_cols = st.columns([0.95, 1.0, 1.05, 1.15, 1.0, 4.85], gap="small")
-    with cmd_cols[0]:
-        with st.popover(t('popover.mode'), use_container_width=True):
+    active_panel = render_atlas_command_nav(
+        "recursive",
+        [
+            ("mode", t("popover.mode")),
+            ("seeds", t("popover.seeds")),
+            ("config", t("popover.config")),
+            ("candidates", t("popover.candidates")),
+            ("history", t("popover.history")),
+        ],
+    )
+
+    if active_panel == "mode":
+
+        def _mode_body() -> None:
+            nonlocal is_expert
             is_expert = st.checkbox(
                 t("recursive.open_expert"),
                 value=current_expert,
                 key="recursive_expert_mode_enabled",
                 help=t("recursive.expert_help"),
             )
+            st.markdown(render_atlas_modal_footer(t("recursive.expert_help")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="recursive",
+            title=t("popover.mode"),
+            subtitle=t("recursive.expert_help"),
+            metrics=[
+                (t("recursive.metric.mode"), t("label.expert") if current_expert else t("label.simple")),
+                (t("recursive.metric.seeds"), len(initial_keywords)),
+                (t("recursive.metric.rounds"), len(rounds)),
+                (t("recursive.metric.nodes"), len(nodes)),
+            ],
+            filters=[
+                (t("recursive.metric.mode"), t("label.expert") if current_expert else t("label.simple")),
+                (t("recursive.stage.mode"), t("recursive.stage.timeline")),
+                (t("crawl.row.status"), status),
+            ],
+            body=_mode_body,
+            icon="M",
+        )
+
     st.session_state["recursive_view_mode"] = "expert" if is_expert else "simple"
-    with cmd_cols[1]:
-        with st.popover(t('popover.seeds'), use_container_width=True):
+
+    if active_panel == "seeds":
+
+        def _seeds_body() -> None:
+            nonlocal keyword_runtime
             st.markdown(
                 f"<div class='recursive-inline-note'>{t('recursive.seed_note', count=len(initial_keywords))}</div>",
                 unsafe_allow_html=True,
             )
             keyword_runtime = render_keyword_library("recursive")
-    with cmd_cols[2]:
-        with st.popover(t('popover.config'), use_container_width=True):
+            st.markdown(
+                render_atlas_bar_rows(
+                    [
+                        (t("recursive.metric.seeds"), len(keyword_runtime.get("keywords", initial_keywords)), min(100, len(keyword_runtime.get("keywords", initial_keywords)) / 24 * 100 if keyword_runtime.get("keywords", initial_keywords) else 0)),
+                        (t("recursive.metric.nodes"), len(nodes), min(100, len(nodes) / 48 * 100 if nodes else 0)),
+                    ],
+                    title=t("recursive.seed_expander"),
+                    tone="gold",
+                ),
+                unsafe_allow_html=True,
+            )
+
+        render_atlas_command_modal(
+            page_id="recursive",
+            title=t("recursive.step_seed"),
+            subtitle=t("recursive.step_seed_desc"),
+            metrics=[
+                (t("recursive.metric.seeds"), len(initial_keywords)),
+                (t("recursive.metric.rounds"), len(rounds)),
+            ],
+            filters=[
+                (t("recursive.metric.seeds"), len(initial_keywords)),
+                (t("recursive.metric.nodes"), len(nodes)),
+                (t("crawl.row.status"), status),
+            ],
+            body=_seeds_body,
+            icon="S",
+            metric_columns=2,
+        )
+
+    elif active_panel == "config":
+
+        def _config_body() -> None:
+            nonlocal config
             config = _render_recursive_config(keyword_runtime, is_expert)
             if is_expert:
                 _render_search_metrics(config["platform"])
-    with cmd_cols[3]:
-        with st.popover(t('popover.candidates'), use_container_width=True):
+            st.markdown(render_atlas_modal_footer(t("recursive.expert_chain_desc")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="recursive",
+            title=t("popover.config"),
+            subtitle=t("recursive.expert_chain_desc"),
+            metrics=[
+                (t("crawl.row.platform"), PLATFORM_OPTIONS.get(config["platform"], config["platform"])),
+                (t("recursive.metric.mode"), t("label.expert") if is_expert else t("label.simple")),
+                (t("recursive.metric.seeds"), len(keyword_runtime.get("keywords", initial_keywords))),
+                (t("recursive.metric.rounds"), config["max_depth"]),
+            ],
+            filters=[
+                (t("crawl.row.platform"), PLATFORM_OPTIONS.get(config["platform"], config["platform"])),
+                (t("recursive.metric.mode"), t("label.expert") if is_expert else t("label.simple")),
+                (t("recursive.metric.rounds"), config["max_depth"]),
+            ],
+            body=_config_body,
+            icon="C",
+        )
+
+    elif active_panel == "candidates":
+
+        def _candidates_body() -> None:
             _render_candidate_panel(config, keyword_runtime, is_expert)
-    with cmd_cols[4]:
-        with st.popover(t('popover.history'), use_container_width=True):
+
+        render_atlas_command_modal(
+            page_id="recursive",
+            title=t("recursive.drawer.candidates"),
+            subtitle=t("recursive.drawer.candidates_title"),
+            metrics=[
+                (t("recursive.metric.seeds"), len(keyword_runtime.get("keywords", initial_keywords))),
+                (t("recursive.metric.nodes"), len(nodes)),
+                (t("recursive.metric.rounds"), len(rounds)),
+            ],
+            filters=[
+                (t("crawl.row.platform"), PLATFORM_OPTIONS.get(config["platform"], config["platform"])),
+                (t("recursive.metric.mode"), t("label.expert") if is_expert else t("label.simple")),
+                (t("recursive.metric.nodes"), len(nodes)),
+            ],
+            body=_candidates_body,
+            icon="N",
+            metric_columns=3,
+        )
+
+    elif active_panel == "history":
+
+        def _history_body() -> None:
             _render_history_library(is_expert)
             if st.session_state.get("recursive_last_run") and is_expert:
                 st.divider()
                 _render_node_detail(st.session_state["recursive_last_run"])
 
+        render_atlas_command_modal(
+            page_id="recursive",
+            title=t("popover.history"),
+            subtitle=t("recursive.drawer.timeline"),
+            metrics=[
+                (t("recursive.metric.rounds"), len(rounds)),
+                (t("recursive.metric.nodes"), len(nodes)),
+                (t("crawl.row.status"), status),
+                (t("recursive.drawer.result"), len(runs)),
+            ],
+            filters=[
+                (t("recursive.metric.rounds"), len(rounds)),
+                (t("recursive.metric.nodes"), len(nodes)),
+                (t("crawl.row.status"), status),
+            ],
+            body=_history_body,
+            icon="H",
+        )
+
     # ---- Bind to most recent run (incl. running) ----
-    runs = list_recursive_runs()
-    run = runs[0] if runs else None
-    rounds = run.get("rounds", []) if run else []
-    nodes = run.get("nodes", []) if run else []
-    status = run.get("status", "waiting") if run else "waiting"
 
     # ---- Resolve query state ----
     query = dict(st.query_params)

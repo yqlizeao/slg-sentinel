@@ -6,12 +6,18 @@ import streamlit as st
 import streamlit.components.v1 as st_components
 
 from ui.components.atlas_shell import (
+    atlas_native_slot,
     atlas_chips,
     atlas_empty,
     atlas_rows,
+    render_atlas_bar_rows,
+    render_atlas_command_modal,
+    render_atlas_command_nav,
     render_atlas_drawer,
     render_atlas_list_editor,
+    render_atlas_metric_tiles,
     render_atlas_panel,
+    render_atlas_modal_footer,
     render_atlas_stage,
 )
 from ui.components.common import render_section_title, render_data_freshness, render_kpi_card, icon
@@ -821,6 +827,7 @@ def render_overview_page() -> None:
         ("xiaohongshu", "RedNote"),
     ]
     platform_stats = [(platform_id, label, get_platform_stats(platform_id)) for platform_id, label in platform_data]
+    loaded_total_kb = sum(float(item.get("size_kb", 0) or 0) for item in loaded_files)
 
     @st.dialog(t("overview.confirm_clear"))
     def confirm_clear_all() -> None:
@@ -832,13 +839,32 @@ def render_overview_page() -> None:
         if c2.button(t("overview.cancel"), use_container_width=True):
             st.rerun()
 
-    cmd_cols = st.columns([1.0, 1.0, 1.0, 1.0, 5.5], gap="small")
-    with cmd_cols[0]:
-        with st.popover(t('popover.data'), use_container_width=True):
-            st.caption(t("overview.loaded_data"))
+    active_panel = render_atlas_command_nav(
+        "overview",
+        [
+            ("data", t("popover.data")),
+            ("trending", t("popover.trending")),
+            ("comments", t("popover.comments")),
+            ("freshness", t("popover.freshness")),
+        ],
+    )
+
+    if active_panel == "data":
+
+        def _data_body() -> None:
             if loaded_files:
-                if st.button(t("overview.delete_all"), type="primary", use_container_width=True):
-                    confirm_clear_all()
+                if st.button(t("overview.delete_all"), type="primary", key="overview_delete_all_inline"):
+                    st.session_state["overview_confirm_clear_inline"] = True
+                if st.session_state.get("overview_confirm_clear_inline"):
+                    st.warning(t("overview.delete_all_warning"))
+                    confirm_cols = st.columns([1, 1, 3])
+                    if confirm_cols[0].button(t("overview.confirm_clear_btn"), type="primary", key="overview_confirm_clear_all"):
+                        delete_all_loaded_csv_files()
+                        st.session_state["overview_confirm_clear_inline"] = False
+                        st.rerun()
+                    if confirm_cols[1].button(t("overview.cancel"), key="overview_cancel_clear_all"):
+                        st.session_state["overview_confirm_clear_inline"] = False
+                        st.rerun()
                 for idx, item in enumerate(loaded_files[:20]):
                     file_cols = st.columns([3, 1.4], gap="small")
                     with file_cols[0]:
@@ -858,18 +884,68 @@ def render_overview_page() -> None:
                             except Exception:
                                 st.error(t("overview.delete_blocked"))
             else:
-                st.caption(common_empty := t("common.empty_first_action"))
-    with cmd_cols[1]:
-        with st.popover(t('popover.trending'), use_container_width=True):
-            view_limit = st.selectbox(
-                t("overview.view_limit"),
-                [10, 20, 50, 100, 300, 500],
-                index=[10, 20, 50, 100, 300, 500].index(view_limit) if view_limit in [10, 20, 50, 100, 300, 500] else 0,
-                key="overview_view_limit",
-            )
+                st.caption(t("common.empty_first_action"))
+            st.markdown(render_atlas_modal_footer(t("overview.drawer.loaded_caption")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="overview",
+            title=t("overview.drawer.loaded"),
+            subtitle=t("overview.drawer.loaded_caption"),
+            metrics=[
+                (t("overview.drawer.loaded"), len(loaded_files)),
+                (t("overview.panel.local_sets"), health.get("capacity", 0)),
+                (t("overview.panel.last_sync"), health.get("last_sync", "—")),
+                (t("label.csv"), f"{loaded_total_kb:.1f} KB"),
+            ],
+            filters=[
+                (t("overview.panel.api"), t("label.online") if health.get("api_health") else t("label.local")),
+                (t("overview.panel.local_sets"), health.get("capacity", 0)),
+                (t("overview.panel.last_sync"), health.get("last_sync", "—")),
+            ],
+            body=_data_body,
+            icon="D",
+        )
+
+    elif active_panel == "trending":
+
+        def _trending_body() -> None:
+            nonlocal view_limit, trending
+            with atlas_native_slot(t("overview.drawer.hot_title"), t("overview.sorted_by_views")):
+                view_limit = st.selectbox(
+                    t("overview.view_limit"),
+                    [10, 20, 50, 100, 300, 500],
+                    index=[10, 20, 50, 100, 300, 500].index(view_limit) if view_limit in [10, 20, 50, 100, 300, 500] else 0,
+                    key="overview_view_limit",
+                )
             trending = get_trending_videos(int(view_limit))
             if trending:
                 visible = trending[: int(view_limit)]
+                top_value = max([int(video.get("view_count", 0) or 0) for video in visible[:8]] or [1])
+                st.markdown(
+                    render_atlas_metric_tiles(
+                        [
+                            (t("overview.view_limit"), view_limit),
+                            (t("overview.drawer.hot_title"), len(visible)),
+                        ],
+                        columns=2,
+                    ),
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    render_atlas_bar_rows(
+                        [
+                            (
+                                str(video.get("title") or video.get("video_title") or t("overview.untitled"))[:24],
+                                f"{int(video.get('view_count', 0) or 0):,}",
+                                (int(video.get("view_count", 0) or 0) / top_value) * 100,
+                            )
+                            for video in visible[:8]
+                        ],
+                        title=t("overview.drawer.hot_title"),
+                        tone="green",
+                    ),
+                    unsafe_allow_html=True,
+                )
                 rows_html = render_atlas_list_editor(
                     t('overview.drawer.hot_title'),
                     [
@@ -890,33 +966,100 @@ def render_overview_page() -> None:
                     )
             else:
                 st.caption(t("common.empty_first_action"))
-    with cmd_cols[2]:
-        with st.popover(t('popover.comments'), use_container_width=True):
+            st.markdown(render_atlas_modal_footer(t("overview.sorted_by_views")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="overview",
+            title=t("overview.drawer.trending"),
+            subtitle=t("overview.drawer.hot_caption"),
+            metrics=[
+                (t("overview.view_limit"), view_limit),
+                (t("overview.drawer.hot_title"), len(trending)),
+            ],
+            filters=[
+                (t("overview.view_limit"), view_limit),
+                (t("overview.drawer.hot_title"), len(trending)),
+                (t("overview.sorted_by_views"), t("label.ready")),
+            ],
+            body=_trending_body,
+            icon="T",
+        )
+
+    elif active_panel == "comments":
+
+        def _comments_body() -> None:
             if comments:
-                for comment in comments[:8]:
-                    st.markdown(
-                        f"**{escape(str(comment.get('author', t('profile.unknown'))))}** · "
-                        f"{escape(str(comment.get('platform', '')))} · {int(comment.get('like_count', 0) or 0)} {t('overview.likes')}"
+                top_likes = max([int(comment.get("like_count", 0) or 0) for comment in comments[:8]] or [1])
+                st.markdown(
+                    render_atlas_bar_rows(
+                        [
+                            (
+                                str(comment.get("author", t("profile.unknown")))[:18],
+                                f"{int(comment.get('like_count', 0) or 0):,}",
+                                (int(comment.get("like_count", 0) or 0) / top_likes) * 100,
+                            )
+                            for comment in comments[:8]
+                        ],
+                        title=t("overview.top_comments"),
+                        tone="gold",
+                    ),
+                    unsafe_allow_html=True,
+                )
+                comment_rows = [
+                    (
+                        f"{str(comment.get('author', t('profile.unknown')))[:18]} · {str(comment.get('platform', ''))}",
+                        str(comment.get("content", ""))[:64],
                     )
-                    st.caption(str(comment.get("content", ""))[:180])
+                    for comment in comments[:8]
+                ]
+                st.markdown(render_atlas_list_editor(t("overview.drawer.comments"), comment_rows, compact=True), unsafe_allow_html=True)
             else:
                 st.caption(t("common.empty_first_action"))
-    with cmd_cols[3]:
-        with st.popover(t('popover.freshness'), use_container_width=True):
-            from datetime import datetime as _dt
-            now_str = _dt.now().strftime("%Y-%m-%d %H:%M")
-            clk = icon("clock", color="#d4af37")
-            st.markdown(
-                "<div style='display:flex;align-items:center;gap:10px;padding:14px 16px;"
-                "border:1px solid rgba(180,160,120,0.14);border-radius:8px;background:rgba(12,15,20,0.7);'>"
-                f"<div style='font-size:14px;'>{clk}</div>"
-                "<div style='display:flex;flex-direction:column;line-height:1.5;'>"
-                f"<span style='font-size:10px;color:rgba(232,228,220,0.42);letter-spacing:1px;text-transform:uppercase;'>{t('common.freshness')}</span>"
-                f"<span style='font-size:13px;color:rgba(232,228,220,0.85);font-family:var(--wa-font-mono);'>{now_str}</span>"
-                "</div>"
-                "</div>",
-                unsafe_allow_html=True,
-            )
+            st.markdown(render_atlas_modal_footer(t("overview.drawer.comments_caption")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="overview",
+            title=t("overview.drawer.comments"),
+            subtitle=t("overview.drawer.comments_caption"),
+            metrics=[
+                (t("overview.drawer.comments"), len(comments)),
+                (t("overview.likes"), f"{sum(int(comment.get('like_count', 0) or 0) for comment in comments):,}"),
+            ],
+            filters=[
+                (t("overview.drawer.comments"), len(comments)),
+                (t("overview.likes"), f"{sum(int(comment.get('like_count', 0) or 0) for comment in comments):,}"),
+                (t("overview.mode_label"), t("label.local")),
+            ],
+            body=_comments_body,
+            icon="C",
+            metric_columns=2,
+        )
+
+    elif active_panel == "freshness":
+        from datetime import datetime as _dt
+        now_str = _dt.now().strftime("%Y-%m-%d %H:%M")
+
+        def _freshness_body() -> None:
+            st.markdown(render_atlas_modal_footer(t("overview.mode_label")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="overview",
+            title=t("common.freshness"),
+            subtitle=t("overview.mode_label"),
+            metrics=[
+                (t("common.freshness"), now_str),
+                (t("overview.panel.last_sync"), health.get("last_sync", "—")),
+                (t("overview.panel.api"), t("label.online") if health.get("api_health") else t("label.local")),
+                (t("overview.panel.local_sets"), health.get("capacity", 0)),
+            ],
+            filters=[
+                (t("nav.year"), t("common.year_ad")),
+                (t("overview.panel.api"), t("label.online") if health.get("api_health") else t("label.local")),
+                (t("overview.panel.local_sets"), health.get("capacity", 0)),
+            ],
+            body=_freshness_body,
+            icon="F",
+        )
 
     api_text = t('label.online') if health["api_health"] else t('label.local')
     platform_rows = [
