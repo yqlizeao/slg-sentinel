@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as st_components
 
+from ui.components.atlas_shell import atlas_native_slot
 from ui.services.app_services import (
     get_keyword_library_last_saved_at,
     load_keyword_library,
@@ -257,20 +258,20 @@ def render_keyword_mind_map(candidates: list[dict], root_label: str = "采集结
 
 def render_step_block_header(step: str, title: str, color: str, description: str | None = None) -> None:
     desc_html = (
-        f"<div style='font-size:12px; color:rgba(232,228,220,0.4); margin-top:2px; line-height:1.5;'>{description}</div>"
+        f"<div style='font-size:10px; color:rgba(232,228,220,0.34); margin-top:2px; line-height:1.3;'>{description}</div>"
         if description
         else ""
     )
     st.markdown(
         f"""
-        <div style='display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;'>
-            <div style='width:38px; height:38px; border-radius:12px; background:{color}18; color:{color}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;'>
+        <div class='atlas-step-head' style='--step-color:{color};'>
+            <div>
                 {step}
             </div>
-            <div>
-                <div style='font-size:16px; font-weight:700; color:#E8E4DC;'>{title}</div>
+            <section>
+                <strong>{title}</strong>
                 {desc_html}
-            </div>
+            </section>
         </div>
         """,
         unsafe_allow_html=True,
@@ -338,7 +339,7 @@ def render_keyword_library(editor_prefix: str = "crawl") -> dict:
     save_status = {"text": t("keyword.status_synced"), "tone": "normal"}
     current_keywords = list(merged_keywords)
 
-    with st.container(border=True):
+    with atlas_native_slot(t("keyword.title"), t("keyword.subtitle")):
         st.markdown(
             f"""
             <div class='atlas-library-head'>

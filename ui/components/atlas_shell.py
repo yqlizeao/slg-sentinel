@@ -1,6 +1,7 @@
 """Shared War Atlas-style single viewport stage components."""
 from __future__ import annotations
 
+from contextlib import contextmanager
 from html import escape
 from typing import Iterable
 
@@ -10,10 +11,52 @@ from ui.i18n import t
 
 
 Panel = dict[str, str]
+CommandItem = tuple[str, str]
 
 
 def _safe(value: object) -> str:
     return escape(str(value), quote=True)
+
+
+def _panel_state_key(page_id: str) -> str:
+    return f"atlas_active_panel_{page_id}"
+
+
+def active_atlas_panel(page_id: str, valid_panel_ids: Iterable[str]) -> str | None:
+    panel = st.session_state.get(_panel_state_key(page_id))
+    valid = set(valid_panel_ids)
+    return str(panel) if panel in valid else None
+
+
+def render_atlas_command_nav(page_id: str, items: Iterable[CommandItem]) -> str | None:
+    """Render the compact secondary command navigation used on every page."""
+    item_list = list(items)
+    valid_ids = [panel_id for panel_id, _ in item_list]
+    active = active_atlas_panel(page_id, valid_ids)
+    choice_key = f"atlas_command_choice_{page_id}"
+    if st.session_state.get(choice_key) not in [*valid_ids, None]:
+        st.session_state[choice_key] = active
+    labels = {panel_id: label for panel_id, label in item_list}
+
+    def _select_panel() -> None:
+        selected_panel = st.session_state.get(choice_key)
+        if selected_panel in valid_ids:
+            st.session_state[_panel_state_key(page_id)] = selected_panel
+
+    st.markdown("<div class='atlas-command-nav-sentinel'></div>", unsafe_allow_html=True)
+    selected = st.pills(
+        t("nav.display"),
+        valid_ids,
+        default=active,
+        format_func=lambda panel_id: f"{labels.get(panel_id, panel_id)}  ⌄",
+        key=choice_key,
+        label_visibility="collapsed",
+        on_change=_select_panel,
+    )
+    if selected and selected != active:
+        st.session_state[_panel_state_key(page_id)] = selected
+        st.rerun()
+    return active
 
 
 def render_atlas_stage(
@@ -92,6 +135,97 @@ def render_atlas_stage(
     st.markdown(stage_html, unsafe_allow_html=True)
 
 
+def render_atlas_modal_header(
+    title: str,
+    subtitle: str = "",
+    *,
+    icon: str = "bars",
+) -> str:
+    icon_html = "<span></span><span></span><span></span>" if icon == "bars" else f"<b>{_safe(icon[:2])}</b>"
+    subtitle_html = f"<p>{_safe(subtitle)}</p>" if subtitle else ""
+    return (
+        "<section class='atlas-modal-head'>"
+        f"<div class='atlas-modal-icon'>{icon_html}</div>"
+        "<div class='atlas-modal-copy'>"
+        f"<div class='atlas-modal-title'>{_safe(title)}</div>"
+        f"{subtitle_html}"
+        "</div>"
+        "</section>"
+    )
+
+
+def render_atlas_filter_bar(filters: Iterable[tuple[str, object]]) -> str:
+    cells = "".join(
+        "<div class='atlas-modal-filter-cell'>"
+        f"<span>{_safe(label)}</span>"
+        f"<b>{_safe(value)}</b>"
+        "</div>"
+        for label, value in filters
+    )
+    return f"<section class='atlas-modal-filter-bar'>{cells}</section>" if cells else ""
+
+
+def render_atlas_modal_footer(note: str, *, action: str = "") -> str:
+    action_html = f"<span>{_safe(action)}</span>" if action else ""
+    return f"<footer class='atlas-modal-footer'><em>{_safe(note)}</em>{action_html}</footer>"
+
+
+def render_atlas_native_slot_header(title: str, caption: str = "") -> str:
+    caption_html = f"<p>{_safe(caption)}</p>" if caption else ""
+    return (
+        "<div class='atlas-native-slot-head'>"
+        f"<div>{_safe(title)}</div>"
+        f"{caption_html}"
+        "</div>"
+    )
+
+
+@contextmanager
+def atlas_native_slot(title: str, caption: str = ""):
+    """Wrap native Streamlit controls in an Atlas-looking editing surface."""
+    with st.container(border=True):
+        st.markdown(render_atlas_native_slot_header(title, caption), unsafe_allow_html=True)
+        yield
+
+
+def render_atlas_command_modal(
+    *,
+    page_id: str,
+    title: str,
+    subtitle: str = "",
+    metrics: Iterable[tuple[str, object]] | None = None,
+    filters: Iterable[tuple[str, object]] | None = None,
+    body,
+    footer_note: str = "",
+    footer_action: str = "",
+    icon: str = "bars",
+    metric_columns: int = 4,
+    size: str = "default",
+) -> None:
+    """Render a War Atlas-style modal that can host native Streamlit widgets."""
+
+    def _dismiss_panel() -> None:
+        st.session_state[_panel_state_key(page_id)] = None
+        st.session_state[f"atlas_command_choice_{page_id}"] = None
+
+    @st.dialog(title or t("nav.display"), width="large", on_dismiss=_dismiss_panel)
+    def _atlas_modal() -> None:
+        st.markdown(
+            f"<div class='atlas-modal-sentinel is-{_safe(size)}'></div>"
+            + render_atlas_modal_header(title, subtitle, icon=icon),
+            unsafe_allow_html=True,
+        )
+        if filters:
+            st.markdown(render_atlas_filter_bar(filters), unsafe_allow_html=True)
+        if metrics:
+            st.markdown(render_atlas_metric_tiles(metrics, columns=metric_columns), unsafe_allow_html=True)
+        body()
+        if footer_note or footer_action:
+            st.markdown(render_atlas_modal_footer(footer_note, action=footer_action), unsafe_allow_html=True)
+
+    _atlas_modal()
+
+
 def render_atlas_drawer(title: str, body: str, *, badge: str = "OPEN") -> Panel:
     return {"title": title, "body": body, "badge": badge}
 
@@ -152,15 +286,11 @@ def atlas_empty(title: str, body: str) -> str:
 
 
 def render_atlas_popover_header(title: str, subtitle: str = "", *, icon: str = "bars") -> str:
-    icon_html = (
-        "<span></span><span></span><span></span>"
-        if icon == "bars"
-        else _safe(icon)
-    )
+    icon_html = "<span></span><span></span><span></span>"
     subtitle_html = f"<p>{_safe(subtitle)}</p>" if subtitle else ""
     return (
         "<section class='atlas-popover-head'>"
-        f"<div class='atlas-popover-icon {'' if icon == 'bars' else 'is-text'}'>{icon_html}</div>"
+        f"<div class='atlas-popover-icon' aria-label='{_safe(icon)}'>{icon_html}</div>"
         "<div>"
         f"<div class='atlas-popover-title'>{_safe(title)}</div>"
         f"{subtitle_html}"
@@ -170,13 +300,21 @@ def render_atlas_popover_header(title: str, subtitle: str = "", *, icon: str = "
 
 
 def render_atlas_metric_tiles(metrics: Iterable[tuple[str, object]], *, columns: int = 2) -> str:
-    metric_html = "".join(
-        "<div class='atlas-popover-metric'>"
-        f"<strong>{_safe(value)}</strong>"
-        f"<span>{_safe(label)}</span>"
-        "</div>"
-        for label, value in metrics
-    )
+    metric_html = ""
+    for label, value in metrics:
+        value_text = str(value)
+        has_digit = any(ch.isdigit() for ch in value_text)
+        value_cls = ""
+        if not has_digit:
+            value_cls += " is-text"
+        if len(value_text) > 11:
+            value_cls += " is-long"
+        metric_html += (
+            "<div class='atlas-popover-metric'>"
+            f"<strong class='{value_cls}' title='{_safe(value_text)}'>{_safe(value_text)}</strong>"
+            f"<span>{_safe(label)}</span>"
+            "</div>"
+        )
     return f"<section class='atlas-popover-metrics' style='--atlas-popover-metric-cols:{max(1, min(columns, 4))};'>{metric_html}</section>"
 
 

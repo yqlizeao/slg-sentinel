@@ -576,20 +576,22 @@ div[data-testid="stPopoverBody"] {
     position: fixed !important;
     left: 50% !important;
     right: auto !important;
-    top: 112px !important;
+    top: 98px !important;
     bottom: auto !important;
     transform: translateX(-50%) !important;
-    width: min(1120px, calc(100vw - 84px)) !important;
-    max-width: min(1120px, calc(100vw - 84px)) !important;
-    max-height: calc(100dvh - 136px) !important;
+    width: min(1160px, calc(100vw - 72px)) !important;
+    max-width: min(1160px, calc(100vw - 72px)) !important;
+    max-height: calc(100dvh - 118px) !important;
     margin-top: 0 !important;
     overflow: auto !important;
     padding: 0 !important;
-    border: 1px solid rgba(180,160,120,.22) !important;
+    border: 1px solid rgba(180,160,120,.20) !important;
     border-radius: 16px !important;
     background:
-        linear-gradient(180deg, rgba(16,19,25,.98), rgba(9,11,15,.98)) !important;
-    box-shadow: 0 34px 94px rgba(0,0,0,.72), 0 0 0 1px rgba(255,255,255,.025) inset !important;
+        radial-gradient(circle at 72% 12%, rgba(212,175,55,.055), transparent 31%),
+        radial-gradient(circle at 16% 88%, rgba(91,154,110,.07), transparent 34%),
+        linear-gradient(180deg, rgba(17,21,27,.985), rgba(8,10,14,.985)) !important;
+    box-shadow: 0 30px 86px rgba(0,0,0,.80), 0 0 0 1px rgba(255,255,255,.028) inset !important;
     scrollbar-width: thin;
     scrollbar-color: rgba(212,175,55,.38) rgba(180,160,120,.08);
 }
@@ -612,6 +614,19 @@ div[data-testid="stPopoverBody"] [data-testid="stVerticalBlock"] {
 div[data-testid="stPopoverBody"] [data-testid="stVerticalBlock"] {
     gap: 0 !important;
 }
+div[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] h1,
+div[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] h2,
+div[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] h3,
+div[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] h4,
+div[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] h5 {
+    margin: 16px 34px 10px !important;
+    color: rgba(232,228,220,.62) !important;
+    font-family: var(--wa-font-display) !important;
+    font-size: 15px !important;
+    line-height: 1.1 !important;
+    letter-spacing: 2.4px !important;
+    text-transform: uppercase !important;
+}
 div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
     flex-wrap: wrap !important;
     gap: 14px !important;
@@ -626,8 +641,8 @@ div[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] {
     color: rgba(232,228,220,.68) !important;
 }
 div[data-testid="stPopoverBody"] hr {
-    margin: 18px 0 !important;
-    border-color: rgba(180,160,120,.14) !important;
+    margin: 10px 0 !important;
+    border-color: rgba(180,160,120,.10) !important;
 }
 div[data-testid="stPopoverBody"] .stAlert {
     margin: 12px 32px !important;
@@ -639,18 +654,25 @@ div[data-testid="stPopoverBody"] [data-testid="stCaptionContainer"] {
 }
 div[data-testid="stPopoverBody"] .stButton,
 div[data-testid="stPopoverBody"] [data-testid="stButton"] {
-    padding: 0 32px 22px !important;
+    padding: 0 32px 16px !important;
 }
 div[data-testid="stPopoverBody"] button[kind="primary"],
 div[data-testid="stPopoverBody"] .stButton button {
-    min-height: 42px !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(212,175,55,.46) !important;
-    background: rgba(212,175,55,.10) !important;
+    min-height: 38px !important;
+    border-radius: 6px !important;
+    border: 1px solid rgba(212,175,55,.40) !important;
+    background: rgba(212,175,55,.085) !important;
     color: var(--wa-gold) !important;
     font-weight: 700 !important;
-    letter-spacing: .3px !important;
+    letter-spacing: .2px !important;
     box-shadow: none !important;
+}
+div[data-testid="stPopoverBody"] .stButton button:hover,
+div[data-testid="stPopoverBody"] button[kind="primary"]:hover {
+    background: rgba(212,175,55,.16) !important;
+    border-color: rgba(212,175,55,.64) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+    transform: none !important;
 }
 div[data-testid="stPopoverBody"] .stSelectbox,
 div[data-testid="stPopoverBody"] .stRadio,
@@ -658,6 +680,13 @@ div[data-testid="stPopoverBody"] .stTextInput,
 div[data-testid="stPopoverBody"] .stNumberInput,
 div[data-testid="stPopoverBody"] .stTextArea {
     padding-inline: 32px !important;
+}
+div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] .stSelectbox,
+div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] .stRadio,
+div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] .stTextInput,
+div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] .stNumberInput,
+div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] .stTextArea {
+    padding-inline: 0 !important;
 }
 div[data-testid="stPopoverBody"] label,
 div[data-testid="stPopoverBody"] [data-testid="stWidgetLabel"] {
@@ -670,10 +699,22 @@ div[data-testid="stPopoverBody"] [data-testid="stWidgetLabel"] {
 div[data-testid="stPopoverBody"] [data-baseweb="select"],
 div[data-testid="stPopoverBody"] input,
 div[data-testid="stPopoverBody"] textarea {
-    min-height: 48px !important;
-    border-radius: 8px !important;
-    background: rgba(6,8,11,.72) !important;
-    border: 1px solid rgba(180,160,120,.20) !important;
+    min-height: 44px !important;
+    border-radius: 6px !important;
+    background: rgba(5,7,10,.76) !important;
+    border: 1px solid rgba(180,160,120,.18) !important;
+}
+div[data-testid="stPopoverBody"] [data-baseweb="select"] input,
+div[data-testid="stPopoverBody"] [data-baseweb="select"] [contenteditable="true"] {
+    caret-color: transparent !important;
+    color: transparent !important;
+    text-shadow: none !important;
+    opacity: 0 !important;
+    width: 1px !important;
+}
+div[data-testid="stPopoverBody"] [data-testid="stHeaderActionElements"],
+div[data-testid="stPopoverBody"] a[href^="#"] {
+    display: none !important;
 }
 div[data-testid="stPopoverBody"] [data-baseweb="select"]:hover,
 div[data-testid="stPopoverBody"] input:hover,
@@ -685,20 +726,78 @@ div[data-testid="stPopoverBody"] textarea:focus {
 div[data-testid="stPopoverBody"] [role="radiogroup"] {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 10px !important;
+    gap: 8px !important;
 }
 div[data-testid="stPopoverBody"] [role="radiogroup"] label {
-    min-height: 42px !important;
+    min-height: 38px !important;
     align-items: center !important;
-    padding: 8px 12px !important;
+    padding: 7px 11px !important;
     border: 1px solid rgba(180,160,120,.14) !important;
-    border-radius: 8px !important;
-    background: rgba(12,15,20,.62) !important;
+    border-radius: 6px !important;
+    background: rgba(9,12,16,.62) !important;
+}
+div[data-testid="stPopoverBody"] [data-testid="stExpander"],
+div[data-testid="stPopoverBody"] [data-testid="stVerticalBlockBorderWrapper"],
+div[data-testid="stPopoverBody"] [data-testid="stForm"] {
+    margin: 12px 32px !important;
+    border: 1px solid rgba(180,160,120,.16) !important;
+    border-radius: 10px !important;
+    background: rgba(7,10,13,.46) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+div[data-testid="stPopoverBody"] [data-testid="stExpander"] details,
+div[data-testid="stPopoverBody"] [data-testid="stExpander"] summary {
+    background: transparent !important;
+    border: 0 !important;
+}
+div[data-testid="stPopoverBody"] [data-testid="stTabs"] {
+    padding-inline: 32px !important;
+}
+div[data-testid="stPopoverBody"] [data-baseweb="tab-list"] {
+    gap: 8px !important;
+    border-bottom: 1px solid rgba(180,160,120,.14) !important;
+}
+div[data-testid="stPopoverBody"] [data-baseweb="tab"] {
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    border: 1px solid rgba(180,160,120,.14) !important;
+    border-bottom: 0 !important;
+    border-radius: 6px 6px 0 0 !important;
+    background: rgba(10,12,16,.45) !important;
+    color: rgba(232,228,220,.58) !important;
+    font-family: var(--wa-font-mono) !important;
+    font-size: 10px !important;
+    letter-spacing: .8px !important;
 }
 div[data-testid="stPopoverBody"] [data-testid="stDataFrame"],
 div[data-testid="stPopoverBody"] table {
     margin-inline: 32px !important;
     width: calc(100% - 64px) !important;
+}
+div[data-testid="stPopoverBody"] [data-testid="stDataFrame"] {
+    overflow: hidden !important;
+    border: 1px solid rgba(180,160,120,.16) !important;
+    border-radius: 10px !important;
+    background: rgba(7,10,13,.48) !important;
+}
+div[data-testid="stPopoverBody"] .dvn-scroller,
+div[data-testid="stPopoverBody"] .stDataFrameGlideDataEditor,
+div[data-testid="stPopoverBody"] [class*="glide"] {
+    background: rgba(7,10,13,.68) !important;
+    color: rgba(232,228,220,.72) !important;
+}
+div[data-testid="stPopoverBody"] table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(180,160,120,.16) !important;
+    border-radius: 10px !important;
+}
+div[data-testid="stPopoverBody"] th,
+div[data-testid="stPopoverBody"] td {
+    border-bottom: 1px solid rgba(180,160,120,.10) !important;
+    color: rgba(232,228,220,.68) !important;
+    background: rgba(7,10,13,.46) !important;
 }
 [role="listbox"],
 ul[role="listbox"] {
@@ -2134,17 +2233,20 @@ body,
     letter-spacing: 1px;
 }
 .atlas-popover-head {
-    position: sticky;
-    top: 0;
-    z-index: 3;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30;
     display: grid;
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 18px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 20px;
     align-items: center;
-    min-height: 116px;
-    padding: 26px 36px 24px;
+    min-height: 110px;
+    width: 100%;
+    margin: 0 !important;
+    padding: 27px 36px 24px;
     border-bottom: 1px solid rgba(180,160,120,.18);
-    background: rgba(16,19,25,.96);
+    background:
+        linear-gradient(180deg, rgba(19,23,30,.98), rgba(13,16,21,.96));
     backdrop-filter: blur(16px);
 }
 .atlas-popover-icon {
@@ -2152,7 +2254,7 @@ body,
     align-items: flex-end;
     justify-content: center;
     gap: 5px;
-    width: 36px;
+    width: 34px;
     height: 36px;
     color: var(--wa-gold);
 }
@@ -2166,40 +2268,38 @@ body,
 .atlas-popover-icon span:nth-child(2) { height: 26px; }
 .atlas-popover-icon span:nth-child(3) { height: 34px; }
 .atlas-popover-icon.is-text {
-    align-items: center;
-    border: 1px solid rgba(212,175,55,.35);
-    border-radius: 8px;
-    background: rgba(212,175,55,.08);
-    font-family: var(--wa-font-mono);
-    font-weight: 700;
+    align-items: flex-end;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 .atlas-popover-title {
     margin: 0 !important;
-    color: rgba(232,228,220,.76) !important;
+    color: rgba(232,228,220,.66) !important;
     font-family: var(--wa-font-display) !important;
-    font-size: clamp(18px, 2vw, 26px) !important;
-    line-height: 1.05 !important;
-    letter-spacing: 3.5px !important;
+    font-size: clamp(19px, 1.55vw, 24px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: 3.2px !important;
     text-transform: uppercase;
 }
 .atlas-popover-head p {
-    margin: 11px 0 0 !important;
-    color: rgba(232,228,220,.42) !important;
-    font-size: 16px !important;
+    margin: 12px 0 0 !important;
+    color: rgba(232,228,220,.40) !important;
+    font-size: 15px !important;
     line-height: 1.35 !important;
 }
 .atlas-popover-metrics {
     display: grid;
     grid-template-columns: repeat(var(--atlas-popover-metric-cols), minmax(0, 1fr));
-    gap: 14px;
-    padding: 26px 34px 12px;
+    gap: 20px;
+    padding: 24px 34px 14px;
 }
 .atlas-popover-metric {
-    min-height: 118px;
-    padding: 28px 30px 22px;
-    border: 1px solid rgba(180,160,120,.16);
+    min-height: 120px;
+    padding: 28px 28px 22px;
+    border: 1px solid rgba(180,160,120,.145);
     border-radius: 12px;
-    background: rgba(7,10,13,.64);
+    background: linear-gradient(180deg, rgba(7,10,13,.76), rgba(5,7,10,.58));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
 }
 .atlas-popover-metric strong {
@@ -2207,46 +2307,67 @@ body,
     margin-bottom: 14px;
     color: #f4f0e8;
     font-family: var(--wa-font-display);
-    font-size: clamp(28px, 3vw, 44px);
+    font-size: clamp(29px, 2.9vw, 43px);
     line-height: .95;
     letter-spacing: .5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.atlas-popover-metric strong.is-long {
+    font-size: clamp(22px, 2vw, 31px);
+    letter-spacing: .2px;
+}
+.atlas-popover-metric strong.is-text {
+    color: rgba(232,228,220,.86);
+    font-family: var(--wa-font-sans);
+    font-size: clamp(20px, 1.65vw, 27px);
+    font-weight: 700;
+    letter-spacing: 0;
+}
+.atlas-popover-metric strong.is-text.is-long {
+    font-size: clamp(17px, 1.45vw, 23px);
 }
 .atlas-popover-metric span {
-    color: rgba(232,228,220,.42);
+    color: rgba(232,228,220,.38);
     font-family: var(--wa-font-mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1.7px;
     text-transform: uppercase;
 }
 .atlas-popover-bars,
 .atlas-popover-segments {
-    padding: 22px 34px 12px;
+    padding: 22px 34px 14px;
+    border-top: 1px solid rgba(180,160,120,.08);
 }
 .atlas-popover-section-title {
     margin: 0 0 18px !important;
-    color: rgba(232,228,220,.66) !important;
+    color: rgba(232,228,220,.62) !important;
     font-family: var(--wa-font-display) !important;
-    font-size: 18px !important;
-    letter-spacing: 3px !important;
+    font-size: 17px !important;
+    letter-spacing: 3.2px !important;
     text-transform: uppercase;
 }
 .atlas-popover-bar-row {
     display: grid;
-    grid-template-columns: minmax(120px, 190px) minmax(0, 1fr) minmax(58px, auto);
+    grid-template-columns: minmax(112px, 178px) minmax(0, 1fr) minmax(58px, auto);
     gap: 18px;
     align-items: center;
-    min-height: 37px;
+    min-height: 34px;
     color: rgba(232,228,220,.54);
-    font-size: 13px;
+    font-size: 12px;
 }
 .atlas-popover-bar-row span {
     text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .atlas-popover-bar-row b {
     color: rgba(232,228,220,.50);
     font-family: var(--wa-font-mono);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     text-align: right;
 }
@@ -2256,6 +2377,7 @@ body,
     overflow: hidden;
     border-radius: 6px;
     background: rgba(232,228,220,.055);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
 }
 .atlas-popover-bar-track i {
     display: block;
@@ -2273,9 +2395,10 @@ body,
 .atlas-popover-segment-track {
     display: flex;
     overflow: hidden;
-    height: 42px;
+    height: 44px;
     border-radius: 9px;
     background: rgba(232,228,220,.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
 }
 .atlas-popover-segment-track i {
     display: block;
@@ -2317,10 +2440,10 @@ body,
     justify-content: space-between;
     gap: 18px;
     align-items: center;
-    margin-top: 20px;
-    padding: 18px 36px 24px;
+    margin-top: 18px;
+    padding: 15px 36px 20px;
     border-top: 1px solid rgba(180,160,120,.16);
-    background: rgba(9,11,15,.96);
+    background: rgba(9,11,15,.97);
 }
 .atlas-popover-footer em {
     color: rgba(232,228,220,.42);
@@ -2332,6 +2455,571 @@ body,
     font-size: 12px;
     font-weight: 700;
     letter-spacing: .6px;
+}
+
+/* ===== Atlas command navigation + modal ===== */
+.atlas-command-nav-sentinel {
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button) {
+    width: fit-content !important;
+    max-width: min(920px, calc(100vw - 52px));
+    margin: 0.35rem 0 0.68rem !important;
+    padding: 7px !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    border: 1px solid rgba(180,160,120,.12);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(9,12,16,.82), rgba(7,9,12,.66));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+    scrollbar-width: none;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button)::-webkit-scrollbar {
+    display: none;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button) > div {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button) > div:last-child {
+    display: none !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button) button {
+    min-width: 116px !important;
+    width: auto !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    padding: 0 14px !important;
+    border: 1px solid rgba(180,160,120,.13) !important;
+    border-radius: 6px !important;
+    background: rgba(7,9,12,.72) !important;
+    color: rgba(232,228,220,.50) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button) button p {
+    color: inherit !important;
+    font-family: var(--wa-font-mono) !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 1.45px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button) button:hover {
+    border-color: rgba(212,175,55,.30) !important;
+    background: rgba(212,175,55,.055) !important;
+    color: rgba(232,228,220,.76) !important;
+    transform: none !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+> div[data-testid="stHorizontalBlock"]:has(button) button[kind="primary"] {
+    border-color: rgba(212,175,55,.55) !important;
+    background: linear-gradient(180deg, rgba(212,175,55,.14), rgba(212,175,55,.055)) !important;
+    color: var(--wa-gold) !important;
+    box-shadow: inset 0 0 0 1px rgba(212,175,55,.08), 0 0 18px rgba(212,175,55,.06) !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] {
+    width: fit-content !important;
+    max-width: min(920px, calc(100vw - 52px)) !important;
+    margin: 0.35rem 0 0.68rem !important;
+    padding: 6px !important;
+    overflow-x: auto !important;
+    border: 1px solid rgba(180,160,120,.12);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(9,12,16,.82), rgba(7,9,12,.66));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+    scrollbar-width: none;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"]::-webkit-scrollbar {
+    display: none;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] > div {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] button,
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] [role="radio"] {
+    flex: 0 0 auto !important;
+    min-width: 116px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 14px !important;
+    border: 1px solid rgba(180,160,120,.13) !important;
+    border-radius: 6px !important;
+    background: rgba(7,9,12,.72) !important;
+    color: rgba(232,228,220,.50) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] button p,
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] [role="radio"] p {
+    margin: 0 !important;
+    color: inherit !important;
+    font-family: var(--wa-font-mono) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 1.35px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] button:hover,
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] [role="radio"]:hover {
+    border-color: rgba(212,175,55,.30) !important;
+    background: rgba(212,175,55,.055) !important;
+    color: rgba(232,228,220,.76) !important;
+    transform: none !important;
+}
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] button[aria-checked="true"],
+div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] [role="radio"][aria-checked="true"] {
+    border-color: rgba(212,175,55,.55) !important;
+    background: linear-gradient(180deg, rgba(212,175,55,.14), rgba(212,175,55,.055)) !important;
+    color: var(--wa-gold) !important;
+    box-shadow: inset 0 0 0 1px rgba(212,175,55,.08), 0 0 18px rgba(212,175,55,.06) !important;
+}
+
+div[data-testid="stDialog"] {
+    background: rgba(0,0,0,.54) !important;
+    backdrop-filter: blur(4px);
+}
+div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head) {
+    width: min(1080px, calc(100vw - 96px)) !important;
+    max-width: min(1080px, calc(100vw - 96px)) !important;
+    max-height: calc(100dvh - 120px) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(180,160,120,.24) !important;
+    border-radius: 14px !important;
+    background:
+        radial-gradient(circle at 50% -20%, rgba(212,175,55,.055), transparent 42%),
+        linear-gradient(180deg, rgba(18,22,30,.965), rgba(8,10,14,.985)) !important;
+    box-shadow:
+        0 24px 72px rgba(0,0,0,.66),
+        0 0 0 1px rgba(255,255,255,.025),
+        inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head) > div {
+    padding: 0 !important;
+    overflow-y: auto !important;
+    max-height: calc(100dvh - 120px) !important;
+}
+div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head) > div:first-child:not(:has(.atlas-modal-head)) {
+    display: none !important;
+}
+div[data-testid="stDialog"] h2 {
+    display: none !important;
+}
+div[data-testid="stDialog"] button[aria-label="Close"] {
+    position: absolute !important;
+    top: 24px !important;
+    right: 32px !important;
+    z-index: 80 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    border: 1px solid rgba(180,160,120,.16) !important;
+    border-radius: 10px !important;
+    background: rgba(232,228,220,.055) !important;
+    color: rgba(232,228,220,.60) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+div[data-testid="stDialog"] button[aria-label="Close"]:hover {
+    border-color: rgba(212,175,55,.30) !important;
+    background: rgba(232,228,220,.09) !important;
+    color: var(--wa-gold) !important;
+    transform: none !important;
+}
+div[data-testid="stDialog"] button[aria-label="Close"] svg {
+    width: 21px !important;
+    height: 21px !important;
+}
+div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head)::-webkit-scrollbar,
+div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head) > div::-webkit-scrollbar {
+    width: 6px;
+}
+div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head)::-webkit-scrollbar-thumb,
+div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head) > div::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(212,175,55,.55);
+}
+.atlas-modal-head {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 27px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    min-height: 82px;
+    padding: 19px 96px 17px 32px;
+    border-bottom: 1px solid rgba(180,160,120,.18);
+    background: linear-gradient(180deg, rgba(18,22,30,.985), rgba(12,15,20,.965));
+}
+.atlas-modal-icon {
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    width: 27px;
+    height: 30px;
+    color: var(--wa-gold);
+}
+.atlas-modal-icon span {
+    display: block;
+    width: 5px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(180deg, #e4c64f, #a98924);
+}
+.atlas-modal-icon span:nth-child(1) { height: 12px; }
+.atlas-modal-icon span:nth-child(2) { height: 20px; }
+.atlas-modal-icon span:nth-child(3) { height: 28px; }
+.atlas-modal-icon b {
+    color: var(--wa-gold);
+    font-family: var(--wa-font-display);
+    font-size: 17px;
+    letter-spacing: 1px;
+}
+.atlas-modal-title {
+    color: rgba(232,228,220,.68);
+    font-family: var(--wa-font-display);
+    font-size: clamp(17px, 1.25vw, 21px);
+    line-height: 1.06;
+    letter-spacing: 2.8px;
+    text-transform: uppercase;
+}
+.atlas-modal-copy p {
+    margin: 7px 0 0 !important;
+    color: rgba(232,228,220,.43) !important;
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+    max-width: 760px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.atlas-modal-filter-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px 32px;
+    border-bottom: 1px solid rgba(180,160,120,.14);
+    background: rgba(12,15,20,.58);
+}
+.atlas-modal-filter-cell {
+    min-height: 42px;
+    padding: 7px 11px;
+    border: 1px solid rgba(180,160,120,.15);
+    border-radius: 6px;
+    background: rgba(0,0,0,.28);
+}
+.atlas-modal-filter-cell span {
+    display: block;
+    margin-bottom: 3px;
+    color: rgba(232,228,220,.33);
+    font-family: var(--wa-font-mono);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.15px;
+    text-transform: uppercase;
+}
+.atlas-modal-filter-cell b {
+    color: rgba(232,228,220,.70);
+    font-size: 12px;
+    font-weight: 500;
+}
+div[data-testid="stDialog"] .atlas-popover-metrics {
+    padding: 20px 32px 10px;
+    gap: 14px;
+}
+div[data-testid="stDialog"] .atlas-popover-metric {
+    min-height: 78px;
+    padding: 17px 19px 14px;
+    border-radius: 8px;
+}
+div[data-testid="stDialog"] .atlas-popover-metric strong {
+    margin-bottom: 8px;
+    font-size: clamp(23px, 1.95vw, 31px);
+}
+div[data-testid="stDialog"] .atlas-popover-metric strong.is-text {
+    font-size: clamp(15px, 1.22vw, 20px);
+}
+div[data-testid="stDialog"] .atlas-popover-metric span {
+    font-size: 9px;
+    letter-spacing: 1.28px;
+}
+div[data-testid="stDialog"] .atlas-popover-bars,
+div[data-testid="stDialog"] .atlas-popover-segments,
+div[data-testid="stDialog"] .atlas-shell-list-editor,
+div[data-testid="stDialog"] .atlas-shell-empty {
+    margin-left: 32px;
+    margin-right: 32px;
+}
+div[data-testid="stDialog"] .atlas-popover-bars,
+div[data-testid="stDialog"] .atlas-popover-segments {
+    padding-left: 0;
+    padding-right: 0;
+}
+div[data-testid="stDialog"] .atlas-popover-section-title {
+    margin-bottom: 12px !important;
+    font-size: 12.5px !important;
+    letter-spacing: 2.25px !important;
+}
+div[data-testid="stDialog"] .atlas-popover-bar-row {
+    grid-template-columns: minmax(98px, 152px) minmax(0, 1fr) minmax(48px, auto);
+    min-height: 25px;
+    gap: 12px;
+    font-size: 10.5px;
+}
+div[data-testid="stDialog"] .atlas-popover-bar-track {
+    height: 16px;
+    border-radius: 4px;
+}
+div[data-testid="stDialog"] .atlas-library-head {
+    margin: 0 0 10px;
+    padding: 12px;
+    border-radius: 7px;
+}
+div[data-testid="stDialog"] .atlas-library-title {
+    margin-top: 4px;
+    font-size: 18px;
+    letter-spacing: 1.45px;
+}
+div[data-testid="stDialog"] .atlas-library-subtitle {
+    margin-top: 6px;
+    font-size: 11px;
+}
+div[data-testid="stDialog"] .atlas-library-radar {
+    min-width: 74px;
+}
+div[data-testid="stDialog"] .atlas-library-radar strong {
+    font-size: 19px;
+}
+div[data-testid="stDialog"] .atlas-library-metric {
+    min-height: 70px;
+    padding: 10px 12px;
+}
+div[data-testid="stDialog"] .atlas-library-metric b {
+    margin-top: 6px;
+    font-size: 22px;
+}
+div[data-testid="stDialog"] .atlas-panel-title {
+    font-size: 13px;
+}
+div[data-testid="stDialog"] .atlas-panel-caption {
+    margin-bottom: 10px;
+    font-size: 10.5px;
+}
+div[data-testid="stDialog"] .stButton > button {
+    width: auto !important;
+    min-width: 118px !important;
+    max-width: 100% !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 14px !important;
+    transform: none !important;
+}
+div[data-testid="stDialog"] .stButton {
+    width: auto !important;
+}
+div[data-testid="stDialog"] [data-testid="stHorizontalBlock"] {
+    padding-left: 32px;
+    padding-right: 32px;
+}
+div[data-testid="stDialog"] [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"],
+div[data-testid="stDialog"] [data-testid="stDataFrame"],
+div[data-testid="stDialog"] iframe {
+    margin-left: 32px !important;
+    margin-right: 32px !important;
+    max-width: calc(100% - 64px) !important;
+}
+.atlas-modal-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 56px;
+    margin-top: 14px;
+    padding: 11px 32px 13px;
+    border-top: 1px solid rgba(180,160,120,.16);
+    background: linear-gradient(180deg, rgba(10,12,16,.94), rgba(7,9,12,.985));
+}
+.atlas-modal-footer em {
+    color: rgba(232,228,220,.42);
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+.atlas-modal-footer span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border: 1px solid rgba(212,175,55,.42);
+    border-radius: 6px;
+    background: rgba(212,175,55,.07);
+    color: var(--wa-gold);
+    font-family: var(--wa-font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .7px;
+}
+div[data-testid="stDialog"] [data-testid="stVerticalBlockBorderWrapper"]:has(.atlas-native-slot-head) {
+    margin: 16px 32px 0 !important;
+    border: 1px solid rgba(180,160,120,.145) !important;
+    border-radius: 8px !important;
+    background:
+        linear-gradient(180deg, rgba(10,13,17,.72), rgba(6,8,11,.58)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+div[data-testid="stDialog"] [data-testid="stVerticalBlockBorderWrapper"]:has(.atlas-native-slot-head) > div {
+    padding: 16px 18px 18px !important;
+}
+.atlas-native-slot-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin: -1px 0 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(180,160,120,.10);
+}
+.atlas-native-slot-head div {
+    color: rgba(232,228,220,.72);
+    font-family: var(--wa-font-display);
+    font-size: 13px;
+    line-height: 1.1;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+}
+.atlas-native-slot-head p {
+    max-width: 58%;
+    margin: 0 !important;
+    color: rgba(232,228,220,.36) !important;
+    font-size: 10.5px !important;
+    line-height: 1.45 !important;
+    text-align: right;
+}
+div[data-testid="stDialog"] label,
+div[data-testid="stDialog"] [data-testid="stWidgetLabel"] {
+    color: rgba(232,228,220,.42) !important;
+    font-family: var(--wa-font-mono) !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.15px !important;
+    text-transform: uppercase !important;
+}
+div[data-testid="stDialog"] [data-baseweb="select"] > div,
+div[data-testid="stDialog"] [data-testid="stTextInput"] input,
+div[data-testid="stDialog"] [data-testid="stDateInput"] input,
+div[data-testid="stDialog"] [data-testid="stNumberInput"] input,
+div[data-testid="stDialog"] textarea {
+    min-height: 36px !important;
+    border: 1px solid rgba(180,160,120,.15) !important;
+    border-radius: 6px !important;
+    background: rgba(0,0,0,.34) !important;
+    color: rgba(232,228,220,.72) !important;
+    font-size: 12px !important;
+    box-shadow: none !important;
+}
+div[data-testid="stDialog"] textarea {
+    min-height: 72px !important;
+}
+div[data-testid="stDialog"] [data-baseweb="select"] > div:focus-within,
+div[data-testid="stDialog"] [data-testid="stTextInput"] input:focus,
+div[data-testid="stDialog"] [data-testid="stDateInput"] input:focus,
+div[data-testid="stDialog"] [data-testid="stNumberInput"] input:focus,
+div[data-testid="stDialog"] textarea:focus {
+    border-color: rgba(212,175,55,.46) !important;
+    box-shadow: 0 0 0 1px rgba(212,175,55,.12) !important;
+}
+div[data-testid="stDialog"] [role="radiogroup"] {
+    gap: 8px !important;
+}
+div[data-testid="stDialog"] [role="radiogroup"] label,
+div[data-testid="stDialog"] [data-testid="stCheckbox"] label,
+div[data-testid="stDialog"] [data-testid="stToggle"] label {
+    min-height: 32px !important;
+    padding: 6px 9px !important;
+    border: 1px solid rgba(180,160,120,.10);
+    border-radius: 6px;
+    background: rgba(0,0,0,.20);
+    color: rgba(232,228,220,.58) !important;
+    text-transform: none !important;
+    letter-spacing: .2px !important;
+    font-family: var(--wa-font-sans) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+div[data-testid="stDialog"] [data-testid="stMetric"] {
+    padding: 12px 14px !important;
+    border: 1px solid rgba(180,160,120,.12);
+    border-radius: 8px;
+    background: rgba(0,0,0,.22);
+}
+div[data-testid="stDialog"] [data-testid="stMetricLabel"] {
+    color: rgba(232,228,220,.38) !important;
+    font-size: 9px !important;
+    letter-spacing: 1px !important;
+}
+div[data-testid="stDialog"] [data-testid="stMetricValue"] {
+    color: rgba(232,228,220,.86) !important;
+    font-family: var(--wa-font-display) !important;
+    font-size: 24px !important;
+}
+.atlas-step-head {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    margin: 6px 0 7px;
+}
+.atlas-step-head > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border: 1px solid color-mix(in srgb, var(--step-color) 34%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--step-color) 13%, transparent);
+    color: var(--step-color);
+    font-family: var(--wa-font-mono);
+    font-size: 9px;
+    font-weight: 800;
+}
+.atlas-step-head strong {
+    display: block;
+    color: rgba(232,228,220,.76);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.1;
 }
 .atlas-shell-list-editor {
     display: grid;
@@ -2972,6 +3660,42 @@ div[data-testid="stHorizontalBlock"]:has(button[data-testid="stPopoverButton"]) 
         padding: 0 10px;
         font-size: 11px;
     }
+    div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+    > div[data-testid="stHorizontalBlock"]:has(button) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        width: calc(100vw - 44px) !important;
+        max-width: calc(100vw - 44px) !important;
+        margin: 0.25rem 0 0.55rem !important;
+        padding: 5px !important;
+        overflow-x: auto !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+    > div[data-testid="stHorizontalBlock"]:has(button) > div {
+        flex: 0 0 auto !important;
+        width: auto !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel)
+    > div[data-testid="stHorizontalBlock"]:has(button) button {
+        min-width: 104px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 12px !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] {
+        width: calc(100vw - 44px) !important;
+        max-width: calc(100vw - 44px) !important;
+        margin: 0.25rem 0 0.55rem !important;
+        padding: 5px !important;
+    }
+    div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] button,
+    div[data-testid="stVerticalBlock"]:has(> div .atlas-command-nav-sentinel) div[data-testid="stPills"] [role="radio"] {
+        min-width: 104px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 12px !important;
+    }
     .atlas-shell-stage {
         height: calc(100dvh - 164px);
         min-height: 0;
@@ -3045,6 +3769,7 @@ div[data-testid="stHorizontalBlock"]:has(button[data-testid="stPopoverButton"]) 
         top: 118px !important;
         width: calc(100vw - 24px) !important;
         max-width: calc(100vw - 24px) !important;
+        min-height: 0 !important;
         max-height: calc(100dvh - 132px) !important;
         border-radius: 12px !important;
     }
@@ -3088,6 +3813,86 @@ div[data-testid="stHorizontalBlock"]:has(button[data-testid="stPopoverButton"]) 
     }
     .atlas-popover-footer {
         padding: 14px 18px 18px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head) {
+        width: calc(100vw - 24px) !important;
+        max-width: calc(100vw - 24px) !important;
+        max-height: calc(100dvh - 96px) !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stDialog"] div[role="dialog"]:has(.atlas-modal-head) > div {
+        max-height: calc(100dvh - 96px) !important;
+    }
+    div[data-testid="stDialog"] button[aria-label="Close"] {
+        top: 18px !important;
+        right: 18px !important;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+    }
+    .atlas-modal-head {
+        grid-template-columns: 24px minmax(0, 1fr);
+        min-height: 74px;
+        gap: 12px;
+        padding: 16px 70px 14px 20px;
+    }
+    .atlas-modal-title {
+        font-size: 15px;
+        letter-spacing: 1.8px;
+    }
+    .atlas-modal-copy p {
+        font-size: 11px !important;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .atlas-modal-filter-bar,
+    div[data-testid="stDialog"] .atlas-popover-metrics,
+    div[data-testid="stDialog"] .atlas-popover-bars,
+    div[data-testid="stDialog"] .atlas-popover-segments {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+    .atlas-modal-filter-bar,
+    div[data-testid="stDialog"] .atlas-popover-metrics {
+        grid-template-columns: 1fr;
+    }
+    div[data-testid="stDialog"] .atlas-popover-metric {
+        min-height: 72px;
+        padding: 15px 16px 12px;
+    }
+    div[data-testid="stDialog"] .atlas-popover-metric strong {
+        font-size: 25px;
+    }
+    div[data-testid="stDialog"] [data-testid="stHorizontalBlock"],
+    div[data-testid="stDialog"] .atlas-popover-bars,
+    div[data-testid="stDialog"] .atlas-popover-segments,
+    div[data-testid="stDialog"] .atlas-shell-list-editor,
+    div[data-testid="stDialog"] .atlas-shell-empty,
+    div[data-testid="stDialog"] [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"],
+    div[data-testid="stDialog"] [data-testid="stDataFrame"],
+    div[data-testid="stDialog"] iframe,
+    div[data-testid="stDialog"] [data-testid="stVerticalBlockBorderWrapper"]:has(.atlas-native-slot-head) {
+        margin-left: 18px !important;
+        margin-right: 18px !important;
+        max-width: calc(100% - 36px) !important;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .atlas-native-slot-head {
+        flex-direction: column;
+        gap: 5px;
+    }
+    .atlas-native-slot-head p {
+        max-width: 100%;
+        text-align: left;
+    }
+    .atlas-modal-footer {
+        padding: 11px 18px 13px;
         flex-direction: column;
         align-items: flex-start;
     }

@@ -5,11 +5,18 @@ from html import escape
 import pandas as pd
 import streamlit as st
 from ui.components.atlas_shell import (
+    atlas_native_slot,
     atlas_empty,
     atlas_rows,
+    render_atlas_bar_rows,
+    render_atlas_command_modal,
+    render_atlas_command_nav,
     render_atlas_drawer,
     render_atlas_list_editor,
+    render_atlas_metric_tiles,
+    render_atlas_modal_footer,
     render_atlas_panel,
+    render_atlas_segment_bar,
     render_atlas_stage,
 )
 from ui.components.common import render_atlas_ops_board, render_empty_state, render_page_header, render_data_freshness, icon
@@ -46,12 +53,42 @@ def _render_insights_summary(insights: list[dict]) -> None:
 def render_report_page() -> None:
     custom_date = st.session_state.get("report_date", datetime.now())
     generate_btn = False
-    cmd_cols = st.columns([1.15, 1.0, 1.0, 6.0], gap="small")
-    with cmd_cols[0]:
-        with st.popover(t('popover.generate'), use_container_width=True):
-            custom_date = st.date_input(t("report.date_label"), value=custom_date, key="report_date")
-            st.caption(t("report.type_weekly"))
-            generate_btn = st.button(t("report.generate"), type="primary", use_container_width=True)
+    active_panel = render_atlas_command_nav(
+        "report",
+        [
+            ("generate", t("popover.generate")),
+            ("brief", t("popover.brief")),
+            ("freshness", t("popover.freshness")),
+        ],
+    )
+
+    if active_panel == "generate":
+
+        def _generate_body() -> None:
+            nonlocal custom_date, generate_btn
+            with atlas_native_slot(t("popover.generate"), t("report.subtitle")):
+                custom_date = st.date_input(t("report.date_label"), value=custom_date, key="report_date")
+                st.caption(t("report.type_weekly"))
+                generate_btn = st.button(t("report.generate"), type="primary")
+            st.markdown(render_atlas_modal_footer(t("report.no_report_desc")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="report",
+            title=t("popover.generate"),
+            subtitle=t("report.subtitle"),
+            metrics=[
+                (t("report.panel.date"), custom_date.strftime("%Y-%m-%d")),
+                (t("report.panel.output"), t("label.markdown")),
+            ],
+            filters=[
+                (t("report.panel.date"), custom_date.strftime("%Y-%m-%d")),
+                (t("report.panel.output"), t("label.markdown")),
+                (t("report.type_weekly"), t("label.ready")),
+            ],
+            body=_generate_body,
+            icon="G",
+            metric_columns=2,
+        )
     date_str = custom_date.strftime("%Y-%m-%d")
     if generate_btn:
         with st.spinner(t("report.generating")):
@@ -71,17 +108,79 @@ def render_report_page() -> None:
     mentions_data = payload.get("mentions", {}) if artifacts else {}
     markdown_body = artifacts.get("markdown", "") if artifacts else ""
 
-    with cmd_cols[1]:
-        with st.popover(t('popover.brief'), use_container_width=True):
+    if active_panel == "brief":
+
+        def _brief_body() -> None:
+            if sent_data:
+                total_sent = max(sum(int(value) for value in sent_data.values()), 1)
+                sent_palette = ["#5B9A6E", "#E85D4A", "#8fa3ad", "#d4af37", "#9B7FD4"]
+                st.markdown(
+                    render_atlas_segment_bar(
+                        [
+                            (str(label), int(value) / total_sent * 100, sent_palette[index % len(sent_palette)])
+                            for index, (label, value) in enumerate(sent_data.items())
+                        ],
+                        title=t("report.sentiment"),
+                    ),
+                    unsafe_allow_html=True,
+                )
+            if mentions_data:
+                top_mentions = max([int(value) for value in mentions_data.values()] or [1])
+                st.markdown(
+                    render_atlas_bar_rows(
+                        [
+                            (str(label), int(value), int(value) / top_mentions * 100)
+                            for label, value in sorted(mentions_data.items(), key=lambda item: item[1], reverse=True)[:8]
+                        ],
+                        title=t("report.mentions"),
+                        tone="red",
+                    ),
+                    unsafe_allow_html=True,
+                )
             if markdown_body:
                 st.markdown(markdown_body)
             elif insights:
                 _render_insights_summary(insights)
             else:
                 st.caption(t("report.no_report_hint"))
-    with cmd_cols[2]:
-        with st.popover(t('popover.freshness'), use_container_width=True):
+            st.markdown(render_atlas_modal_footer(t("report.no_report_hint")), unsafe_allow_html=True)
+
+        render_atlas_command_modal(
+            page_id="report",
+            title=t("report.drawer.brief"),
+            subtitle=t("report.ops.subtitle"),
+            metrics=[
+                (t("report.metric.insights"), len(insights)),
+                (t("report.metric.rivals"), len(mentions_data)),
+                (t("report.metric.report"), t("label.ready") if artifacts else t("label.empty")),
+                (t("report.metric.date"), date_str),
+            ],
+            filters=[
+                (t("report.metric.date"), date_str),
+                (t("report.metric.report"), t("label.ready") if artifacts else t("label.empty")),
+                (t("report.metric.rivals"), len(mentions_data)),
+            ],
+            body=_brief_body,
+            icon="B",
+        )
+
+    elif active_panel == "freshness":
+
+        def _freshness_body() -> None:
             render_data_freshness()
+
+        render_atlas_command_modal(
+            page_id="report",
+            title=t("common.freshness"),
+            subtitle=t("report.stage.mode"),
+            filters=[
+                (t("report.metric.date"), date_str),
+                (t("report.metric.insights"), len(insights)),
+                (t("report.metric.report"), t("label.ready") if artifacts else t("label.empty")),
+            ],
+            body=_freshness_body,
+            icon="F",
+        )
 
     sentiment_label = {
         "positive": t('label.sentiment_positive'),

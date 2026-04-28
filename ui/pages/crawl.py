@@ -7,16 +7,18 @@ import streamlit.components.v1 as st_components
 
 from src.core.config import load_config
 from ui.components.atlas_shell import (
+    atlas_native_slot,
     atlas_chips,
     atlas_empty,
     atlas_rows,
+    render_atlas_command_modal,
+    render_atlas_command_nav,
     render_atlas_drawer,
     render_atlas_list_editor,
     render_atlas_bar_rows,
     render_atlas_metric_tiles,
     render_atlas_panel,
-    render_atlas_popover_footer,
-    render_atlas_popover_header,
+    render_atlas_modal_footer,
     render_atlas_stage,
 )
 from ui.components.common import render_atlas_ops_board, render_page_header
@@ -259,29 +261,21 @@ def render_crawl_page() -> None:
     order_val = "totalrank"
     limit_val = int(st.session_state.get("crawl_limit", 20))
 
-    cmd_cols = st.columns([1.05, 1.15, 1.0, 1.0, 5.2], gap="small")
-    with cmd_cols[0]:
-        with st.popover(t('popover.route'), use_container_width=True):
-            st.markdown(
-                render_atlas_popover_header(
-                    t("crawl.panel.route"),
-                    t("crawl.subtitle"),
-                ),
-                unsafe_allow_html=True,
-            )
-            route_preview_estimated = int(limit_val) * int(keyword_count)
-            st.markdown(
-                render_atlas_metric_tiles(
-                    [
-                        (t("crawl.row.platform"), PLATFORM_OPTIONS[platform]),
-                        (t("crawl.metric.keywords"), keyword_count),
-                        (t("crawl.metric.limit"), limit_val),
-                        (t("crawl.metric.output"), f"{route_preview_estimated:,}"),
-                    ],
-                    columns=4,
-                ),
-                unsafe_allow_html=True,
-            )
+    active_panel = render_atlas_command_nav(
+        "crawl",
+        [
+            ("route", t("popover.route")),
+            ("keywords", t("popover.keywords")),
+            ("fields", t("popover.fields")),
+            ("result", t("popover.result")),
+        ],
+    )
+
+    if active_panel == "route":
+        route_preview_estimated = int(limit_val) * int(keyword_count)
+
+        def _route_body() -> None:
+            nonlocal platform, mode, depth, order_label, order_val, limit_val
             st.markdown(
                 render_atlas_bar_rows(
                     [
@@ -295,54 +289,58 @@ def render_crawl_page() -> None:
                 ),
                 unsafe_allow_html=True,
             )
-            render_step_block_header("01", t("crawl.step.platform"), "#5B9A6E", t("crawl.step.platform_desc"))
-            platform = st.selectbox(
-                t("crawl.platform_label"),
-                list(PLATFORM_OPTIONS.keys()),
-                format_func=lambda x: PLATFORM_OPTIONS[x],
-                key="crawl_platform",
-                label_visibility="collapsed",
-            )
-            st.divider()
-            render_step_block_header("02", t("crawl.step.auth"), "#6B8BDB", t("crawl.step.auth_desc"))
-            if platform in media_platforms:
-                mode = st.radio(t("crawl.auth_label"), [auth_required_label], key="crawl_mode_media", label_visibility="collapsed")
-                st.caption(t("crawl.auth_required_note"))
-            else:
-                mode = st.radio(
-                    t("crawl.auth_label"),
-                    [auth_anonymous_label, auth_local_label],
-                    key="crawl_mode_general",
-                    label_visibility="collapsed",
-                )
-            st.divider()
-            render_step_block_header("03", t("crawl.step.depth"), "#D4956B", t("crawl.step.depth_desc"))
-            if platform in media_platforms:
-                depth = st.radio(t("crawl.step.depth"), [depth_limited_label], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
-            else:
-                depth = st.radio(t("crawl.step.depth"), [depth_basic_label, depth_deep_label], key="crawl_depth_general", label_visibility="collapsed")
-            st.divider()
-            render_step_block_header("04", t("crawl.step.strategy"), "#9B7FD4", t("crawl.strategy_note"))
-            if platform == "bilibili":
-                order_map = {
-                    t("crawl.order_totalrank"): "totalrank",
-                    t("crawl.order_pubdate"): "pubdate",
-                    t("crawl.order_click"): "click",
-                    t("crawl.order_stow"): "stow",
-                }
-                order_label = st.selectbox(t("crawl.step.strategy"), list(order_map.keys()), index=0, key="crawl_order_bilibili", label_visibility="collapsed")
-                order_val = order_map[order_label]
-            else:
-                st.caption(t("crawl.strategy_empty_note"))
-            st.divider()
-            render_step_block_header("05", t("crawl.step.limit"), "#7FB5B0", t("crawl.step.limit_desc"))
-            limit_val = st.selectbox(
-                t("crawl.step.limit"),
-                list(limit_options.keys()),
-                format_func=lambda x: limit_options[x],
-                key="crawl_limit",
-                label_visibility="collapsed",
-            )
+            with atlas_native_slot(t("crawl.panel.route"), t("crawl.popover.route_note")):
+                top_route_cols = st.columns([1.05, 1.1, 1.1], gap="medium")
+                with top_route_cols[0]:
+                    render_step_block_header("01", t("crawl.step.platform"), "#5B9A6E", t("crawl.step.platform_desc"))
+                    platform = st.selectbox(
+                        t("crawl.platform_label"),
+                        list(PLATFORM_OPTIONS.keys()),
+                        format_func=lambda x: PLATFORM_OPTIONS[x],
+                        key="crawl_platform",
+                        label_visibility="collapsed",
+                    )
+                with top_route_cols[1]:
+                    render_step_block_header("02", t("crawl.step.auth"), "#6B8BDB", t("crawl.step.auth_desc"))
+                    if platform in media_platforms:
+                        mode = st.radio(t("crawl.auth_label"), [auth_required_label], key="crawl_mode_media", label_visibility="collapsed")
+                        st.caption(t("crawl.auth_required_note"))
+                    else:
+                        mode = st.radio(
+                            t("crawl.auth_label"),
+                            [auth_anonymous_label, auth_local_label],
+                            key="crawl_mode_general",
+                            label_visibility="collapsed",
+                        )
+                with top_route_cols[2]:
+                    render_step_block_header("03", t("crawl.step.depth"), "#D4956B", t("crawl.step.depth_desc"))
+                    if platform in media_platforms:
+                        depth = st.radio(t("crawl.step.depth"), [depth_limited_label], key="crawl_depth_media", label_visibility="collapsed", disabled=True)
+                    else:
+                        depth = st.radio(t("crawl.step.depth"), [depth_basic_label, depth_deep_label], key="crawl_depth_general", label_visibility="collapsed")
+                lower_route_cols = st.columns([1.5, .9], gap="medium")
+                with lower_route_cols[0]:
+                    render_step_block_header("04", t("crawl.step.strategy"), "#9B7FD4", t("crawl.strategy_note"))
+                    if platform == "bilibili":
+                        order_map = {
+                            t("crawl.order_totalrank"): "totalrank",
+                            t("crawl.order_pubdate"): "pubdate",
+                            t("crawl.order_click"): "click",
+                            t("crawl.order_stow"): "stow",
+                        }
+                        order_label = st.selectbox(t("crawl.step.strategy"), list(order_map.keys()), index=0, key="crawl_order_bilibili", label_visibility="collapsed")
+                        order_val = order_map[order_label]
+                    else:
+                        st.caption(t("crawl.strategy_empty_note"))
+                with lower_route_cols[1]:
+                    render_step_block_header("05", t("crawl.step.limit"), "#7FB5B0", t("crawl.step.limit_desc"))
+                    limit_val = st.selectbox(
+                        t("crawl.step.limit"),
+                        list(limit_options.keys()),
+                        format_func=lambda x: limit_options[x],
+                        key="crawl_limit",
+                        label_visibility="collapsed",
+                    )
             estimated_results = int(limit_val) * int(keyword_count)
             st.markdown(
                 render_atlas_list_editor(
@@ -358,10 +356,7 @@ def render_crawl_page() -> None:
                 unsafe_allow_html=True,
             )
             st.markdown(
-                render_atlas_popover_footer(
-                    t("crawl.popover.route_note"),
-                    action=t("crawl.popover.launch_hint"),
-                ),
+                render_atlas_modal_footer(t("crawl.popover.route_note"), action=t("crawl.popover.launch_hint")),
                 unsafe_allow_html=True,
             )
             runtime_config = load_config()
@@ -430,28 +425,30 @@ def render_crawl_page() -> None:
                     st.success(t("crawl.success", platform=PLATFORM_OPTIONS[platform]))
                 else:
                     st.error(t("crawl.failed_code", code=code))
-    with cmd_cols[1]:
-        with st.popover(t('popover.keywords'), use_container_width=True):
-            st.markdown(
-                render_atlas_popover_header(
-                    t("crawl.panel.keywords"),
-                    t("keyword.subtitle"),
-                ),
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                render_atlas_metric_tiles(
-                    [
-                        (t("crawl.metric.keywords"), keyword_count),
-                        (t("crawl.metric.limit"), limit_val),
-                    ],
-                    columns=2,
-                ),
-                unsafe_allow_html=True,
-            )
-            keyword_runtime = render_keyword_library("crawl")
-            keyword_count = int(keyword_runtime.get("keyword_count", keyword_count))
-            merged_keywords = list(keyword_runtime.get("keywords", merged_keywords))
+
+        render_atlas_command_modal(
+            page_id="crawl",
+            title=t("crawl.panel.route"),
+            subtitle=t("crawl.subtitle"),
+            metrics=[
+                (t("crawl.row.platform"), PLATFORM_OPTIONS[platform]),
+                (t("crawl.metric.keywords"), keyword_count),
+                (t("crawl.metric.limit"), limit_val),
+                (t("crawl.metric.output"), f"{route_preview_estimated:,}"),
+            ],
+            filters=[
+                (t("crawl.step.platform"), PLATFORM_OPTIONS[platform]),
+                (t("crawl.step.auth"), mode),
+                (t("crawl.step.depth"), depth),
+            ],
+            body=_route_body,
+            icon="bars",
+        )
+
+    elif active_panel == "keywords":
+
+        def _keyword_body() -> None:
+            nonlocal keyword_runtime, keyword_count, merged_keywords
             st.markdown(
                 render_atlas_bar_rows(
                     [
@@ -463,15 +460,30 @@ def render_crawl_page() -> None:
                 ),
                 unsafe_allow_html=True,
             )
-    with cmd_cols[2]:
-        with st.popover(t('popover.fields'), use_container_width=True):
-            st.markdown(
-                render_atlas_popover_header(
-                    t("crawl.drawer.fields"),
-                    t("crawl.depth_note"),
-                ),
-                unsafe_allow_html=True,
-            )
+            keyword_runtime = render_keyword_library("crawl")
+            keyword_count = int(keyword_runtime.get("keyword_count", keyword_count))
+            merged_keywords = list(keyword_runtime.get("keywords", merged_keywords))
+
+        render_atlas_command_modal(
+            page_id="crawl",
+            title=t("crawl.panel.keywords"),
+            subtitle=t("keyword.subtitle"),
+            metrics=[
+                (t("crawl.metric.keywords"), keyword_count),
+                (t("crawl.metric.limit"), limit_val),
+            ],
+            filters=[
+                (t("keyword.status_synced"), keyword_count),
+                (t("keyword.enable_expansion"), t("label.ready")),
+                (t("crawl.estimated"), int(limit_val) * max(keyword_count, 1)),
+            ],
+            body=_keyword_body,
+            icon="K",
+        )
+
+    elif active_panel == "fields":
+
+        def _fields_body() -> None:
             st.markdown(
                 render_atlas_bar_rows(
                     [
@@ -487,18 +499,26 @@ def render_crawl_page() -> None:
             )
             _render_platform_field_tables(platform, mode, depth)
             st.markdown(
-                render_atlas_popover_footer(t("crawl.popover.field_note")),
+                render_atlas_modal_footer(t("crawl.popover.field_note")),
                 unsafe_allow_html=True,
             )
-    with cmd_cols[3]:
-        with st.popover(t('popover.result'), use_container_width=True):
-            st.markdown(
-                render_atlas_popover_header(
-                    t("crawl.panel.result"),
-                    t("crawl.progress"),
-                ),
-                unsafe_allow_html=True,
-            )
+
+        render_atlas_command_modal(
+            page_id="crawl",
+            title=t("crawl.drawer.fields"),
+            subtitle=t("crawl.depth_note"),
+            filters=[
+                (t("crawl.row.platform"), PLATFORM_OPTIONS.get(platform, platform)),
+                (t("crawl.row.auth"), mode),
+                (t("crawl.row.depth"), depth),
+            ],
+            body=_fields_body,
+            icon="F",
+        )
+
+    elif active_panel == "result":
+
+        def _result_body() -> None:
             if st.session_state.get("crawl_last_result"):
                 last_result = st.session_state["crawl_last_result"]
                 st.markdown(
@@ -529,9 +549,29 @@ def render_crawl_page() -> None:
                 )
                 st.markdown(atlas_empty(t("crawl.panel.result"), t("common.empty_first_action")), unsafe_allow_html=True)
             st.markdown(
-                render_atlas_popover_footer(t("crawl.popover.result_note")),
+                render_atlas_modal_footer(t("crawl.popover.result_note")),
                 unsafe_allow_html=True,
             )
+
+        last_result = st.session_state.get("crawl_last_result") or {}
+        render_atlas_command_modal(
+            page_id="crawl",
+            title=t("crawl.panel.result"),
+            subtitle=t("crawl.progress"),
+            metrics=[
+                (t("crawl.row.status"), t("label.ok") if last_result.get("return_code") == 0 else t("label.waiting")),
+                (t("crawl.row.platform"), last_result.get("platform_label", PLATFORM_OPTIONS.get(platform, platform))),
+                (t("crawl.metric.keywords"), last_result.get("keyword_count", keyword_count)),
+                (t("crawl.metric.limit"), last_result.get("limit_val", limit_val)),
+            ],
+            filters=[
+                (t("crawl.metric.output"), t("label.csv")),
+                (t("crawl.progress"), t("label.ready") if last_result else t("label.empty")),
+                (t("crawl.row.platform"), PLATFORM_OPTIONS.get(platform, platform)),
+            ],
+            body=_result_body,
+            icon="R",
+        )
 
     result = st.session_state.get("crawl_last_result") or {}
     result_rows = [
