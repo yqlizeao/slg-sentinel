@@ -183,37 +183,14 @@ feat(采集): 新增抖音平台 B站 适配器的评论情感分析功能
 - 修复了当评论为空时的 IndexError
 ```
 
-### 2. 自动创建 Pull Request
+### 2. 自动推送到远程
 
-- commit 完成后，使用 `gh pr create` 创建 Pull Request
-- PR 标题使用中文，简洁概括本次修改
-- PR body 使用中文，包含：
-  - **修改概述**：1-3 个要点描述本次修改
-  - **修改详情**：列出具体修改的文件和功能点
-  - **测试说明**：如何验证本次修改
-- 示例：
-
-```bash
-gh pr create --title "feat: 新增抖音平台评论情感分析功能" --body "$(cat <<'EOF'
-## 修改概述
-- 新增抖音平台评论的情感分析能力
-- 修复评论为空时的空指针异常
-
-## 修改详情
-- `src/adapters/bilibili.py`：新增 get_comment_sentiment 方法
-- `src/analysis/sentiment.py`：适配抖音评论格式
-- `tests/test_bilibili_sentiment.py`：新增 3 条测试用例
-
-## 测试说明
-- 运行 `python -m pytest tests/test_bilibili_sentiment.py -v` 验证
-EOF
-)"
-```
+- commit 完成后，立即执行 `git push` 推送到远程仓库
+- 如果当前分支尚未跟踪远程分支，使用 `git push -u origin <branch>`
 
 ### 注意事项
 
-- 如果当前分支未推送到远程，先执行 `git push -u origin <branch>` 再创建 PR
-- PR 标题和 commit message 中不得包含敏感信息（密钥、Token 等）
+- push 到远程的内容中不得包含敏感信息（密钥、Token 等）
 - 每次修改只产生一个 commit，不要拆分成多个无意义的 commit
 - commit message 和 PR body 必须准确反映实际修改的文件类型（代码、配置、文档等）
 
