@@ -59,12 +59,13 @@ pip install -e ".[all,gui]"
 streamlit run app.py
 ```
 
-控制台提供 6 个功能页面：
-- **总览**：系统健康状态、平台数据量、全网热帖排行
+控制台提供 7 个功能页面：
+- **总览**：本周核心发现（LLM 生成）、关键词趋势图、高赞评论精选、平台数据量、全网热帖排行
 - **采集**：选择平台 → 模式 → 深度 → 配额，一键启动单次采集
 - **递归采集（话题探索）**：从起始话题出发，自动完成多轮采集、关键词提炼、扩展和停止判断
 - **画像**：玩家派系标签、消费类型分布、核心追踪名单
 - **智能报表**：情感分布图表 + 竞品声量柱状图 + Markdown 周报
+- **竞品对比**：选择两个 TapTap 竞品，LLM 自动生成优劣势对比与产品机会分析
 - **设置**：在线编辑 targets / keywords / 密钥配置
 
 ### 4. CLI 命令行
@@ -92,7 +93,7 @@ python -m src.cli expand-keywords --provider deepseek
 
 ```
 slg-sentinel/
-├── app.py                      # Streamlit 控制台（6 页面导航）
+├── app.py                      # Streamlit 控制台（7 页面导航）
 ├── ui/
 │   ├── pages/                  # 总览、采集、递归采集、画像、报表、设置
 │   ├── components/             # 通用 UI 组件与采集页组件
@@ -106,7 +107,7 @@ slg-sentinel/
 │   ├── services/               # CLI 服务层：采集、画像、报告编排
 │   ├── adapters/               # 6 平台采集适配器
 │   └── analysis/               # 情感分析、画像、周报
-├── tests/                      # pytest 测试套件（41 条）
+├── tests/                      # pytest 测试套件（64 条）
 ├── data/                       # CSV 时序数据（data 分支）
 │   ├── video_platforms/        # B 站 / YouTube 视频 + 评论
 │   ├── community_platforms/    # TapTap 评论
@@ -121,7 +122,8 @@ slg-sentinel/
 ├── MediaCrawler/               # Git Submodule（抖音/快手/小红书引擎）
 ├── keywords.yaml               # 搜索关键词配置
 ├── targets.yaml                # 监控目标配置
-└── Gemini.md                   # AI 助手工程指南
+├── CLAUDE.md                   # Claude Code 工程指南
+└── GEMINI.md                   # Gemini 工程指南
 ```
 
 ---
@@ -228,7 +230,7 @@ bilibili:
 python -m pytest tests/ -v
 ```
 
-当前覆盖 41 条测试，验证：模型身份判等、CSV 幂等存储、情感分析准确性、配置加载容错、周报生成、TapTap review 转换、用户画像聚合与保存、递归采集任务 CRUD、搜索指标封顶判定与 CSV header 迁移、话题分组规则与泛化词检测、探索摘要聚合。
+当前覆盖 64 条测试，验证：模型身份判等、CSV 幂等存储、情感分析准确性、配置加载容错、周报生成、TapTap review 转换、用户画像聚合与保存、递归采集任务 CRUD、搜索指标封顶判定与 CSV header 迁移、话题分组规则与泛化词检测、探索摘要聚合、LLM 客户端调用与降级、适配器搜索解析。
 
 ---
 
@@ -246,7 +248,12 @@ python -m pytest tests/ -v
 
 ## AI 助手入口
 
-本项目附带 **[Gemini.md](./Gemini.md)** 工程指南文件。如果你使用 AI 编程助手（Gemini / Cursor / Claude 等），请在新会话开始时让 AI 先阅读该文件以建立项目上下文。
+本项目附带两份 AI 工程指南文件，分别适配不同的 AI 编程助手：
+
+- **[CLAUDE.md](./CLAUDE.md)** — Claude Code 工程指南（适用于 Claude Code / Cursor）
+- **[GEMINI.md](./GEMINI.md)** — Gemini 工程指南（适用于 Gemini CLI / Gemini Code Assist）
+
+在新会话开始时，请让 AI 先阅读对应的工程指南文件以建立项目上下文。
 
 ---
 
